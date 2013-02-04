@@ -1,0 +1,11 @@
+# AlertsService.js
+component {b98ab6b8-6c88-11e2-99bc-6745f7369235} AlertsService.js
+
+# AboutRedirector.js
+component {59f3da9a-6c88-11e2-b875-33d1bd379849} AboutRedirector.js
+contract @mozilla.org/network/protocol/about;1?what= {59f3da9a-6c88-11e2-b875-33d1bd379849}
+contract @mozilla.org/network/protocol/about;1?what=embedlite {59f3da9a-6c88-11e2-b875-33d1bd379849}
+
+# LoginManagerPrompter.js
+component {72de694e-6c88-11e2-a4ee-6b515bdf0cb7} LoginManagerPrompter.js
+contract @mozilla.org/login-manager/prompter;1 {72de694e-6c88-11e2-a4ee-6b515bdf0cb7}
