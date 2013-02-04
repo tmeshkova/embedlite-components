@@ -28,12 +28,12 @@ PKG_CHECK_MODULES(ENGINE, libxul nspr,
     AC_SUBST(IDL_DIR)
 ])
 
-CXXFLAGS+=" -include mozilla-config.h -std=gnu++0x "
-CXXFLAGS+=" -Wno-attributes -Wno-ignored-qualifiers -Wall "
-CXXFLAGS+=" -Wno-unused-parameter -Wpointer-arith -Woverloaded-virtual "
-CXXFLAGS+=" -Werror=return-type -Wtype-limits -Wempty-body -Wno-ctor-dtor-privacy "
-CXXFLAGS+=" -Wno-format -Wno-overlength-strings -Wno-invalid-offsetof "
-CXXFLAGS+=" -Wno-variadic-macros -Wno-long-long  -Wno-psabi "
+CXXFLAGS="$CXXFLAGS -include mozilla-config.h -std=gnu++0x "
+CXXFLAGS="$CXXFLAGS -Wno-attributes -Wno-ignored-qualifiers -Wall "
+CXXFLAGS="$CXXFLAGS -Wno-unused-parameter -Wpointer-arith -Woverloaded-virtual "
+CXXFLAGS="$CXXFLAGS -Werror=return-type -Wtype-limits -Wempty-body -Wno-ctor-dtor-privacy "
+CXXFLAGS="$CXXFLAGS -Wno-format -Wno-overlength-strings -Wno-invalid-offsetof "
+CXXFLAGS="$CXXFLAGS -Wno-variadic-macros -Wno-long-long  -Wno-psabi "
 
 AC_SUBST(ENGINE_CFLAGS)
 AC_SUBST(ENGINE_LIBS)

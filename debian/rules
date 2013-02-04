@@ -15,14 +15,6 @@ DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 CFLAGS = -Wall -g
 configopts =
 
-ifneq (,$(findstring $(DEB_HOST_ARCH),arm armel))
-	CFLAGS += -march=armv5t
-endif
-
-ifneq (,$(findstring thumb,$(DEB_BUILD_OPTIONS)))
-	CFLAGS += -mthumb
-endif
-
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	CFLAGS += -O0
 else
