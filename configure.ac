@@ -44,4 +44,5 @@ AC_OUTPUT([
     history/Makefile
     chromehelper/Makefile
     prompt/Makefile
+    jscomps/Makefile
 ])
