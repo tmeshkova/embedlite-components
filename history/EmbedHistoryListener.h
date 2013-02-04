@@ -15,7 +15,10 @@
 #include "nsServiceManagerUtils.h"
 
 #define NS_EMBEDLITEHISTORY_CID \
-    {0xCCAA4780, 0x15DD, 0x40A7, {0xA1, 0x4F, 0x21, 0x56, 0xBC, 0x88, 0x2A, 0x0B}}
+{ 0xec7cf1e2, \
+  0x6e88, \
+  0x11e2, \
+  { 0xa7, 0x9a, 0xfb, 0x19, 0xfe, 0x29, 0x97 }}
 
 class EmbedHistoryListener : public mozilla::IHistory, public nsIRunnable
 {
@@ -43,7 +46,6 @@ private:
     nsTPriorityQueue<nsString> mPendingURIs;
     nsCOMPtr<nsIEmbedAppService> mService;
 };
-
 
 #define NS_EMBED_HISTORY_CONTRACTID "@mozilla.org/embed-history-component;1"
 #define NS_EMBED_HISTORY_SERVICE_CLASSNAME "Embed History Listener Component"

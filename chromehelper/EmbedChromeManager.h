@@ -37,9 +37,9 @@ private:
 #define NS_EMBED_CHROME_CONTRACTID "@mozilla.org/embed-chrome-component;1"
 #define NS_EMBED_CHROME_SERVICE_CLASSNAME "Embed Chrome Listener Component"
 #define NS_EMBED_CHROME_SERVICE_CID \
-{ 0xab157a4c, \
-  0x6aaf, \
-  0x12e2, \
-  { 0xa6, 0x9f, 0x4f, 0xcc, 0xae, 0x4e, 0x8e, 0xc6 }}
+{ 0xc0e99ee0, \
+  0x6e88, \
+  0x11e2, \
+  { 0xad, 0x40, 0xaf, 0xe0, 0x02, 0x59, 0x55 }}
 
 #endif /*EmbedChromeManager_H_*/

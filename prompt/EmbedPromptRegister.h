@@ -26,9 +26,9 @@ public:
 #define NS_EMBED_PROMPT_CONTRACTID "@mozilla.org/embed-prompt-component;1"
 #define NS_EMBED_PROMPT_SERVICE_CLASSNAME "Embed Prompt Component"
 #define NS_EMBED_PROMPT_SERVICE_CID \
-{ 0x195eb924, \
-  0x3ab1, \
+{ 0xd64e5366, \
+  0x6e88, \
   0x11e2, \
-  { 0xa5, 0x9f, 0x4f, 0xbc, 0xae, 0x3e, 0x4e, 0xc3 }}
+  { 0xae, 0x17, 0x5b, 0xbd, 0xc0, 0x83, 0xa0 }}
 
 #endif /*EmbedPromptRegister_H_*/
