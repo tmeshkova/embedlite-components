@@ -1,7 +1,7 @@
 EXTRA_DIST = \
 	autogen.sh
 
-SUBDIRS = history chromehelper prompt jscomps
+SUBDIRS = history chromehelper prompt jscomps touchhelper
 
 INCLUDES = $(DEPS_CFLAGS) 
 

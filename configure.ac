@@ -45,4 +45,5 @@ AC_OUTPUT([
     chromehelper/Makefile
     prompt/Makefile
     jscomps/Makefile
+    touchhelper/Makefile
 ])
