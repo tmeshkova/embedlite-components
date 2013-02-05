@@ -28,7 +28,7 @@ PKG_CHECK_MODULES(ENGINE, libxul nspr,
     AC_SUBST(IDL_DIR)
 ])
 
-CXXFLAGS="$CXXFLAGS -include mozilla-config.h -std=gnu++0x "
+CXXFLAGS="$CXXFLAGS -include mozilla-config.h -std=gnu++0x -fno-rtti "
 CXXFLAGS="$CXXFLAGS -Wno-attributes -Wno-ignored-qualifiers -Wall "
 CXXFLAGS="$CXXFLAGS -Wno-unused-parameter -Wpointer-arith -Woverloaded-virtual "
 CXXFLAGS="$CXXFLAGS -Werror=return-type -Wtype-limits -Wempty-body -Wno-ctor-dtor-privacy "
