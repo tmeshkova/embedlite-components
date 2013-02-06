@@ -6,13 +6,18 @@ if [ "$TARGET_DIR" = "" ]; then
   TARGET_DIR=/usr/lib/mozembedlite/components
 fi
 
+LAST_OBJ_DIR="."
+if [ -f ./last_obj_dir ]; then
+LAST_OBJ_DIR=`cat last_obj_dir`
+fi
+
 mkdir -p $TARGET_DIR
 
 FILES_LIST="
-chromehelper/.libs/libchromehelper.so
-history/.libs/libhistory.so
-prompt/.libs/libprompt.so
-touchhelper/.libs/libtouchhelper.so
+$LAST_OBJ_DIR/chromehelper/.libs/libchromehelper.so
+$LAST_OBJ_DIR/history/.libs/libhistory.so
+$LAST_OBJ_DIR/prompt/.libs/libprompt.so
+$LAST_OBJ_DIR/touchhelper/.libs/libtouchhelper.so
 EmbedLiteBinComponents.manifest
 EmbedLiteJSComponents.manifest
 jscomps/AboutRedirector.js

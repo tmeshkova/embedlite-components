@@ -37,26 +37,29 @@ ifneq (,$(findstring parallel,$(DEB_BUILD_OPTIONS)))
 endif
 
 MAKEFLAGS += $(NJOBS)
+DEST_OBJ_DIR=objdir-$(DEB_HOST_ARCH)
 
-configure: configure-stamp
-configure-stamp:
+configure: configure-$(DEB_HOST_ARCH)-stamp
+configure-$(DEB_HOST_ARCH)-stamp:
 	dh_testdir
+	echo $(DEST_OBJ_DIR) > $(CURDIR)/last_obj_dir
 	NO_CONFIGURE=yes ./autogen.sh --prefix=/usr
-	CFLAGS="$(CFLAGS)" ./configure --prefix=/usr --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info
+	mkdir -p $(CURDIR)/$(DEST_OBJ_DIR)
+	cd $(DEST_OBJ_DIR) && CFLAGS="$(CFLAGS)" ../configure --prefix=/usr --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info
 
-	touch configure-stamp
+	touch configure-$(DEB_HOST_ARCH)-stamp
 
-build: build-stamp
-build-stamp: configure-stamp
+build: build-$(DEB_HOST_ARCH)-stamp
+build-$(DEB_HOST_ARCH)-stamp: configure-$(DEB_HOST_ARCH)-stamp
 	dh_testdir
-	$(MAKE)
-	touch build-stamp
+	cd $(DEST_OBJ_DIR) && $(MAKE)
+	touch build-$(DEB_HOST_ARCH)-stamp
 
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp
-	rm -f configure-stamp
+	rm -f build-$(DEB_HOST_ARCH)-stamp
+	rm -f configure-$(DEB_HOST_ARCH)-stamp
 #	$(MAKE) distclean
 	dh_clean
 
@@ -67,7 +70,7 @@ install: build
 	dh_installdirs -s
 
         # Add here commands to install the package into debian/tmp
-	$(MAKE) install prefix=$(CURDIR)/debian/tmp/usr
+	cd $(DEST_OBJ_DIR) && $(MAKE) install prefix=$(CURDIR)/debian/tmp/usr
 	
 	dh_install --sourcedir=debian/tmp
 	
