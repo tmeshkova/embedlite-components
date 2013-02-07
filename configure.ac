@@ -49,7 +49,9 @@ fi
 AC_SUBST(SDK_DIR)
 AC_SUBST(IDL_DIR)
 
-CXXFLAGS="$CXXFLAGS -include mozilla-config.h -std=gnu++0x -fno-rtti "
+# Required flags
+CXXFLAGS="$CXXFLAGS -include mozilla-config.h -std=gnu++0x -fno-rtti -fvisibility=hidden "
+# random warnings hide
 CXXFLAGS="$CXXFLAGS -Wno-attributes -Wno-ignored-qualifiers -Wall "
 CXXFLAGS="$CXXFLAGS -Wno-unused-parameter -Wpointer-arith -Woverloaded-virtual "
 CXXFLAGS="$CXXFLAGS -Werror=return-type -Wtype-limits -Wempty-body -Wno-ctor-dtor-privacy "
