@@ -6,10 +6,8 @@ if [ "$TARGET_DIR" = "" ]; then
   TARGET_DIR=/usr/lib/mozembedlite/components
 fi
 
-LAST_OBJ_DIR="."
-if [ -f ./last_obj_dir ]; then
-LAST_OBJ_DIR=`cat last_obj_dir`
-fi
+BARCH=`uname -m`
+LAST_OBJ_DIR="objdir-$BARCH"
 
 mkdir -p $TARGET_DIR
 

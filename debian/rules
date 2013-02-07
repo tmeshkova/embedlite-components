@@ -42,7 +42,6 @@ DEST_OBJ_DIR=objdir-$(DEB_HOST_ARCH)
 configure: configure-$(DEB_HOST_ARCH)-stamp
 configure-$(DEB_HOST_ARCH)-stamp:
 	dh_testdir
-	echo $(DEST_OBJ_DIR) > $(CURDIR)/last_obj_dir
 	NO_CONFIGURE=yes ./autogen.sh --prefix=/usr
 	mkdir -p $(CURDIR)/$(DEST_OBJ_DIR)
 	cd $(DEST_OBJ_DIR) && CFLAGS="$(CFLAGS)" ../configure --prefix=/usr --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info
