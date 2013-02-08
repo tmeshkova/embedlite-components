@@ -12,6 +12,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsIEmbedAppService.h"
 #include "nsIDOMWindow.h"
+#include "gfxRect.h"
 
 #define MOZ_DOMTitleChanged "DOMTitleChanged"
 #define MOZ_DOMContentLoaded "DOMContentLoaded"
@@ -24,7 +25,8 @@
 #define MOZ_pagehide "pagehide"
 #define MOZ_DOMMetaAdded "DOMMetaAdded"
 
-class EmbedTouchListener : public nsIDOMEventListener
+class EmbedTouchListener : public nsIDOMEventListener,
+                           public mozilla::layers::GeckoContentController
 {
 public:
     EmbedTouchListener(nsIDOMWindow* aWin);
@@ -33,10 +35,34 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDOMEVENTLISTENER
 
+    virtual void RequestContentRepaint(const mozilla::layers::FrameMetrics&);
+    virtual void HandleDoubleTap(const nsIntPoint&);
+    virtual void HandleSingleTap(const nsIntPoint&);
+    virtual void HandleLongTap(const nsIntPoint&);
+    virtual void SendAsyncScrollDOMEvent(const mozilla::gfx::Rect&, const mozilla::gfx::Size&);
+
     nsCOMPtr<nsIDOMWindow> DOMWindow;
 private:
+    void AnyElementFromPoint(nsIDOMWindow* aWindow, double aX, double aY, nsIDOMElement* *aElem);
+    bool ShouldZoomToElement(nsIDOMElement* aElement);
+    void ZoomToElement(nsIDOMElement* aElement,
+                       int aClickY = -1,
+                       bool aCanZoomOut = true,
+                       bool aCanZoomIn = true);
+    mozilla::gfx::Rect GetBoundingContentRect(nsIDOMElement* aElement);
+    bool IsRectZoomedIn(mozilla::gfx::Rect aRect, mozilla::gfx::Rect aViewport);
+    void ScrollToFocusedInput(bool aAllowZoom);
+    nsresult GetFocusedInput(nsIDOMElement* *aElement, bool aOnlyInputElements = false);
+
     nsCOMPtr<nsIEmbedAppService> mService;
-    int mWindowCounter;
+    mozilla::gfx::Rect mContentRect;
+    mozilla::gfx::Size mScrollSize;
+    bool mGotViewPortUpdate;
+    mozilla::gfx::Rect mViewport;
+    mozilla::gfx::Rect mCssCompositedRect;
+    mozilla::gfx::Rect mCssPageRect;
+    uint32_t mTopWinid;
+    bool mHadResizeSinceLastFrameUpdate;
 };
 
 #endif /*EmbedTouchListener_H_*/

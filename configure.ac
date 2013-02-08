@@ -49,6 +49,7 @@ fi
 AC_SUBST(SDK_DIR)
 AC_SUBST(IDL_DIR)
 
+
 # Required flags
 CXXFLAGS="$CXXFLAGS -include mozilla-config.h -std=gnu++0x -fno-rtti -fvisibility=hidden "
 # random warnings hide

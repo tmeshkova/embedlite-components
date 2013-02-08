@@ -55,6 +55,10 @@ EmbedTouchManager::Init()
                                           true);
         NS_ENSURE_SUCCESS(rv, rv);
         rv = observerService->AddObserver(this,
+                                          "embedliteviewcreated",
+                                          true);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = observerService->AddObserver(this,
                                           "domwindowclosed",
                                           true);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -72,7 +76,7 @@ EmbedTouchManager::Observe(nsISupports *aSubject,
                              const PRUnichar *aData)
 {
     nsresult rv;
-    if (!strcmp(aTopic, "domwindowopened")) {
+    if (!strcmp(aTopic, "embedliteviewcreated")) {
         nsCOMPtr<nsIDOMWindow> win = do_QueryInterface(aSubject, &rv);
         NS_ENSURE_SUCCESS(rv, NS_OK);
         WindowCreated(win);
@@ -101,6 +105,10 @@ EmbedTouchManager::WindowCreated(nsIDOMWindow* aWin)
     if (!mService) {
         mService = do_GetService("@mozilla.org/embedlite-app-service;1");
     }
+    uint32_t id = 0;
+    mService->GetIDByWindow(aWin, &id);
+    LOGT("id for window: %u", id);
+    mService->AddContentListener(id, listener);
 }
 
 void
@@ -121,6 +129,9 @@ EmbedTouchManager::WindowDestroyed(nsIDOMWindow* aWin)
     }
     mArray.RemoveObjectAt(i);
     mWindowCounter--;
+    uint32_t id = 0;
+    mService->GetIDByWindow(aWin, &id);
+    mService->AddContentListener(id, listener);
     if (!mWindowCounter) {
         mService = nullptr;
     }

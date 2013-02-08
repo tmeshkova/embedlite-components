@@ -15,7 +15,7 @@
 #include "nsCOMArray.h"
 
 class EmbedTouchManager : public nsIObserver,
-                           public nsSupportsWeakReference
+                          public nsSupportsWeakReference
 {
 public:
     EmbedTouchManager();
