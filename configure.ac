@@ -19,6 +19,12 @@ AM_PROG_LIBTOOL
 AC_PROG_CPP
 AC_HEADER_STDC
 
+if test "$PYTHON" == ""; then
+    PYTHON=python
+fi
+
+echo "Using PYTHON=$PYTHON"
+
 AC_ARG_WITH(engine-path,
     AC_HELP_STRING([--with-engine-path[=path_to_obj_build_dir]],
                    [Specify engine path (default=)]
