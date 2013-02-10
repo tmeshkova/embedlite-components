@@ -57,8 +57,9 @@ build-$(DEB_HOST_ARCH)-stamp: configure-$(DEB_HOST_ARCH)-stamp
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f build-$(DEB_HOST_ARCH)-stamp
-	rm -f configure-$(DEB_HOST_ARCH)-stamp
+	-rm -f build-$(DEB_HOST_ARCH)-stamp
+	-rm -f configure-$(DEB_HOST_ARCH)-stamp
+	-rm -rf $(DEST_OBJ_DIR)
 #	$(MAKE) distclean
 	dh_clean
 
