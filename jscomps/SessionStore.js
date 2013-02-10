@@ -10,8 +10,6 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-//@line 17 "/home/romaxa/build/xulrunner-package/mozilla-central/mobile/xul/components/SessionStore.js"
-
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   Cu.import("resource://gre/modules/NetUtil.jsm");
   return NetUtil;
@@ -543,7 +541,6 @@ SessionStore.prototype = {
   },
 
   _updateCrashReportURL: function ss_updateCrashReportURL(aWindow) {
-//@line 566 "/home/romaxa/build/xulrunner-package/mozilla-central/mobile/xul/components/SessionStore.js"
   },
 
   getBrowserState: function ss_getBrowserState() {
