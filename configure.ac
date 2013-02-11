@@ -22,7 +22,7 @@ AC_HEADER_STDC
 if test "$PYTHON" == ""; then
     PYTHON=python
 fi
-
+AC_SUBST(PYTHON)
 echo "Using PYTHON=$PYTHON"
 
 AC_ARG_WITH(engine-path,
