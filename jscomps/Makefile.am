@@ -2,6 +2,7 @@ jscomps_manifestdir=$(libdir)/mozembedlite/components
 jscomps_manifest_DATA = \
 	AboutRedirector.js \
 	AlertsService.js \
+	SessionStore.js \
 	LoginManagerPrompter.js \
 	$(NULL)
 
