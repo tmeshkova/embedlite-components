@@ -50,6 +50,8 @@ PKG_CHECK_MODULES(ENGINE, libxul mozilla-nspr,
 [
     SDK_DIR=`pkg-config --variable=sdkdir libxul`
     IDL_DIR=`pkg-config --variable=idldir libxul`
+    INCLUDE_DIR=`pkg-config --variable=includedir libxul`
+    ENGINE_CFLAGS="$ENGINE_CFLAGS -I$INCLUDE_DIR/nspr"
 ])
 fi
 AC_SUBST(SDK_DIR)
