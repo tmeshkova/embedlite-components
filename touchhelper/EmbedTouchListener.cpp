@@ -75,6 +75,20 @@ void EmbedTouchListener::SendAsyncScrollDOMEvent(const mozilla::gfx::Rect& aRect
         mHadResizeSinceLastFrameUpdate = true;
     mContentRect = aRect;
     mScrollSize = aSize;
+    
+    nsString sendString;
+    // Just simple property bag support still
+    nsCOMPtr<nsIEmbedLiteJSON> json = do_GetService("@mozilla.org/embedlite-json;1");
+    nsCOMPtr<nsIWritablePropertyBag2> root;
+    json->CreateObject(getter_AddRefs(root));
+    root->SetPropertyAsUint32(NS_LITERAL_STRING("rectX"), aRect.x);
+    root->SetPropertyAsUint32(NS_LITERAL_STRING("rectY"), aRect.y);
+    root->SetPropertyAsUint32(NS_LITERAL_STRING("rectW"), aRect.width);
+    root->SetPropertyAsUint32(NS_LITERAL_STRING("rectH"), aRect.height);
+    root->SetPropertyAsUint32(NS_LITERAL_STRING("sizeW"), aSize.width);
+    root->SetPropertyAsUint32(NS_LITERAL_STRING("sizeH"), aSize.height);
+    json->CreateJSON(root, sendString);
+    mService->SendAsyncMessage(mTopWinid, NS_LITERAL_STRING("dom:scroll").get(), sendString.get());
 }
 
 NS_IMETHODIMP
