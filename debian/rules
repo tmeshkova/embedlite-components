@@ -51,6 +51,7 @@ configure-$(DEB_HOST_ARCH)-stamp:
 build: build-$(DEB_HOST_ARCH)-stamp
 build-$(DEB_HOST_ARCH)-stamp: configure-$(DEB_HOST_ARCH)-stamp
 	dh_testdir
+	export echo=echo
 	cd $(DEST_OBJ_DIR) && $(MAKE)
 	touch build-$(DEB_HOST_ARCH)-stamp
 
