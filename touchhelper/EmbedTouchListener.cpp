@@ -77,21 +77,41 @@ void EmbedTouchListener::HandleLongTap(const nsIntPoint& aPoint)
     if (element){
         element->GetLocalName(localName);
     }
-
+    nsCOMPtr<nsIDOMElement> linkContent;
     if (localName.LowerCaseEqualsLiteral("a") ||
     localName.LowerCaseEqualsLiteral("area") ||
     localName.LowerCaseEqualsLiteral("link")) {
         bool hasAttr;
         element->HasAttribute(NS_LITERAL_STRING("href"), &hasAttr);
         if (hasAttr) {
-            element->GetAttribute(NS_LITERAL_STRING("href"), aHRef);
+            linkContent = element;
+            nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(linkContent));
+            if (anchor){
+                anchor->GetHref(aHRef);
+            }
+            else {
+                nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(linkContent));
+                if (area){
+                    area->GetHref(aHRef);
+                }
+                else {
+                    nsCOMPtr<nsIDOMHTMLLinkElement> link(do_QueryInterface(linkContent));
+                    if (link){
+                        link->GetHref(aHRef);
+                    }
+                }
+            }
         }
     }
     else if (localName.LowerCaseEqualsLiteral("img")) {
         bool hasAttr;
         element->HasAttribute(NS_LITERAL_STRING("src"), &hasAttr);
         if (hasAttr) {
-            element->GetAttribute(NS_LITERAL_STRING("src"), aSrc);
+            linkContent = element;
+            nsCOMPtr<nsIDOMHTMLImageElement> anchor(do_QueryInterface(linkContent));
+            if (anchor){
+                anchor->GetSrc(aSrc);
+            }
         }
     }
 
@@ -102,19 +122,33 @@ void EmbedTouchListener::HandleLongTap(const nsIntPoint& aPoint)
         if (!element)
             break;
         element->GetLocalName(localName);
-        if (localName.LowerCaseEqualsLiteral("a")) {
+        if (localName.LowerCaseEqualsLiteral("a") ||
+            localName.LowerCaseEqualsLiteral("area") ||
+            localName.LowerCaseEqualsLiteral("link")) {
             bool hasAttr;
             element->HasAttribute(NS_LITERAL_STRING("href"), &hasAttr);
             if (hasAttr) {
-                element->GetAttribute(NS_LITERAL_STRING("href"), aHRef);
+                linkContent = element;
+                nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(linkContent));
+                if (anchor)
+                    anchor->GetHref(aHRef);
             }
+            else
+                linkContent = nullptr; // Links can't be nested.
+                break;
         }
         else if (localName.LowerCaseEqualsLiteral("img")) {
             bool hasAttr;
             element->HasAttribute(NS_LITERAL_STRING("src"), &hasAttr);
             if (hasAttr) {
-                element->GetAttribute(NS_LITERAL_STRING("src"), aSrc);
+                linkContent = element;
+                nsCOMPtr<nsIDOMHTMLImageElement> anchor(do_QueryInterface(linkContent));
+                if (anchor)
+                    anchor->GetSrc(aSrc);
             }
+            else
+                linkContent = nullptr; // Links can't be nested.
+                break;
         }
 
         nsCOMPtr<nsIDOMNode> temp = curr;
