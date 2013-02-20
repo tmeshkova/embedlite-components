@@ -108,9 +108,9 @@ void EmbedTouchListener::HandleLongTap(const nsIntPoint& aPoint)
         element->HasAttribute(NS_LITERAL_STRING("src"), &hasAttr);
         if (hasAttr) {
             linkContent = element;
-            nsCOMPtr<nsIDOMHTMLImageElement> anchor(do_QueryInterface(linkContent));
-            if (anchor){
-                anchor->GetSrc(aSrc);
+            nsCOMPtr<nsIDOMHTMLImageElement> image(do_QueryInterface(linkContent));
+            if (image){
+                image->GetSrc(aSrc);
             }
         }
     }
@@ -130,12 +130,25 @@ void EmbedTouchListener::HandleLongTap(const nsIntPoint& aPoint)
             if (hasAttr) {
                 linkContent = element;
                 nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(linkContent));
-                if (anchor)
+                if (anchor) {
                     anchor->GetHref(aHRef);
+                }
+                else {
+                    nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(linkContent));
+                    if (area){
+                        area->GetHref(aHRef);
+                    }
+                    else {
+                        nsCOMPtr<nsIDOMHTMLLinkElement> link(do_QueryInterface(linkContent));
+                        if (link){
+                            link->GetHref(aHRef);
+                        }
+                    }
+                }
             }
             else
                 linkContent = nullptr; // Links can't be nested.
-                break;
+            break;
         }
         else if (localName.LowerCaseEqualsLiteral("img")) {
             bool hasAttr;
@@ -160,8 +173,8 @@ void EmbedTouchListener::HandleLongTap(const nsIntPoint& aPoint)
         nsCOMPtr<nsIEmbedLiteJSON> json = do_GetService("@mozilla.org/embedlite-json;1");
         nsCOMPtr<nsIWritablePropertyBag2> root;
         json->CreateObject(getter_AddRefs(root));
-        root->SetPropertyAsAString(NS_LITERAL_STRING("aHRef"), aHRef);
-        root->SetPropertyAsAString(NS_LITERAL_STRING("aSrc"), aSrc);
+        root->SetPropertyAsAString(NS_LITERAL_STRING("LinkHref"), aHRef);
+        root->SetPropertyAsAString(NS_LITERAL_STRING("ImageSrc"), aSrc);
         json->CreateJSON(root, sendString);
         mService->SendAsyncMessage(mTopWinid, NS_LITERAL_STRING("context:info").get(), sendString.get());
     }
