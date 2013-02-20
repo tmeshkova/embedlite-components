@@ -155,9 +155,9 @@ void EmbedTouchListener::HandleLongTap(const nsIntPoint& aPoint)
             element->HasAttribute(NS_LITERAL_STRING("src"), &hasAttr);
             if (hasAttr) {
                 linkContent = element;
-                nsCOMPtr<nsIDOMHTMLImageElement> anchor(do_QueryInterface(linkContent));
-                if (anchor)
-                    anchor->GetSrc(aSrc);
+                nsCOMPtr<nsIDOMHTMLImageElement> image(do_QueryInterface(linkContent));
+                if (image)
+                    image->GetSrc(aSrc);
             }
             else
                 linkContent = nullptr; // Links can't be nested.
