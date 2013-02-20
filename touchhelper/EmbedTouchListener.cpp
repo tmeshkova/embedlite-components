@@ -37,6 +37,9 @@
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLAnchorElement.h"
+#include "nsIDOMHTMLAreaElement.h"
+#include "nsIDOMHTMLImageElement.h"
 
 using namespace mozilla;
 
@@ -65,6 +68,69 @@ void EmbedTouchListener::HandleSingleTap(const nsIntPoint& aPoint)
 void EmbedTouchListener::HandleLongTap(const nsIntPoint& aPoint)
 {
     LOGT("pt[%i,%i]", aPoint.x, aPoint.y);
+    nsCOMPtr<nsIDOMElement> element;
+    gfxRect retRect(0,0,0,0);
+    AnyElementFromPoint(DOMWindow, aPoint.x, aPoint.y, getter_AddRefs(element));
+    nsAutoString localName;
+    nsAutoString aHRef;
+    nsAutoString aSrc;
+    if (element){
+        element->GetLocalName(localName);
+    }
+
+    if (localName.LowerCaseEqualsLiteral("a") ||
+    localName.LowerCaseEqualsLiteral("area") ||
+    localName.LowerCaseEqualsLiteral("link")) {
+        bool hasAttr;
+        element->HasAttribute(NS_LITERAL_STRING("href"), &hasAttr);
+        if (hasAttr) {
+            element->GetAttribute(NS_LITERAL_STRING("href"), aHRef);
+        }
+    }
+    else if (localName.LowerCaseEqualsLiteral("img")) {
+        bool hasAttr;
+        element->HasAttribute(NS_LITERAL_STRING("src"), &hasAttr);
+        if (hasAttr) {
+            element->GetAttribute(NS_LITERAL_STRING("src"), aSrc);
+        }
+    }
+
+    nsCOMPtr<nsIDOMNode> curr;
+    element->GetParentNode(getter_AddRefs(curr));
+    while (curr) {
+        element = do_QueryInterface(curr);
+        if (!element)
+            break;
+        element->GetLocalName(localName);
+        if (localName.LowerCaseEqualsLiteral("a")) {
+            bool hasAttr;
+            element->HasAttribute(NS_LITERAL_STRING("href"), &hasAttr);
+            if (hasAttr) {
+                element->GetAttribute(NS_LITERAL_STRING("href"), aHRef);
+            }
+        }
+        else if (localName.LowerCaseEqualsLiteral("img")) {
+            bool hasAttr;
+            element->HasAttribute(NS_LITERAL_STRING("src"), &hasAttr);
+            if (hasAttr) {
+                element->GetAttribute(NS_LITERAL_STRING("src"), aSrc);
+            }
+        }
+
+        nsCOMPtr<nsIDOMNode> temp = curr;
+        temp->GetParentNode(getter_AddRefs(curr));
+    }
+
+    if (!aHRef.IsEmpty() || !aSrc.IsEmpty()) {
+        nsString sendString;
+        nsCOMPtr<nsIEmbedLiteJSON> json = do_GetService("@mozilla.org/embedlite-json;1");
+        nsCOMPtr<nsIWritablePropertyBag2> root;
+        json->CreateObject(getter_AddRefs(root));
+        root->SetPropertyAsAString(NS_LITERAL_STRING("aHRef"), aHRef);
+        root->SetPropertyAsAString(NS_LITERAL_STRING("aSrc"), aSrc);
+        json->CreateJSON(root, sendString);
+        mService->SendAsyncMessage(mTopWinid, NS_LITERAL_STRING("context:info").get(), sendString.get());
+    }
 }
 
 void EmbedTouchListener::SendAsyncScrollDOMEvent(const mozilla::gfx::Rect& aRect,
