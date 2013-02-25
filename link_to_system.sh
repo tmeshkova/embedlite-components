@@ -2,8 +2,8 @@
 
 TARGET_DIR=$1
 if [ "$TARGET_DIR" = "" ]; then
-  echo "TARGET_DIR ex: /usr/lib/mozembedlite/components"
-  TARGET_DIR=/usr/lib/mozembedlite/components
+  echo "TARGET_DIR ex: /usr/lib/mozembedlite"
+  TARGET_DIR=/usr/lib/mozembedlite
 fi
 
 BARCH=`uname -m`
@@ -22,8 +22,16 @@ jscomps/AboutRedirector.js
 jscomps/AlertsService.js
 jscomps/LoginManagerPrompter.js
 "
+
 for str in $FILES_LIST; do
     fname="${str##*/}"
     rm -f $TARGET_DIR/$fname;
-    ln -s $(pwd)/$str $TARGET_DIR/$fname;
+    ln -s $(pwd)/$str $TARGET_DIR/components/$fname;
 done
+
+rm -f $TARGET_DIR/chrome/EmbedLiteJSScripts.manifest;
+ln -s $(pwd)/EmbedLiteJSScripts.manifest $TARGET_DIR/chrome/EmbedLiteJSScripts.manifest;
+
+rm -rf $TARGET_DIR/chrome/embedlite;
+mkdir -p $TARGET_DIR/chrome/embedlite/content;
+ln -s $(pwd)/jsscripts/embedhelper.js $TARGET_DIR/chrome/embedlite/content/embedhelper.js;

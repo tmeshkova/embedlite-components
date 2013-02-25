@@ -75,4 +75,5 @@ AC_OUTPUT([
     prompt/Makefile
     jscomps/Makefile
     touchhelper/Makefile
+    jsscripts/Makefile
 ])
