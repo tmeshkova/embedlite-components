@@ -21,7 +21,6 @@ EmbedLiteJSComponents.manifest
 jscomps/AboutRedirector.js
 jscomps/AlertsService.js
 jscomps/LoginManagerPrompter.js
-jscomps/SessionStore.js
 "
 for str in $FILES_LIST; do
     fname="${str##*/}"
