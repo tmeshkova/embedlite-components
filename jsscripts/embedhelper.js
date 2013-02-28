@@ -20,34 +20,14 @@ XPCOMUtils.defineLazyServiceGetter(this, "DOMUtils",
   "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 
 const kStateActive = 0x00000001; // :active pseudoclass for elements
-const kDefaultCSSViewportWidth = 980;
-const kDefaultCSSViewportHeight = 480;
 
 dump("###################################### embedhelper.js loaded\n");
 
 var globalObject = null;
 
-// track the last known screen size so that new tabs
-// get created with the right size rather than being 1x1
-let gScreenWidth = 1;
-let gScreenHeight = 1;
-
 function EmbedHelper() {
-  this.browser = null;
-  this.id = 0;
   this.lastTouchedAt = Date.now();
-  this.showProgress = true;
-  this._zoom = 1.0;
-  this._drawZoom = 1.0;
-  this.userScrollPos = { x: 0, y: 0 };
   this.contentDocumentIsDisplayed = true;
-  this.pluginDoorhangerTimeout = null;
-  this.shouldShowPluginDoorhanger = true;
-  this.clickToPlayPluginsActivated = false;
-  this.desktopMode = false;
-  this.originalURI = null;
-  this.savedArticle = null;
-  this.hasTouchListener = false;
   this._init();
 }
 
@@ -62,11 +42,6 @@ EmbedHelper.prototype = {
     addEventListener("touchmove", this, false);
     addEventListener("touchend", this, false);
     Services.obs.addObserver(this, "before-first-paint", true);
-    Services.obs.addObserver(this, "Gesture:SingleTap", false);
-    Services.obs.addObserver(this, "Gesture:CancelTouch", false);
-    Services.obs.addObserver(this, "Gesture:DoubleTap", false);
-    Services.obs.addObserver(this, "Gesture:Scroll", false);
-    Services.obs.addObserver(this, "dom-touch-listener-added", false);
   },
 
   observe: function(aSubject, aTopic, data) {
@@ -280,7 +255,7 @@ const ElementTouchHelper = {
 
   /* Returns the touch radius in content px. */
   getTouchRadius: function getTouchRadius() {
-    let dpiRatio = 72;
+    let dpiRatio = 1.0;
     let zoom = 1.0;// BrowserApp.selectedTab._zoom;
     return {
       top: this.radius.top * dpiRatio / zoom,
