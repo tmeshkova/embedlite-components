@@ -41,6 +41,11 @@ EmbedHelper.prototype = {
     addEventListener("touchstart", this, false);
     addEventListener("touchmove", this, false);
     addEventListener("touchend", this, false);
+    addMessageListener("AZPC:ScrollDOMEvent", this);
+    addMessageListener("Viewport:Change", this);
+    addMessageListener("Gesture:DoubleTap", this);
+    addMessageListener("Gesture:SingleTap", this);
+    addMessageListener("Gesture:LongTap", this);
     Services.obs.addObserver(this, "before-first-paint", true);
   },
 
@@ -62,7 +67,7 @@ EmbedHelper.prototype = {
   },
 
   receiveMessage: function receiveMessage(aMessage) {
-    dump("Child Script: Message: name:" + aMessage.name + "\n");
+    dump("Child Script: Message: name:" + aMessage.name + ", json:" + JSON.stringify(aMessage.json) + "\n");
   },
 
   handleEvent: function(aEvent) {
