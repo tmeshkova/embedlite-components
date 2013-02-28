@@ -68,15 +68,18 @@ void EmbedTouchListener::HandleSingleTap(const nsIntPoint& aPoint)
 void EmbedTouchListener::HandleLongTap(const nsIntPoint& aPoint)
 {
     LOGT("pt[%i,%i]", aPoint.x, aPoint.y);
+    nsresult rv;
     nsCOMPtr<nsIDOMElement> element;
     gfxRect retRect(0,0,0,0);
     AnyElementFromPoint(DOMWindow, aPoint.x, aPoint.y, getter_AddRefs(element));
+    if (!element) {
+        // Clicked some unknown area without elements... return here
+        return;
+    }
     nsAutoString localName;
     nsAutoString aHRef;
     nsAutoString aSrc;
-    if (element){
-        element->GetLocalName(localName);
-    }
+    element->GetLocalName(localName);
     nsCOMPtr<nsIDOMElement> linkContent;
     if (localName.LowerCaseEqualsLiteral("a") ||
     localName.LowerCaseEqualsLiteral("area") ||
