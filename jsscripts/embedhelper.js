@@ -93,7 +93,6 @@ EmbedHelper.prototype = {
       dump("windowUtils Is FirstPaint\n");
       return false;
     }
-    dump("this.contentDocumentIsDisplayed" + this.contentDocumentIsDisplayed + "\n");
     return this.contentDocumentIsDisplayed;
   },
 
