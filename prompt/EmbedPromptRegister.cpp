@@ -17,6 +17,7 @@
 
 #include "nsILoginManager.h"
 #include "nsIFormHistory.h"
+#include "nsWidgetsCID.h"
 
 using namespace mozilla::embedlite;
 
@@ -61,21 +62,6 @@ EmbedPromptRegister::Init()
             }
         }
     }
-
-#if 0
-    oldFactory = do_GetClassObject("@mozilla.org/filepicker;1");
-    if (oldFactory) {
-        nsCID* cid = NULL;
-        rv = cr->ContractIDToCID("@mozilla.org/filepicker;1", &cid);
-        if (!NS_FAILED(rv)) {
-            rv = cr->UnregisterFactory(*cid, oldFactory.get());
-            NS_Free(cid);
-            if (NS_FAILED(rv)) {
-                return NS_ERROR_FAILURE;
-            }
-        }
-    }
-#endif
 
     nsCID promptCID = EMBED_LITE_PROMPT_SERVICE_CID;
     rv = cr->RegisterFactory(promptCID, "EmbedLite Prompt",

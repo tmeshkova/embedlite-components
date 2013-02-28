@@ -21,6 +21,7 @@ $OBJPREFIX/chromehelper/.libs/libchromehelper.so
 $OBJPREFIX/history/.libs/libhistory.so
 $OBJPREFIX/prompt/.libs/libprompt.so
 $OBJPREFIX/touchhelper/.libs/libtouchhelper.so
+$OBJPREFIX/widgetfactory/.libs/libwidgetfactory.so
 EmbedLiteBinComponents.manifest
 EmbedLiteJSComponents.manifest
 jscomps/AboutRedirector.js

@@ -2,3 +2,4 @@ binary-component libprompt.so
 binary-component libhistory.so
 binary-component libchromehelper.so
 binary-component libtouchhelper.so
+binary-component libwidgetfactory.so

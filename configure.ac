@@ -76,4 +76,5 @@ AC_OUTPUT([
     jscomps/Makefile
     touchhelper/Makefile
     jsscripts/Makefile
+    widgetfactory/Makefile
 ])
