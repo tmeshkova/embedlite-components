@@ -27,7 +27,7 @@ nsEmbedFilePicker::~nsEmbedFilePicker()
 
 NS_IMETHODIMP nsEmbedFilePicker::Init(nsIDOMWindow* parent, const nsAString& title, int16_t mode)
 {
-  printf("nsEmbedFilePicker::Init NOT IMPLEMENTED: win:%p, title:%s, mode:%i", parent, NS_ConvertUTF16toUTF8(title).get(), mode);
+  printf("nsEmbedFilePicker::Init NOT IMPLEMENTED: win:%p, title:%s, mode:%i\n", parent, NS_ConvertUTF16toUTF8(title).get(), mode);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
