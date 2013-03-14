@@ -55,7 +55,7 @@ NS_IMETHODIMP nsEmbedAlertsService::ShowAlertNotification(const nsAString & aIma
 
   // Do not display the alert. Instead call alertfinished and get out.
   if (aAlertListener)
-    aAlertListener->Observe(NULL, "alertfinished", PromiseFlatString(aAlertCookie).get());
+    aAlertListener->Observe(NULL, "alertclickcallback", PromiseFlatString(aAlertCookie).get());
 
   return NS_OK;
 }

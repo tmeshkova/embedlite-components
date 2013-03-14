@@ -25,6 +25,7 @@ HelperAppLauncherDialog.prototype = {
 
   show: function hald_show(aLauncher, aContext, aReason) {
     // Check to see if we can open this file or not
+    dump("HelperAppLauncherDialog show\n");
     if (aLauncher.MIMEInfo.hasDefaultHandler) {
       aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.useSystemDefault;
       aLauncher.launchWithApplication(null, false);
@@ -35,13 +36,15 @@ HelperAppLauncherDialog.prototype = {
           if (aTopic == "alertclickcallback") {
             wasClicked = true;
             let win = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator).getMostRecentWindow("navigator:browser");
-            if (win)
+            if (win) {
               win.BrowserUI.showPanel("downloads-container");
+            }
   
             aLauncher.saveToDisk(null, false);
           } else {
-            if (!wasClicked)
+            if (!wasClicked) {
               aLauncher.cancel(Cr.NS_BINDING_ABORTED);
+            }
           }
         }
       };
@@ -52,6 +55,7 @@ HelperAppLauncherDialog.prototype = {
   promptForSaveToFile: function hald_promptForSaveToFile(aLauncher, aContext, aDefaultFile, aSuggestedFileExt, aForcePrompt) {
     let file = null;
     let prefs = Services.prefs;
+    dump("HelperAppLauncherDialog promptForSaveToFile\n");
 
     if (!aForcePrompt) {
       // Check to see if the user wishes to auto save to the default download
@@ -73,8 +77,9 @@ HelperAppLauncherDialog.prototype = {
         }
 
         // Check to make sure we have a valid directory, otherwise, prompt
-        if (file)
+        if (file) {
           return file;
+        }
       }
     }
 
@@ -113,8 +118,9 @@ HelperAppLauncherDialog.prototype = {
     // The last directory preference may not exist, which will throw.
     try {
       let lastDir = prefs.getComplexValue("browser.download.lastDir", Ci.nsILocalFile);
-      if (isUsableDirectory(lastDir))
+      if (isUsableDirectory(lastDir)) {
         picker.displayDirectory = lastDir;
+      }
     }
     catch (e) { }
 
@@ -145,6 +151,8 @@ HelperAppLauncherDialog.prototype = {
   },
 
   validateLeafName: function hald_validateLeafName(aLocalFile, aLeafName, aFileExt) {
+    dump("HelperAppLauncherDialog validateLeafName\n");
+
     if (!(aLocalFile && this.isUsableDirectory(aLocalFile)))
       return null;
 
@@ -161,6 +169,7 @@ HelperAppLauncherDialog.prototype = {
   },
 
   makeFileUnique: function hald_makeFileUnique(aLocalFile) {
+    dump("HelperAppLauncherDialog makeFileUnique\n");
     try {
       // Note - this code is identical to that in
       //   toolkit/content/contentAreaUtils.js.
@@ -199,16 +208,15 @@ HelperAppLauncherDialog.prototype = {
   },
 
   isUsableDirectory: function hald_isUsableDirectory(aDirectory) {
+    dump("HelperAppLauncherDialog isUsableDirectory\n");
     return aDirectory.exists() && aDirectory.isDirectory() && aDirectory.isWritable();
   },
 
   _notify: function hald_notify(aLauncher, aCallback) {
-    let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-
     let notifier = Cc[aCallback ? "@mozilla.org/alerts-service;1" : "@mozilla.org/toaster-alerts-service;1"].getService(Ci.nsIAlertsService);
     notifier.showAlertNotification(URI_GENERIC_ICON_DOWNLOAD,
-                                   bundle.GetStringFromName("alertDownloads"),
-                                   bundle.GetStringFromName("alertCantOpenDownload"),
+                                   "alertDownloads",
+                                   "alertCantOpenDownload",
                                    true, "", aCallback, "downloadopen-fail");
   }
 };
