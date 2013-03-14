@@ -97,7 +97,7 @@ EmbedPromptRegister::Init()
     }
 
     nsCID alertsCID = NS_EMBED_ALERTS_SERVICE_CID;
-    rv = cr->RegisterFactory(fpickerCID, "EmbedLite Alerts Service",
+    rv = cr->RegisterFactory(alertsCID, "EmbedLite Alerts Service",
                              "@mozilla.org/alerts-service;1", f);
 
     return NS_OK;
