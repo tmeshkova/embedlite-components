@@ -18,10 +18,12 @@
 #include "nsILoginManager.h"
 #include "nsIFormHistory.h"
 #include "nsWidgetsCID.h"
+#include "nsAlertsService.h"
 
 using namespace mozilla::embedlite;
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(EmbedPromptFactory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsEmbedAlertsService)
 
 EmbedPromptRegister::EmbedPromptRegister()
 {
@@ -76,10 +78,27 @@ EmbedPromptRegister::Init()
                                      true);
     }
 
-    // Init LoginManager
-    nsCOMPtr<nsILoginManager> pwdmgr = do_GetService("@mozilla.org/login-manager;1");
-    // Init FormHistory
-    nsCOMPtr<nsIFormHistory2> formHistory = do_GetService("@mozilla.org/satchel/form-history");
+    f = new mozilla::embedlite::GenericFactory(nsEmbedAlertsServiceConstructor);
+    if (!f) {
+        NS_WARNING("Unable to create factory for component");
+        return NS_ERROR_FAILURE;
+    }
+    oldFactory = do_GetClassObject("@mozilla.org/alerts-service;1");
+    if (oldFactory) {
+        nsCID* cid = NULL;
+        rv = cr->ContractIDToCID("@mozilla.org/alerts-service;1", &cid);
+        if (!NS_FAILED(rv)) {
+            rv = cr->UnregisterFactory(*cid, oldFactory.get());
+            NS_Free(cid);
+            if (NS_FAILED(rv)) {
+                return NS_ERROR_FAILURE;
+            }
+        }
+    }
+
+    nsCID alertsCID = NS_EMBED_ALERTS_SERVICE_CID;
+    rv = cr->RegisterFactory(fpickerCID, "EmbedLite Alerts Service",
+                             "@mozilla.org/alerts-service;1", f);
 
     return NS_OK;
 }

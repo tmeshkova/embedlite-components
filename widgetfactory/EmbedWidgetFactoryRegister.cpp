@@ -33,8 +33,6 @@ EmbedWidgetFactoryRegister::~EmbedWidgetFactoryRegister()
 
 NS_IMPL_ISUPPORTS1(EmbedWidgetFactoryRegister, nsSupportsWeakReference)
 
-NS_DEFINE_NAMED_CID(NS_FILEPICKER_CID);
-
 nsresult
 EmbedWidgetFactoryRegister::Init()
 {

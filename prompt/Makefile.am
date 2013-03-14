@@ -6,6 +6,7 @@ libprompt_la_SOURCES = \
     EmbedPromptService.cpp \
     GenericFactory.cpp \
     nsEmbedChildModule.cpp \
+    nsAlertsService.cpp \
     $(NULL)
 
 libprompt_la_CPPFLAGS = \
