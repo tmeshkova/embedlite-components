@@ -27,6 +27,8 @@ EmbedLiteJSComponents.manifest
 jscomps/AboutRedirector.js
 jscomps/AlertsService.js
 jscomps/LoginManagerPrompter.js
+jscomps/HelperAppDialog.js
+jscomps/DownloadManagerUI.js
 "
 
 for str in $FILES_LIST; do
