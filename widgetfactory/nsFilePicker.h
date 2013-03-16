@@ -9,17 +9,27 @@
 #include "nsCOMArray.h"
 #include "nsStringGlue.h"
 #include "nsIFilePicker.h"
+#include "nsIEmbedAppService.h"
+#include <map>
+#include <string>
 
-class nsEmbedFilePicker : public nsIFilePicker
+class nsEmbedFilePicker : public nsIFilePicker, public nsIEmbedMessageListener
 {
 public:
     nsEmbedFilePicker();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIFILEPICKER
+    NS_DECL_NSIEMBEDMESSAGELISTENER
 
 private:
     ~nsEmbedFilePicker();
+    nsresult DoSendAsyncPrompt(int mode);
+    nsCString mFile;
+    int mModalDepth;
+    nsCOMPtr<nsIEmbedAppService> mService;
+    nsCOMPtr<nsIDOMWindow> mWin;
+    nsAString mTitle;
 };
 
 #define NS_EMBED_FILEPICKER_SERVICE_CID \
