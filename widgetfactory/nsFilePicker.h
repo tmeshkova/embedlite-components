@@ -9,17 +9,45 @@
 #include "nsCOMArray.h"
 #include "nsStringGlue.h"
 #include "nsIFilePicker.h"
+#include "nsIEmbedAppService.h"
+#include "nsIDOMWindowUtils.h"
+#include "nsCOMPtr.h"
+#include <map>
+#include <string>
 
-class nsEmbedFilePicker : public nsIFilePicker
+class EmbedFilePickerResponse
+{
+public:
+    EmbedFilePickerResponse()
+      : accepted(false)
+    {}
+    virtual ~EmbedFilePickerResponse() {}
+
+    bool accepted;
+    nsString filePath;
+};
+
+class nsEmbedFilePicker : public nsIFilePicker, public nsIEmbedMessageListener
 {
 public:
     nsEmbedFilePicker();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIFILEPICKER
+    NS_DECL_NSIEMBEDMESSAGELISTENER
 
 private:
     ~nsEmbedFilePicker();
+    nsresult DoSendPrompt();
+    EmbedFilePickerResponse GetResponse();
+    int mModalDepth;
+    int mMode;
+    nsCOMPtr<nsIEmbedAppService> mService;
+    nsCOMPtr<nsIDOMWindow> mWin;
+    nsString mTitle;
+    nsString mDefaultName;
+    nsCOMPtr<nsIFilePickerShownCallback> mCallback;
+    std::map<uint32_t, EmbedFilePickerResponse> mResponseMap;
 };
 
 #define NS_EMBED_FILEPICKER_SERVICE_CID \
