@@ -38,11 +38,15 @@ public:
 
 private:
     ~nsEmbedFilePicker();
-    EmbedFilePickerResponse DoSendAsyncPrompt(int mode);
+    nsresult DoSendPrompt();
+    EmbedFilePickerResponse GetResponse();
     int mModalDepth;
+    int mMode;
     nsCOMPtr<nsIEmbedAppService> mService;
     nsCOMPtr<nsIDOMWindow> mWin;
     nsString mTitle;
+    nsString mDefaultName;
+    nsCOMPtr<nsIFilePickerShownCallback> mCallback;
     std::map<uint32_t, EmbedFilePickerResponse> mResponseMap;
 };
 
