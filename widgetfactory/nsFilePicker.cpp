@@ -11,6 +11,8 @@
 #include "nsIEmbedLiteJSON.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
+#include "nsIVariant.h"
+#include "nsArrayEnumerator.h"
 
 //-----------------------------
 
@@ -21,17 +23,14 @@ NS_IMPL_ISUPPORTS1(nsEmbedFilePicker, nsIFilePicker)
 nsEmbedFilePicker::nsEmbedFilePicker()
 {
   mService = do_GetService("@mozilla.org/embedlite-app-service;1");
-  /* member initializers and constructor code */
 }
 
 nsEmbedFilePicker::~nsEmbedFilePicker()
 {
-  /* destructor code */
 }
 
 NS_IMETHODIMP nsEmbedFilePicker::Init(nsIDOMWindow* parent, const nsAString& title, int16_t mode)
 {
-  printf("nsEmbedFilePicker::Init IMPLEMENTED: win:%p, title:%s, mode:%i\n", parent, NS_ConvertUTF16toUTF8(title).get(), mode);
   mWin = parent;
   mModalDepth = 0;
   mTitle.Assign(title);
@@ -55,13 +54,12 @@ NS_IMETHODIMP nsEmbedFilePicker::AppendFilter(const nsAString& title, const nsAS
 
 NS_IMETHODIMP nsEmbedFilePicker::GetDefaultString(nsAString& aDefaultString)
 {
-  printf("nsEmbedFilePicker::GetDefaultString NOT IMPLEMENTED: aDefaultString:%s\n", NS_ConvertUTF16toUTF8(aDefaultString).get());
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aDefaultString.Assign(mDefaultName);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsEmbedFilePicker::SetDefaultString(const nsAString& aDefaultString)
 {
-  printf("nsEmbedFilePicker::SetDefaultString IMPLEMENTED: aDefaultString:%s\n", NS_ConvertUTF16toUTF8(aDefaultString).get());
   mDefaultName.Assign(aDefaultString);
   return NS_OK;
 }
@@ -92,7 +90,7 @@ NS_IMETHODIMP nsEmbedFilePicker::SetFilterIndex(int32_t aFilterIndex)
 
 NS_IMETHODIMP nsEmbedFilePicker::GetDisplayDirectory(nsIFile* *aDisplayDirectory)
 {
-  printf("nsEmbedFilePicker::GetDisplayDirectory USELESS\n");
+  printf("nsEmbedFilePicker::GetDisplayDirectory NOT IMPLEMENTED\n");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -104,8 +102,6 @@ NS_IMETHODIMP nsEmbedFilePicker::SetDisplayDirectory(nsIFile* aDisplayDirectory)
 
 NS_IMETHODIMP nsEmbedFilePicker::GetFile(nsIFile* *aFile)
 {
-  printf("nsEmbedFilePicker::GetFile IMPLEMENTED\n");
-
   EmbedFilePickerResponse response = GetResponse();
   if (response.accepted) {
     NS_ENSURE_ARG_POINTER(aFile);
@@ -114,53 +110,46 @@ NS_IMETHODIMP nsEmbedFilePicker::GetFile(nsIFile* *aFile)
 
     nsCOMPtr<nsIFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
     NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-    file->InitWithNativePath(NS_ConvertUTF16toUTF8(response.filePath));
-//    file->InitWithNativePath(NS_ConvertUTF16toUTF8(response.items[0]));
+    if (!response.items.IsEmpty()) {
+        file->InitWithNativePath(NS_ConvertUTF16toUTF8(response.items[0]));
+    }
 
     NS_ADDREF(*aFile = file);
 
     return NS_OK;
   }
-  else {
-    return NS_ERROR_ABORT;
-  }
+
+  return NS_ERROR_ABORT;
 }
 
 NS_IMETHODIMP nsEmbedFilePicker::GetFileURL(nsIURI* *aFileURL)
 {
-  printf("nsEmbedFilePicker::GetFileURL IMPLEMENTED\n");
-
   *aFileURL = nullptr;
   EmbedFilePickerResponse response = GetResponse();
   if (response.accepted) {
-    return NS_NewURI(aFileURL, NS_ConvertUTF16toUTF8(response.filePath));
-//    return NS_NewURI(aFileURL, NS_ConvertUTF16toUTF8(response.items[0]));
+    if (!response.items.IsEmpty()) {
+        return NS_NewURI(aFileURL, NS_ConvertUTF16toUTF8(response.items[0]));
+    }
   }
-  else {
-    return NS_ERROR_ABORT;
-  }
+  return NS_ERROR_ABORT;
 }
 
 NS_IMETHODIMP nsEmbedFilePicker::GetFiles(nsISimpleEnumerator* *aFiles)
 {
-  printf("nsEmbedFilePicker::GetFileURL NOT IMPLEMENTED\n");
-  return NS_ERROR_NOT_IMPLEMENTED;
   NS_ENSURE_ARG_POINTER(aFiles);
   EmbedFilePickerResponse response = GetResponse();
   if (response.accepted) {
     nsCOMArray<nsIFile> mFiles;
-//    int32_t count = response.items.Count();
-//    for (int32_t i=0; i<count; i++) {
-//     nsCOMPtr<nsIFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
-//      NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-//      file->InitWithNativePath(NS_ConvertUTF16toUTF8(response.items[i]));
-//      mFiles.AppendObject(file);
-//    }
-//    return NS_NewArrayEnumerator(aFiles, mFiles);
+    int32_t count = response.items.Length();
+    for (int32_t i = 0; i < count; i++) {
+      nsCOMPtr<nsIFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+      NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+      file->InitWithNativePath(NS_ConvertUTF16toUTF8(response.items[i]));
+      mFiles.AppendObject(file);
+    }
+    return NS_NewArrayEnumerator(aFiles, mFiles);
   }
-  else {
-    return NS_ERROR_ABORT;
-  }
+  return NS_ERROR_ABORT;
 }
 
 NS_IMETHODIMP nsEmbedFilePicker::GetAddToRecentDocs(bool* aAddToRecentDocs)
@@ -177,10 +166,9 @@ NS_IMETHODIMP nsEmbedFilePicker::SetAddToRecentDocs(bool aAddToRecentDocs)
 
 NS_IMETHODIMP nsEmbedFilePicker::Show(int16_t* _retval)
 {
-  printf("nsEmbedFilePicker::Show IMPLEMENTED\n");
   DoSendPrompt();
 
-  nsresult rv(NS_OK);
+  nsresult rv;
 
   mService->EnterSecureJSContext();
 
@@ -195,11 +183,11 @@ NS_IMETHODIMP nsEmbedFilePicker::Show(int16_t* _retval)
   nsCOMPtr<nsIThread> thread;
   NS_GetCurrentThread(getter_AddRefs(thread));
   while (mModalDepth == origModalDepth && NS_SUCCEEDED(rv)) {
-      bool processedEvent;
-      rv = thread->ProcessNextEvent(true, &processedEvent);
-      if (NS_SUCCEEDED(rv) && !processedEvent) {
-          rv = NS_ERROR_UNEXPECTED;
-      }
+    bool processedEvent;
+    rv = thread->ProcessNextEvent(true, &processedEvent);
+    if (NS_SUCCEEDED(rv) && !processedEvent) {
+      rv = NS_ERROR_UNEXPECTED;
+    }
   }
   mService->RemoveMessageListener("promptresponse", this);
 
@@ -208,7 +196,7 @@ NS_IMETHODIMP nsEmbedFilePicker::Show(int16_t* _retval)
 
   std::map<uint32_t, EmbedFilePickerResponse>::iterator it = mResponseMap.find(winid);
   if (it == mResponseMap.end()) {
-      return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_UNEXPECTED;
   }
 
   rv = utils->LeaveModalStateWithWindow(modalStateWin);
@@ -219,7 +207,6 @@ NS_IMETHODIMP nsEmbedFilePicker::Show(int16_t* _retval)
 
 NS_IMETHODIMP nsEmbedFilePicker::Open(nsIFilePickerShownCallback* aFilePickerShownCallback)
 {
-  printf("nsEmbedFilePicker::Open IMPLEMENTED\n");
   mCallback = aFilePickerShownCallback;
   DoSendPrompt();
   return NS_OK;
@@ -283,8 +270,35 @@ nsEmbedFilePicker::OnMessageReceived(const char* messageName, const PRUnichar* m
   EmbedFilePickerResponse& response = it->second;
 
   root->GetPropertyAsBool(NS_LITERAL_STRING("accepted"), &response.accepted);
-  root->GetPropertyAsAString(NS_LITERAL_STRING("items"), response.filePath);
-//  root->GetPropertyAsArray(NS_LITERAL_STRING("items"), response.items);
+  nsCOMPtr<nsIVariant> itemsvar;
+  nsresult rv = root->GetProperty(NS_LITERAL_STRING("items"), getter_AddRefs(itemsvar));
+
+  uint16_t dataType = 0;
+  itemsvar->GetDataType(&dataType);
+
+  if (dataType == nsIDataType::VTYPE_ARRAY) {
+    uint16_t valueType;
+    nsIID iid;
+    uint32_t valueCount;
+    void* rawArray;
+    if (NS_SUCCEEDED(itemsvar->GetAsArray(&valueType, &iid, &valueCount, &rawArray))) {
+      if (valueType == nsIDataType::VTYPE_INTERFACE ||
+          valueType == nsIDataType::VTYPE_INTERFACE_IS) {
+        nsISupports** values = static_cast<nsISupports**>(rawArray);
+        for (uint32_t i = 0; i < valueCount; ++i) {
+          nsCOMPtr<nsISupports> supports = dont_AddRef(values[i]);
+          nsCOMPtr<nsIVariant> item = do_QueryInterface(supports);
+          nsString itemString;
+          if (item && NS_SUCCEEDED(item->GetAsAString(itemString))) {
+            response.items.AppendElement(itemString);
+          }
+        }
+      }
+      nsMemory::Free(rawArray);
+    }
+  } else {
+    NS_ERROR("Unexpected items type");
+  }
 
   if (mCallback) {
     mCallback->Done(nsIFilePicker::returnOK);

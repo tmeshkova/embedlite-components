@@ -24,7 +24,7 @@ public:
     virtual ~EmbedFilePickerResponse() {}
 
     bool accepted;
-    nsString filePath;
+    nsTArray<nsString> items;
 };
 
 class nsEmbedFilePicker : public nsIFilePicker, public nsIEmbedMessageListener
