@@ -18,7 +18,7 @@
 
 /* Implementation file */
 
-NS_IMPL_ISUPPORTS1(nsEmbedFilePicker, nsIFilePicker)
+NS_IMPL_ISUPPORTS2(nsEmbedFilePicker, nsIFilePicker, nsIEmbedMessageListener)
 
 nsEmbedFilePicker::nsEmbedFilePicker()
 {

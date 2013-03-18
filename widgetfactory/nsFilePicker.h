@@ -31,13 +31,13 @@ class nsEmbedFilePicker : public nsIFilePicker, public nsIEmbedMessageListener
 {
 public:
     nsEmbedFilePicker();
+    virtual ~nsEmbedFilePicker();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIFILEPICKER
     NS_DECL_NSIEMBEDMESSAGELISTENER
 
 private:
-    ~nsEmbedFilePicker();
     nsresult DoSendPrompt();
     EmbedFilePickerResponse GetResponse();
     int mModalDepth;
