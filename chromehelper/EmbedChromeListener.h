@@ -13,7 +13,6 @@
 #include "nsIEmbedAppService.h"
 #include "nsIDOMWindow.h"
 
-#define MOZ_DOMTitleChanged "DOMTitleChanged"
 #define MOZ_DOMContentLoaded "DOMContentLoaded"
 #define MOZ_DOMLinkAdded "DOMLinkAdded"
 #define MOZ_DOMWillOpenModalDialog "DOMWillOpenModalDialog"

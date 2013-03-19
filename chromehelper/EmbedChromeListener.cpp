@@ -103,13 +103,6 @@ EmbedChromeListener::HandleEvent(nsIDOMEvent* aEvent)
 
     if (type.EqualsLiteral(MOZ_DOMMetaAdded)) {
         messageName.AssignLiteral("chrome:metaadded");
-    } else if (type.EqualsLiteral(MOZ_DOMTitleChanged)) {
-        nsCOMPtr<nsIDOMDocument> ctDoc;
-        window->GetDocument(getter_AddRefs(ctDoc));
-        nsString title;
-        ctDoc->GetTitle(title);
-        messageName.AssignLiteral("chrome:title");
-        root->SetPropertyAsAString(NS_LITERAL_STRING("title"), title);
     } else if (type.EqualsLiteral(MOZ_DOMContentLoaded)) {
         nsCOMPtr<nsIDOMDocument> ctDoc;
         window->GetDocument(getter_AddRefs(ctDoc));

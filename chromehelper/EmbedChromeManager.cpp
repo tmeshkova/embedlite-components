@@ -96,7 +96,6 @@ EmbedChromeManager::WindowCreated(nsIDOMWindow* aWin)
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(pidomWindow->GetChromeEventHandler());
     NS_ENSURE_TRUE(target, );
     nsCOMPtr<EmbedChromeListener> listener = new EmbedChromeListener(aWin);
-    target->AddEventListener(NS_LITERAL_STRING(MOZ_DOMTitleChanged), listener,  PR_FALSE);
     target->AddEventListener(NS_LITERAL_STRING(MOZ_DOMContentLoaded), listener,  PR_FALSE);
     target->AddEventListener(NS_LITERAL_STRING(MOZ_DOMLinkAdded), listener,  PR_FALSE);
     target->AddEventListener(NS_LITERAL_STRING(MOZ_DOMWillOpenModalDialog), listener,  PR_FALSE);
@@ -130,7 +129,6 @@ EmbedChromeManager::WindowDestroyed(nsIDOMWindow* aWin)
         }
     }
     mArray.RemoveObjectAt(i);
-    target->RemoveEventListener(NS_LITERAL_STRING(MOZ_DOMTitleChanged), listener,  PR_FALSE);
     target->RemoveEventListener(NS_LITERAL_STRING(MOZ_DOMContentLoaded), listener,  PR_FALSE);
     target->RemoveEventListener(NS_LITERAL_STRING(MOZ_DOMLinkAdded), listener,  PR_FALSE);
     target->RemoveEventListener(NS_LITERAL_STRING(MOZ_DOMWillOpenModalDialog), listener,  PR_FALSE);
