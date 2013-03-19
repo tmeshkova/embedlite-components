@@ -26,6 +26,7 @@ HelperAppLauncherDialog.prototype = {
   show: function hald_show(aLauncher, aContext, aReason) {
     // Check to see if we can open this file or not
     dump("HelperAppLauncherDialog show\n");
+
     if (aLauncher.MIMEInfo.hasDefaultHandler) {
       aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.useSystemDefault;
       aLauncher.launchWithApplication(null, false);

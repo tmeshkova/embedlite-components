@@ -9,7 +9,38 @@ const Cr = Components.results;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-function DownloadProgressListener() {
+let DownloadListener = {
+  init: function () {
+    Services.obs.addObserver(this, "dl-start", true);
+    Services.obs.addObserver(this, "dl-done", true);
+    Services.obs.addObserver(this, "dl-cancel", true);
+    Services.obs.addObserver(this, "dl-fail", true);
+  },
+
+  observe: function (aSubject, aTopic, aData) {
+    let dl = aSubject.QueryInterface(Ci.nsIDownload);
+    switch(aTopic) {
+      case "dl-start":
+        Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-start", id: dl.id}));
+        break;
+      case "dl-cancel" :
+        Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-cancel", id: dl.id}));
+        break;
+      case "dl-fail" :
+        Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-fail", id: dl.id}));
+        break;
+      case "dl-done" :
+        Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-done", id: dl.id}));
+        break;
+    }
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference])
+}
+
+function DownloadProgressListener()
+{
 }
 
 DownloadProgressListener.prototype = {
@@ -32,17 +63,18 @@ DownloadProgressListener.prototype = {
   },
 
   onProgressChange: function dPL_onProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress, aDownload) {
-    dump("Download Progress changed: cur:" + aCurTotalProgress + ", total:" + aMaxTotalProgress + "\n");
+    Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-progress", id: aDownload.id, cur: aCurTotalProgress, max: aMaxTotalProgress}));
   },
 
   onStateChange: function(aWebProgress, aRequest, aState, aStatus, aDownload)
   {
-    dump("Download State change: " + aState + ", status:" + aStatus + " \n");
+    Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-state", id: aDownload.id, state: aState}));
   },
   onSecurityChange: function(aWebProgress, aRequest, aState, aDownload)
   {
-    dump("Download Security change\n");
+    Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-security", id: aDownload.id, state: aState}));
   },
+
 
   //////////////////////////////////////////////////////////////////////////////
   //// nsISupports
@@ -53,7 +85,10 @@ DownloadProgressListener.prototype = {
 // Download Manager UI
 // -----------------------------------------------------------------------
 
-function DownloadManagerUI() { }
+function DownloadManagerUI()
+{
+  dump("DM  UI INITAILIZED\n");
+}
 
 DownloadManagerUI.prototype = {
   classID: Components.ID("{93db15b1-b408-453e-9a2b-6619e168324a}"),
@@ -64,11 +99,19 @@ DownloadManagerUI.prototype = {
              .getService(Ci.nsIDownloadManager);
   },
 
+  get embedservice() {
+    return Cc["@mozilla.org/embedlite-app-service;1"]
+             .getService(Ci.nsIEmbedAppService);
+  },
+
   show: function show(aWindowContext, aDownload, aReason, aUsePrivateUI) {
     dump("DownloadManagerUI show: ctx:" + aWindowContext + ", download:" + aDownload + ", reason:" + aReason + ", usePrivUI:" + aUsePrivateUI + "\n");
     if (!aReason)
       aReason = Ci.nsIDownloadManagerUI.REASON_USER_INTERACTED;
-    this._progress = new DownloadProgressListener();
+    if (!this._progress) {
+        this._progress = new DownloadProgressListener();
+    }
+    DownloadListener.init();
     this.manager.addListener(this._progress);
 
     return;
