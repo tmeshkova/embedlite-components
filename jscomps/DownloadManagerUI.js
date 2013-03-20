@@ -50,16 +50,36 @@ let DownloadUIListener = {
       // Engine DownloadManager notifications
       case "embedui:download": {
         var data = JSON.parse(aData);
-        if (data.msg == "requestDownloadsList") {
-          let downloads = Services.downloads.activeDownloads;
-          if (downloads && downloads.hasMoreElements()) {
-            dump("DownloadManagerUI: message from EmbedUI: " + data.msg + ", downloads:" + downloads + "\n");
-            var downloadsData = [];
-            while (downloads.hasMoreElements()) {
-              let dl = downloads.getNext().QueryInterface(Ci.nsIDownload);
-              downloadsData.push({ id: dl.id, from: dl.source.spec, to: dl.target.spec });
+        switch (data.msg) {
+          case "requestDownloadsList": {
+            let downloads = Services.downloads.activeDownloads;
+            if (downloads && downloads.hasMoreElements()) {
+              dump("DownloadManagerUI: message from EmbedUI: " + data.msg + ", downloads:" + downloads + "\n");
+              var downloadsData = [];
+              while (downloads.hasMoreElements()) {
+                let dl = downloads.getNext().QueryInterface(Ci.nsIDownload);
+                downloadsData.push({ id: dl.id, from: dl.source.spec, to: dl.target.spec });
+              }
+              Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-list", list: downloadsData}));
             }
-            Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-list", list: downloadsData}));
+            break;
+          }
+          case "addDownload": {
+            dump("addDownload: " + data.from + " to: " + data.to + "\n");
+            const nsIWBP = Ci.nsIWebBrowserPersist;
+            var persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist);
+            let ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+            persist.persistFlags = nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
+                                  nsIWBP.PERSIST_FLAGS_BYPASS_CACHE |
+                                  nsIWBP.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+            dump("addDownload here\n")
+            var dl = Services.downloads.addDownload(Ci.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
+                                                    ios.newURI(data.from, null, null),
+                                                    ios.newURI(data.to, null, null),
+                                                    null, null, Math.round(Date.now() * 1000), null, persist, false);
+            persist.progressListener = dl.QueryInterface(Ci.nsIWebProgressListener);
+            persist.saveURI(dl.source, null, null, null, null, dl.targetFile, null);
+            break;
           }
         }
       }
