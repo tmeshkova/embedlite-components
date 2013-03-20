@@ -20,18 +20,49 @@ let DownloadListener = {
   observe: function (aSubject, aTopic, aData) {
     let dl = aSubject.QueryInterface(Ci.nsIDownload);
     switch(aTopic) {
+      // Engine DownloadManager notifications
       case "dl-start":
         Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-start", id: dl.id}));
         break;
-      case "dl-cancel" :
+      case "dl-cancel":
         Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-cancel", id: dl.id}));
         break;
-      case "dl-fail" :
+      case "dl-fail":
         Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-fail", id: dl.id}));
         break;
-      case "dl-done" :
+      case "dl-done":
         Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-done", id: dl.id}));
         break;
+    }
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference])
+}
+
+let DownloadUIListener = {
+  init: function () {
+    Services.obs.addObserver(this, "embedui:download", true);
+  },
+
+  observe: function (aSubject, aTopic, aData) {
+    switch(aTopic) {
+      // Engine DownloadManager notifications
+      case "embedui:download": {
+        var data = JSON.parse(aData);
+        if (data.msg == "requestDownloadsList") {
+          let downloads = Services.downloads.activeDownloads;
+          if (downloads && downloads.hasMoreElements()) {
+            dump("DownloadManagerUI: message from EmbedUI: " + data.msg + ", downloads:" + downloads + "\n");
+            var downloadsData = [];
+            while (downloads.hasMoreElements()) {
+              let dl = downloads.getNext().QueryInterface(Ci.nsIDownload);
+              downloadsData.push({ id: dl.id, from: dl.source.spec, to: dl.target.spec });
+            }
+            Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-list", list: downloadsData}));
+          }
+        }
+      }
     }
   },
 
@@ -65,7 +96,6 @@ DownloadProgressListener.prototype = {
   onProgressChange: function dPL_onProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress, aDownload) {
     Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-progress", id: aDownload.id, cur: aCurTotalProgress, max: aMaxTotalProgress}));
   },
-
   onStateChange: function(aWebProgress, aRequest, aState, aStatus, aDownload)
   {
     Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-state", id: aDownload.id, state: aState}));
@@ -74,7 +104,6 @@ DownloadProgressListener.prototype = {
   {
     Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-security", id: aDownload.id, state: aState}));
   },
-
 
   //////////////////////////////////////////////////////////////////////////////
   //// nsISupports
@@ -91,7 +120,7 @@ function DownloadManagerUI()
 }
 
 DownloadManagerUI.prototype = {
-  classID: Components.ID("{93db15b1-b408-453e-9a2b-6619e168324a}"),
+  classID: Components.ID("{2137921e-910e-11e2-b344-2bda2844afe1}"),
   _progress: null,
 
   get manager() {
@@ -108,11 +137,6 @@ DownloadManagerUI.prototype = {
     dump("DownloadManagerUI show: ctx:" + aWindowContext + ", download:" + aDownload + ", reason:" + aReason + ", usePrivUI:" + aUsePrivateUI + "\n");
     if (!aReason)
       aReason = Ci.nsIDownloadManagerUI.REASON_USER_INTERACTED;
-    if (!this._progress) {
-        this._progress = new DownloadProgressListener();
-    }
-    DownloadListener.init();
-    this.manager.addListener(this._progress);
 
     return;
   },
@@ -127,7 +151,39 @@ DownloadManagerUI.prototype = {
     return;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDownloadManagerUI])
+  initDownloadManager: function initDownloadManager() {
+    dump("DownloadManagerUI initDownloadManager\n");
+    if (!this._progress) {
+      this._progress = new DownloadProgressListener();
+    }
+    DownloadListener.init();
+    DownloadUIListener.init();
+    this.manager.addListener(this._progress);
+    return;
+  },
+
+  observe: function (aSubject, aTopic, aData) {
+    switch(aTopic) {
+      // Engine DownloadManager notifications
+      case "app-startup": {
+        dump("DownloadManagerUI app-startup\n");
+        Services.obs.addObserver(this, "download-manager-initialized", true);
+        Services.tm.mainThread.dispatch(function() {    
+            this.initDownloadManager();
+        }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
+        break;
+      }
+      case "download-manager-initialized": {
+        dump("DownloadManagerUI download-manager-initialized\n");
+        break;
+      }
+      case "quit-application": {
+        dump("DownloadManagerUI quit-application\n");
+      }
+    }
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDownloadManagerUI, Ci.nsIObserver, Ci.nsISupportsWeakReference])
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DownloadManagerUI]);
