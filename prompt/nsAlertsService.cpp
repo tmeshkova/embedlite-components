@@ -41,7 +41,7 @@ NS_IMETHODIMP nsEmbedAlertsService::ShowAlertNotification(const nsAString & aIma
                                                      const nsAString & aAlertText, bool aAlertTextClickable,
                                                      const nsAString & aAlertCookie,
                                                      nsIObserver * aAlertListener,
-                                                     const nsAString & aAlertName)
+                                                     const nsAString & aAlertName, const nsAString & dir, const nsAString & lang)
 {
   printf(">>>>>>Func:%s::%d image:%s, title:%s, text:%s, clickable:%i, cookie:%s, listener:%p, name:%s\n", __PRETTY_FUNCTION__, __LINE__,
          NS_ConvertUTF16toUTF8(aImageUrl).get(),
@@ -59,6 +59,13 @@ NS_IMETHODIMP nsEmbedAlertsService::ShowAlertNotification(const nsAString & aIma
 
   return NS_OK;
 }
+
+NS_IMETHODIMP nsEmbedAlertsService::CloseAlert(const nsAString & name)
+{
+  printf("nsEmbedAlertsService::CloseAlert: name:%s", NS_ConvertUTF16toUTF8(name).get());
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsEmbedAlertsService::OnProgress(const nsAString & aAlertName,
                                           int64_t aProgress,

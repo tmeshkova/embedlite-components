@@ -119,7 +119,7 @@ EmbedChromeListener::HandleEvent(nsIDOMEvent* aEvent)
         nsCOMPtr<nsIDOMHTMLLinkElement> disabledIface = do_QueryInterface(origTarget);
         nsString href;
         bool disabled = true;
-        disabledIface->GetDisabled(&disabled);
+        disabledIface->GetMozDisabled(&disabled);
         if (!disabledIface || disabled) {
             return NS_OK;
         }

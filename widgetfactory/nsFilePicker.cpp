@@ -311,3 +311,17 @@ nsEmbedFilePicker::OnMessageReceived(const char* messageName, const PRUnichar* m
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsEmbedFilePicker::GetDomfile(nsIDOMFile * *aDomfile)
+{
+  printf("nsEmbedFilePicker::GetDomfile NOT IMPLEMENTED\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsEmbedFilePicker::GetDomfiles(nsISimpleEnumerator * *aDomfiles)
+{
+  printf("nsEmbedFilePicker::GetDomfiles NOT IMPLEMENTED\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
