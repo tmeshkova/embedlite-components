@@ -75,7 +75,7 @@ let DownloadUIListener = {
             dump("addDownload here\n")
             var dl = Services.downloads.addDownload(Ci.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
                                                     ios.newURI(data.from, null, null),
-                                                    null,
+                                                    ios.newURI(data.to, null, null),
                                                     null, null, Math.round(Date.now() * 1000), null, persist, false);
             persist.progressListener = dl.QueryInterface(Ci.nsIWebProgressListener);
             persist.saveURI(dl.source, null, null, null, null, dl.targetFile, null);
