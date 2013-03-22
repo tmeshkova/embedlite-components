@@ -140,6 +140,10 @@ DownloadProgressListener.prototype = {
   {
     Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-security", id: aDownload.id, state: aDownload.state}));
   },
+  onDownloadStateChange: function(aState, aDownload)
+  {
+    Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-state", id: aDownload.id, state: aDownload.state}));
+  },
 
   //////////////////////////////////////////////////////////////////////////////
   //// nsISupports
