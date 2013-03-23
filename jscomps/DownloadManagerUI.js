@@ -52,16 +52,14 @@ let DownloadUIListener = {
         var data = JSON.parse(aData);
         switch (data.msg) {
           case "requestDownloadsList": {
-            let downloads = Services.downloads.activeDownloads;
-            if (downloads && downloads.hasMoreElements()) {
-              dump("DownloadManagerUI: message from EmbedUI: " + data.msg + ", downloads:" + downloads + "\n");
-              var downloadsData = [];
-              while (downloads.hasMoreElements()) {
-                let dl = downloads.getNext().QueryInterface(Ci.nsIDownload);
-                downloadsData.push({ id: dl.id, from: dl.source.spec, to: dl.targetFile.path, state: dl.state, cur: dl.amountTransferred, max: dl.size, percent: dl.percentComplete });
-              }
-              Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-list", list: downloadsData}));
+            let db = Services.downloads.DBConnection;
+            let statement = db.createStatement("select * from moz_downloads;");
+            var downloadsData = [];
+            while (statement.executeStep()) {
+              let dl = Services.downloads.getDownload(statement.row.id);
+              downloadsData.push({ id: dl.id, from: dl.source.spec, to: dl.targetFile.path, state: dl.state, cur: dl.amountTransferred, max: dl.size, percent: dl.percentComplete });
             }
+            Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-list", list: downloadsData}));
             break;
           }
           case "pauseDownload": {
