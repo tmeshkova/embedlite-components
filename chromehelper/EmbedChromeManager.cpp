@@ -76,7 +76,7 @@ EmbedChromeManager::Observe(nsISupports *aSubject,
         nsCOMPtr<nsIDOMWindow> win = do_QueryInterface(aSubject, &rv);
         NS_ENSURE_SUCCESS(rv, NS_OK);
         WindowCreated(win);
-    } else if (!strcmp(aTopic, "domwindclosed")) {
+    } else if (!strcmp(aTopic, "domwindowclosed")) {
         nsCOMPtr<nsIDOMWindow> win = do_QueryInterface(aSubject, &rv);
         NS_ENSURE_SUCCESS(rv, NS_OK);
         WindowDestroyed(win);

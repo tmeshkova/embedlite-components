@@ -80,7 +80,7 @@ EmbedTouchManager::Observe(nsISupports *aSubject,
         nsCOMPtr<nsIDOMWindow> win = do_QueryInterface(aSubject, &rv);
         NS_ENSURE_SUCCESS(rv, NS_OK);
         WindowCreated(win);
-    } else if (!strcmp(aTopic, "domwindclosed")) {
+    } else if (!strcmp(aTopic, "domwindowclosed")) {
         nsCOMPtr<nsIDOMWindow> win = do_QueryInterface(aSubject, &rv);
         NS_ENSURE_SUCCESS(rv, NS_OK);
         WindowDestroyed(win);
@@ -131,7 +131,7 @@ EmbedTouchManager::WindowDestroyed(nsIDOMWindow* aWin)
     mWindowCounter--;
     uint32_t id = 0;
     mService->GetIDByWindow(aWin, &id);
-    mService->AddContentListener(id, listener);
+    mService->RemoveContentListener(id, listener);
     if (!mWindowCounter) {
         mService = nullptr;
     }
