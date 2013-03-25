@@ -29,6 +29,7 @@ jscomps/AlertsService.js
 jscomps/LoginManagerPrompter.js
 jscomps/HelperAppDialog.js
 jscomps/DownloadManagerUI.js
+jscomps/EmbedPrefService.js
 "
 
 for str in $FILES_LIST; do

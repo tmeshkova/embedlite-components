@@ -5,6 +5,7 @@ jscomps_manifest_DATA = \
 	LoginManagerPrompter.js \
 	HelperAppDialog.js \
 	DownloadManagerUI.js \
+	EmbedPrefService.js \
 	$(NULL)
 
 INCLUDES = $(DEPS_CFLAGS) 
