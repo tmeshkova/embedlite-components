@@ -23,3 +23,7 @@ contract @mozilla.org/helperapplauncherdialog;1 {e9d277a0-268a-4ec2-bb8c-10fdf3e
 component {4c5563a0-94eb-11e2-a5f4-7f3c5758e2ae} EmbedPrefService.js
 contract @mozilla.org/embedlite-pref-service;1 {4c5563a0-94eb-11e2-a5f4-7f3c5758e2ae}
 category app-startup EmbedPrefService service,@mozilla.org/embedlite-pref-service;1
+
+# ContentPermissionPrompt.js
+component {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5} ContentPermissionPrompt.js
+contract @mozilla.org/content-permission/prompt;1 {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5}

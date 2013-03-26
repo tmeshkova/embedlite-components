@@ -30,6 +30,7 @@ jscomps/LoginManagerPrompter.js
 jscomps/HelperAppDialog.js
 jscomps/DownloadManagerUI.js
 jscomps/EmbedPrefService.js
+jscomps/ContentPermissionPrompt.js
 "
 
 for str in $FILES_LIST; do

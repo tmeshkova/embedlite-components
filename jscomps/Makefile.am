@@ -6,6 +6,7 @@ jscomps_manifest_DATA = \
 	HelperAppDialog.js \
 	DownloadManagerUI.js \
 	EmbedPrefService.js \
+	ContentPermissionPrompt.js \
 	$(NULL)
 
 INCLUDES = $(DEPS_CFLAGS) 
