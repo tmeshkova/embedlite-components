@@ -10,6 +10,14 @@ const Cc = Components.classes;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(Services, "embedlite",
+                                    "@mozilla.org/embedlite-app-service;1",
+                                    "nsIEmbedAppService");
+
+XPCOMUtils.defineLazyServiceGetter(Services, "uuidgenerator",
+                                    "@mozilla.org/uuid-generator;1",
+                                    "nsIUUIDGenerator");
+
 const kEntities = { "geolocation": "geolocation",
                     "desktop-notification": "desktopNotification" };
 
@@ -18,7 +26,12 @@ function ContentPermissionPrompt() {}
 ContentPermissionPrompt.prototype = {
   classID: Components.ID("{C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionPrompt]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionPrompt, Ci.nsIEmbedMessageListener]),
+  _pendingRequests: {},
+
+  _getRandomId: function() {
+    return Services.uuidgenerator.generateUUID().toString();
+  },
 
   handleExistingPermission: function handleExistingPermission(request) {
     let result = Services.perms.testExactPermissionFromPrincipal(request.principal, request.type);
@@ -33,20 +46,25 @@ ContentPermissionPrompt.prototype = {
     return false;
   },
 
-  prompt: function(request) {
-    // Returns true if the request was handled
-    if (this.handleExistingPermission(request))
-       return;
-
-    let entityName = kEntities[request.type];
-    dump("label:" + entityName + ".allow\n");
-    dump("message = " + entityName + ".ask" + request.principal.URI.host + "\n");
+  onMessageReceived: function(messageName, message) {
+    dump("ContentPermissionPrompt.js on message received: top:" + messageName + ", msg:" + message + "\n");
+    var ret = JSON.parse(message);
     // Send Request
-    let checkedDontAsk = false;
-    let msg = "allow";
-    if (msg == "allow") {
+    if (!ret.id) {
+        dump("request id not defined in response\n");
+        return;
+    }
+    let request = this._pendingRequests[ret.id];
+    if (!request) {
+        dump("Wrong request id:" + ret.id + "\n");
+        return;
+    }
+
+    Services.embedlite.removeMessageListener("embedui:premissions", this);
+    let entityName = kEntities[request.type];
+    if (ret.allow) {
       // If the user checked "Don't ask again", make a permanent exception
-      if (checkedDontAsk) {
+      if (ret.checkedDontAsk) {
         Services.perms.addFromPrincipal(request.principal, request.type, Ci.nsIPermissionManager.ALLOW_ACTION);
       } else if (entityName == "desktopNotification") {
         // For notifications, it doesn't make sense to grant permission once. So when the user clicks allow,
@@ -55,12 +73,28 @@ ContentPermissionPrompt.prototype = {
                                         Ci.nsIPermissionManager.EXPIRE_SESSION);
       }
       request.allow();
-    } else if (msg == "dontAllow") {
+    } else {
         // If the user checked "Don't ask again", make a permanent exception
-        if (checkedDontAsk)
+        if (ret.checkedDontAsk)
           Services.perms.addFromPrincipal(request.principal, request.type, Ci.nsIPermissionManager.DENY_ACTION);
         request.cancel();
     }
+    delete this._pendingRequests[ret.id];
+  },
+
+  prompt: function(request) {
+    // Returns true if the request was handled
+    if (this.handleExistingPermission(request))
+       return;
+
+    let entityName = kEntities[request.type];
+
+    dump("idleTime: json:" + Services.embedlite + "\n");
+    Services.embedlite.addMessageListener("embedui:premissions", this);
+    var winid = Services.embedlite.getIDByWindow(request.window);
+    let uniqueid = this._getRandomId();
+    Services.embedlite.sendAsyncMessage(winid, "embed:permissions", JSON.stringify({title: entityName, host: request.principal.URI.host, id: uniqueid}));
+    this._pendingRequests[uniqueid] = request;
   }
 };
 
