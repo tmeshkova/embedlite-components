@@ -45,3 +45,4 @@ ln -s $(pwd)/EmbedLiteJSScripts.manifest $TARGET_DIR/chrome/EmbedLiteJSScripts.m
 rm -rf $TARGET_DIR/chrome/embedlite;
 mkdir -p $TARGET_DIR/chrome/embedlite/content;
 ln -s $(pwd)/jsscripts/embedhelper.js $TARGET_DIR/chrome/embedlite/content/embedhelper.js;
+ln -s $(pwd)/jsscripts/SelectHelper.js $TARGET_DIR/chrome/embedlite/content/SelectHelper.js;
