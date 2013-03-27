@@ -175,7 +175,7 @@ SelectHelper.prototype = {
     evt.initEvent("change", true, true, aElement.defaultView, 0,
                   false, false,
                   false, false, null);
-    setTimeout(function() {
+    content.window.setTimeout(function() {
       aElement.dispatchEvent(evt);
     }, 0);
   }
