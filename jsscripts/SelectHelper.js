@@ -53,12 +53,11 @@ SelectHelper.prototype = {
   },
 
   _handleClick: function(aTarget) {
-    dump("Handle Click\n");
     // if we're busy looking at a select we want to eat any clicks that
     // come to us, but not to process them
     if (this._uiBusy || !this._isMenu(aTarget) || aTarget.disabled)
         return;
-
+    dump("Click handled by SelectHelper\n")
     this._uiBusy = true;
     this.show(aTarget);
     this._uiBusy = false;
@@ -66,13 +65,10 @@ SelectHelper.prototype = {
 
   show: function(aElement) {
     let list = this.getListForElement(aElement);
-    // dump("Send To UI:" + JSON.stringify(list) + "\n");
     let data = sendSyncMessage("embed:select", list)[0];
-    // dump("Recv from UI:" + JSON.stringify(data) + "\n");
     let selected = data.button;
     if (selected == -1)
         return;
-
     var changed = false;
     if (aElement instanceof Ci.nsIDOMXULMenuListElement) {
       aElement.selectedIndex = selected;
@@ -109,12 +105,6 @@ SelectHelper.prototype = {
       listitems: []
     };
 
-    if (aElement.multiple) {
-      result.buttons = [
-        Strings.browser.GetStringFromName("selectHelper.closeMultipleSelectDialog")
-      ];
-    }
-
     let index = 0;
     this.forOptions(aElement, function(aNode, aOptions) {
       let item = {
@@ -147,13 +137,13 @@ SelectHelper.prototype = {
 
     for (let i = 0; i < numChildren; i++) {
       let child = children[i];
-      if (child instanceof HTMLOptionElement ||
+      if (child instanceof Ci.nsIDOMHTMLOptionElement ||
           child instanceof Ci.nsIDOMXULSelectControlItemElement) {
         // This is a regular choice under no group.
         aFunction.call(this, child, {
           isGroup: false, inGroup: false
         });
-      } else if (child instanceof HTMLOptGroupElement) {
+      } else if (child instanceof Ci.nsIDOMHTMLOptGroupElement) {
         aFunction.call(this, child, {
           isGroup: true, inGroup: false
         });
