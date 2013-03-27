@@ -27,6 +27,7 @@ EmbedPrefService.prototype = {
       case "app-startup": {
         dump("EmbedPrefService app-startup\n");
         Services.obs.addObserver(this, "embedui:prefs", true);
+        Services.obs.addObserver(this, "embedui:saveprefs", true);
         break;
       }
       case "embedui:prefs": {
@@ -50,6 +51,10 @@ EmbedPrefService.prototype = {
             }
         }
         Services.obs.notifyObservers(null, "embed:prefs", JSON.stringify(retPrefs));
+        break;
+      }
+      case "embedui:saveprefs": {
+        Services.prefs.savePrefFile(null);
         break;
       }
     }
