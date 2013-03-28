@@ -21,6 +21,46 @@ function EmbedPrefService()
 EmbedPrefService.prototype = {
   classID: Components.ID("{4c5563a0-94eb-11e2-a5f4-7f3c5758e2ae}"),
 
+  _getPrefs: function AC_getPrefs() {
+    let list = Services.prefs.getChildList("", {}).filter(function(element) {
+      // Avoid displaying "private" preferences
+      return !(/^capability\./.test(element));
+    });
+
+    let prefs = list.sort().map(this._getPref, this);
+    return prefs;
+  },
+
+  _getPref: function AC_getPref(aPrefName) {
+    let pref = {
+      name: aPrefName,
+      value:  "",
+      modified: Services.prefs.prefHasUserValue(aPrefName),
+      lock: Services.prefs.prefIsLocked(aPrefName),
+      type: Services.prefs.getPrefType(aPrefName)
+    };
+
+    try {
+      switch (pref.type) {
+        case Ci.nsIPrefBranch.PREF_BOOL:
+          pref.value = Services.prefs.getBoolPref(aPrefName).toString();
+          break;
+        case Ci.nsIPrefBranch.PREF_INT:
+          pref.value = Services.prefs.getIntPref(aPrefName).toString();
+          break;
+        default:
+        case Ci.nsIPrefBranch.PREF_STRING:
+          pref.value = Services.prefs.getComplexValue(aPrefName, Ci.nsISupportsString).data;
+          // Try in case it's a localized string (will throw an exception if not)
+          if (pref.default && /^chrome:\/\/.+\/locale\/.+\.properties/.test(pref.value))
+            pref.value = Services.prefs.getComplexValue(aPrefName, Ci.nsIPrefLocalizedString).data;
+          break;
+      }
+    } catch (e) {}
+
+    return pref;
+  },
+
   observe: function (aSubject, aTopic, aData) {
     switch(aTopic) {
       // Engine DownloadManager notifications
@@ -28,6 +68,7 @@ EmbedPrefService.prototype = {
         dump("EmbedPrefService app-startup\n");
         Services.obs.addObserver(this, "embedui:prefs", true);
         Services.obs.addObserver(this, "embedui:saveprefs", true);
+        Services.obs.addObserver(this, "embedui:allprefs", true);
         break;
       }
       case "embedui:prefs": {
@@ -56,6 +97,10 @@ EmbedPrefService.prototype = {
       case "embedui:saveprefs": {
         Services.prefs.savePrefFile(null);
         break;
+      }
+      case "embedui:allprefs": {
+        let prefs = this._getPrefs()
+        Services.obs.notifyObservers(null, "embed:allprefs", JSON.stringify(prefs));
       }
     }
   },
