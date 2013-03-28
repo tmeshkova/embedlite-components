@@ -7,6 +7,7 @@ jscomps_manifest_DATA = \
 	DownloadManagerUI.js \
 	EmbedPrefService.js \
 	ContentPermissionPrompt.js \
+	EmbedLiteGlobalHelper.js \
 	$(NULL)
 
 INCLUDES = $(DEPS_CFLAGS) 

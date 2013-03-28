@@ -31,6 +31,7 @@ jscomps/HelperAppDialog.js
 jscomps/DownloadManagerUI.js
 jscomps/EmbedPrefService.js
 jscomps/ContentPermissionPrompt.js
+jscomps/EmbedLiteGlobalHelper.js
 "
 
 for str in $FILES_LIST; do
