@@ -10,6 +10,13 @@ const Cr = Components.results;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(Services, "embedlite",
+                                    "@mozilla.org/embedlite-app-service;1",
+                                    "nsIEmbedAppService");
+XPCOMUtils.defineLazyServiceGetter(Services, "uuidgenerator",
+                                    "@mozilla.org/uuid-generator;1",
+                                    "nsIUUIDGenerator");
+
 /* ==================== LoginManagerPrompter ==================== */
 /*
  * LoginManagerPrompter
@@ -25,11 +32,16 @@ function LoginManagerPrompter() {
 LoginManagerPrompter.prototype = {
 
     classID : Components.ID("72de694e-6c88-11e2-a4ee-6b515bdf0cb7"),
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManagerPrompter]),
+    QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManagerPrompter, Ci.nsIEmbedMessageListener]),
 
     _factory       : null,
     _window       : null,
     _debug         : false, // mirrors signon.debug
+    _pendingRequests: {},
+
+    _getRandomId: function() {
+        return Services.uuidgenerator.generateUUID().toString();
+    },
 
     __pwmgr : null, // Password Manager service
     get _pwmgr() {
@@ -60,20 +72,6 @@ LoginManagerPrompter.prototype = {
         }
 
         return this.__strBundle;
-    },
-
-    __brandBundle : null, // String bundle for L10N
-    get _brandBundle() {
-        if (!this.__brandBundle) {
-            var bunService = Cc["@mozilla.org/intl/stringbundle;1"].
-                             getService(Ci.nsIStringBundleService);
-            this.__brandBundle = bunService.createBundle(
-                        "chrome://branding/locale/brand.properties");
-            if (!this.__brandBundle)
-                throw "Branding string bundle not present!";
-        }
-
-        return this.__brandBundle;
     },
 
 
@@ -131,6 +129,25 @@ LoginManagerPrompter.prototype = {
         this._showSaveLoginNotification(aLogin);
     },
 
+    onMessageReceived: function(messageName, message) {
+        dump("LoginManagerPrompter.js on message received: top:" + messageName + ", msg:" + message + "\n");
+        var ret = JSON.parse(message);
+        // Send Request
+        if (!ret.id) {
+            dump("request id not defined in response\n");
+            return;
+        }
+        let request = this._pendingRequests[ret.id];
+        if (!request) {
+            dump("Wrong request id:" + ret.id + "\n");
+            return;
+        }
+        request[ret.buttonidx].callback();
+
+        Services.embedlite.removeMessageListener("embedui:login", this);
+
+        delete this._pendingRequests[ret.id];
+    },
 
     /*
      * _showLoginNotification
@@ -141,9 +158,6 @@ LoginManagerPrompter.prototype = {
     _showLoginNotification : function (aName, aText, aButtons) {
         this.log("Adding new " + aName + " notification bar");
         let notifyWin = this._window.top;
-        let chromeWin = this._getChromeWindow(notifyWin).wrappedJSObject;
-        let browser = chromeWin.BrowserApp.getBrowserForWindow(notifyWin);
-        let tabID = chromeWin.BrowserApp.getTabForBrowser(browser).id;
 
         // The page we're going to hasn't loaded yet, so we want to persist
         // across the first location change.
@@ -153,14 +167,16 @@ LoginManagerPrompter.prototype = {
         // heuristically determine when to ignore such location changes, so
         // we'll try ignoring location changes based on a time interval.
 
-        let options = {
+        let logoptions = {
             persistWhileVisible: true,
             timeout: Date.now() + 10000
         }
 
-        var nativeWindow = this._getNativeWindow();
-        if (nativeWindow)
-            nativeWindow.doorhanger.show(aText, aName, aButtons, tabID, options);
+        Services.embedlite.addMessageListener("embedui:login", this);
+        var winid = Services.embedlite.getIDByWindow(notifyWin);
+        let uniqueid = this._getRandomId();
+        Services.embedlite.sendAsyncMessage(winid, "embed:login", JSON.stringify({name: aName, buttons: aButtons, options: logoptions, id: uniqueid}));
+        this._pendingRequests[uniqueid] = aButtons;
     },
 
 
@@ -173,37 +189,13 @@ LoginManagerPrompter.prototype = {
      *
      */
     _showSaveLoginNotification : function (aLogin) {
-
-        // Ugh. We can't use the strings from the popup window, because they
-        // have the access key marked in the string (eg "Mo&zilla"), along
-        // with some weird rules for handling access keys that do not occur
-        // in the string, for L10N. See commonDialog.js's setLabelForNode().
-        var neverButtonText =
-              this._getLocalizedString("notifyBarNeverForSiteButtonText");
-        var neverButtonAccessKey =
-              this._getLocalizedString("notifyBarNeverForSiteButtonAccessKey");
-        var rememberButtonText =
-              this._getLocalizedString("notifyBarRememberButtonText");
-        var rememberButtonAccessKey =
-              this._getLocalizedString("notifyBarRememberButtonAccessKey");
-        var notNowButtonText =
-              this._getLocalizedString("notifyBarNotNowButtonText");
-        var notNowButtonAccessKey =
-              this._getLocalizedString("notifyBarNotNowButtonAccessKey");
-
-        var brandShortName =
-              this._brandBundle.GetStringFromName("brandShortName");
         var displayHost = this._getShortDisplayHost(aLogin.hostname);
         var notificationText;
         if (aLogin.username) {
             var displayUser = this._sanitizeUsername(aLogin.username);
-            notificationText  = this._getLocalizedString(
-                                        "saveLoginText",
-                                        [brandShortName, displayUser, displayHost]);
+            notificationText  = this._getLocalizedString("savePassword", [displayUser, displayHost]);
         } else {
-            notificationText  = this._getLocalizedString(
-                                        "saveLoginTextNoUsername",
-                                        [brandShortName, displayHost]);
+            notificationText  = this._getLocalizedString("savePasswordNoUser", [displayHost]);
         }
 
         // The callbacks in |buttons| have a closure to access the variables
@@ -211,34 +203,18 @@ LoginManagerPrompter.prototype = {
         // without a getService() call.
         var pwmgr = this._pwmgr;
 
-
         var buttons = [
-            // "Remember" button
             {
-                label:     rememberButtonText,
-                accessKey: rememberButtonAccessKey,
-                popup:     null,
+                label: this._getLocalizedString("saveButton"),
                 callback: function() {
                     pwmgr.addLogin(aLogin);
                 }
             },
-
-            // "Never for this site" button
             {
-                label:     neverButtonText,
-                accessKey: neverButtonAccessKey,
-                popup:     null,
+                label: this._getLocalizedString("dontSaveButton"),
                 callback: function() {
-                    pwmgr.setLoginSavingEnabled(aLogin.hostname, false);
+                    // Don't set a permanent exception
                 }
-            },
-
-            // "Not now" button
-            {
-                label:     notNowButtonText,
-                accessKey: notNowButtonAccessKey,
-                popup:     null,
-                callback:  function() { /* NOP */ }
             }
         ];
 
@@ -267,22 +243,10 @@ LoginManagerPrompter.prototype = {
         var notificationText;
         if (aOldLogin.username) {
             let displayUser = this._sanitizeUsername(aOldLogin.username);
-            notificationText  = this._getLocalizedString(
-                                          "passwordChangeText",
-                                          [displayUser]);
+            notificationText  = this._getLocalizedString("updatePassword", [displayUser]);
         } else {
-            notificationText  = this._getLocalizedString(
-                                          "passwordChangeTextNoUser");
+            notificationText  = this._getLocalizedString("updatePasswordNoUser");
         }
-
-        var changeButtonText =
-              this._getLocalizedString("notifyBarChangeButtonText");
-        var changeButtonAccessKey =
-              this._getLocalizedString("notifyBarChangeButtonAccessKey");
-        var dontChangeButtonText =
-              this._getLocalizedString("notifyBarDontChangeButtonText");
-        var dontChangeButtonAccessKey =
-              this._getLocalizedString("notifyBarDontChangeButtonAccessKey");
 
         // The callbacks in |buttons| have a closure to access the variables
         // in scope here; set one to |this._pwmgr| so we can get back to pwmgr
@@ -290,21 +254,14 @@ LoginManagerPrompter.prototype = {
         var self = this;
 
         var buttons = [
-            // "Yes" button
             {
-                label:     changeButtonText,
-                accessKey: changeButtonAccessKey,
-                popup:     null,
+                label: this._getLocalizedString("updateButton"),
                 callback:  function() {
                     self._updateLogin(aOldLogin, aNewPassword);
                 }
             },
-
-            // "No" button
             {
-                label:     dontChangeButtonText,
-                accessKey: dontChangeButtonAccessKey,
-                popup:     null,
+                label: this._getLocalizedString("dontUpdateButton"),
                 callback:  function() {
                     // do nothing
                 }
@@ -378,43 +335,6 @@ LoginManagerPrompter.prototype = {
     },
 
     /*
-     * _getChromeWindow
-     *
-     * Given a content DOM window, returns the chrome window it's in.
-     */
-    _getChromeWindow: function (aWindow) {
-        var chromeWin = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIWebNavigation)
-                               .QueryInterface(Ci.nsIDocShell)
-                               .chromeEventHandler.ownerDocument.defaultView;
-        return chromeWin;
-    },
-
-    /*
-     * _getNativeWindow
-     *
-     * Returns the NativeWindow to this prompter, or null if there isn't
-     * a NativeWindow available (w/ error sent to logcat).
-     */
-    _getNativeWindow : function () {
-        let nativeWindow = null;
-        try {
-            let notifyWin = this._window.top;
-            let chromeWin = this._getChromeWindow(notifyWin).wrappedJSObject;
-            if (chromeWin.NativeWindow) {
-                nativeWindow = chromeWin.NativeWindow;
-            } else {
-                Cu.reportError("NativeWindow not available on window");
-            }
-
-        } catch (e) {
-            // If any errors happen, just assume no native window helper.
-            Cu.reportError("No NativeWindow available: " + e);
-        }
-        return nativeWindow;
-    },
-
-    /*
      * _getLocalizedString
      *
      * Can be called as:
@@ -428,11 +348,21 @@ LoginManagerPrompter.prototype = {
      *
      */ 
     _getLocalizedString : function (key, formatArgs) {
-        if (formatArgs)
+        if (formatArgs) {
+            try {
             return this._strBundle.formatStringFromName(
                                         key, formatArgs, formatArgs.length);
-        else
+            } catch (e) {
+            return key + formatArgs.join();
+            }
+        }
+        else {
+            try {
             return this._strBundle.GetStringFromName(key);
+            } catch (e) {
+            return key;
+            }
+        }
     },
 
 

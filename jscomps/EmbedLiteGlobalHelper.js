@@ -23,14 +23,31 @@ EmbedLiteGlobalHelper.prototype = {
       // Engine DownloadManager notifications
       case "app-startup": {
         dump("EmbedLiteGlobalHelper app-startup\n");
+        Services.obs.addObserver(this, "invalidformsubmit", false);
+        Services.obs.addObserver(this, "xpcom-shutdown", false);
         // Init LoginManager
         Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+        break;
+      }
+      case "invalidformsubmit": {
+        dump("EmbedLiteGlobalHelper invalidformsubmit\n");
+        break;
+      }
+      case "xpcom-shutdown": {
+        dump("EmbedLiteGlobalHelper xpcom-shutdown\n");
+        Services.obs.removeObserver(this, "invalidformsubmit", false);
         break;
       }
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference])
+  notifyInvalidSubmit: function notifyInvalidSubmit(aFormElement, aInvalidElements) {
+    dump("NOT IMPLEMENTED Invalid Form Submit, need to do something about it\n");
+    if (!aInvalidElements.length)
+      return;
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference, Ci.nsIFormSubmitObserver])
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([EmbedLiteGlobalHelper]);
