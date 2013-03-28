@@ -1,5 +1,6 @@
 jscomps_manifestdir=$(libdir)/mozembedlite/components
 jscomps_manifest_DATA = \
+	EmbedLiteJSComponents.manifest \
 	AboutRedirector.js \
 	AlertsService.js \
 	LoginManagerPrompter.js \

@@ -4,4 +4,9 @@ jsscripts_manifest_DATA = \
 	SelectHelper.js \
 	$(NULL)
 
+manifestsscript_manifestdir=$(libdir)/mozembedlite/chrome
+manifestsscript_manifest_DATA = \
+	EmbedLiteJSScripts.manifest \
+	$(NULL)
+
 INCLUDES = $(DEPS_CFLAGS) 
