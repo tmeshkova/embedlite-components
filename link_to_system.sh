@@ -32,6 +32,7 @@ jscomps/DownloadManagerUI.js
 jscomps/EmbedPrefService.js
 jscomps/ContentPermissionPrompt.js
 jscomps/EmbedLiteGlobalHelper.js
+jscomps/EmbedLiteConsoleListener.js
 "
 
 for str in $FILES_LIST; do
