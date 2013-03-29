@@ -14,12 +14,18 @@ XPCOMUtils.defineLazyServiceGetter(Services, 'env',
                                   'nsIEnvironment');
 // Common helper service
 
-function SPConsoleListener() {
+function SPConsoleListener(dumpStdOut) {
+  this._dumpToStdOut = dumpStdOut;
 }
 
 SPConsoleListener.prototype = {
+  _dumpToStdOut: false,
   observe: function(msg) {
-    dump("CONSOLE: " + JSON.stringify(msg) + "\n");
+    if (this._dumpToStdOut) {
+      dump("CONSOLE: " + JSON.stringify(msg) + "\n");
+    } else {
+      Services.obs.notifyObservers(null, "embed:logger", JSON.stringify(msg));
+    }
     return;
   },
 
@@ -37,16 +43,19 @@ EmbedLiteConsoleListener.prototype = {
     switch(aTopic) {
       // Engine DownloadManager notifications
       case "app-startup": {
-        var runConsoleEnv = false;
+        let dumpToStdOut = false;
+        var runConsoleEnv = 0;
         try {
           runConsoleEnv = Services.env.get('EMBED_CONSOLE');
+          dumpToStdOut = runConsoleEnv == 1;
         } catch (e) {}
-        var runConsolePref = false;
+        var runConsolePref = 0;
         try {
-          runConsolePref = Services.prefs.getBoolPref("embedlite.console_log.enabled");
+          runConsolePref = Services.prefs.getIntPref("embedlite.console_log.enabled");
+          dumpToStdOut = runConsolePref == 1;
         } catch (e) {/*pref is missing*/ }
-        if (runConsolePref || runConsoleEnv) {
-          let listener = new SPConsoleListener();
+        if (runConsolePref > 0 || runConsoleEnv > 0) {
+          let listener = new SPConsoleListener(dumpToStdOut);
           Services.console.registerListener(listener);
         }
         break;
