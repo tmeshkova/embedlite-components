@@ -19,34 +19,8 @@ function SPConsoleListener() {
 
 SPConsoleListener.prototype = {
   observe: function(msg) {
-    let m = { message: msg.message,
-              errorMessage: null,
-              sourceName: null,
-              sourceLine: null,
-              lineNumber: null,
-              columnNumber: null,
-              category: null,
-              windowID: null,
-              isScriptError: false,
-              isWarning: false,
-              isException: false,
-              isStrict: false };
-    if (msg instanceof Ci.nsIScriptError) {
-      m.errorMessage  = msg.errorMessage;
-      m.sourceName    = msg.sourceName;
-      m.sourceLine    = msg.sourceLine;
-      m.lineNumber    = msg.lineNumber;
-      m.columnNumber  = msg.columnNumber;
-      m.category      = msg.category;
-      m.windowID      = msg.outerWindowID;
-      m.isScriptError = true;
-      m.isWarning     = ((msg.flags & Ci.nsIScriptError.warningFlag) === 1);
-      m.isException   = ((msg.flags & Ci.nsIScriptError.exceptionFlag) === 1);
-      m.isStrict      = ((msg.flags & Ci.nsIScriptError.strictFlag) === 1);
-    }
-    dump("CONSOLE: " + JSON.stringify(m) + "\n");
-    if (!m.isScriptError && m.message === "SENTINEL")
-      Services.console.unregisterListener(this);
+    dump("CONSOLE: " + JSON.stringify(msg) + "\n");
+    return;
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener])
