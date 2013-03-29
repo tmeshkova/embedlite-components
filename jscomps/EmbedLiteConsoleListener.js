@@ -16,17 +16,35 @@ XPCOMUtils.defineLazyServiceGetter(Services, 'env',
 
 function SPConsoleListener(dumpStdOut) {
   this._dumpToStdOut = dumpStdOut;
+  this._cacheLogs = true;
 }
 
 SPConsoleListener.prototype = {
+  _cacheLogs: true,
+  _startupCachedLogs: [],
   _dumpToStdOut: false,
   observe: function(msg) {
     if (this._dumpToStdOut) {
       dump("CONSOLE: " + JSON.stringify(msg) + "\n");
     } else {
-      Services.obs.notifyObservers(null, "embed:logger", JSON.stringify(msg));
+      if (this._cacheLogs) {
+        this._startupCachedLogs.push(msg);
+      } else {
+        Services.obs.notifyObservers(null, "embed:logger", JSON.stringify({ multiple: false, log: msg }));
+      }
     }
-    return;
+  },
+  clearCache: function() {
+      this._cacheLogs = false;
+      this._startupCachedLogs = null;
+  },
+
+  flushCache: function() {
+    if (this._cacheLogs) {
+      this._cacheLogs = false;
+      Services.obs.notifyObservers(null, "embed:logger", JSON.stringify({ multiple: true, log: this._startupCachedLogs }));
+      this._startupCachedLogs = null;
+    }
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener])
@@ -38,6 +56,8 @@ function EmbedLiteConsoleListener()
 
 EmbedLiteConsoleListener.prototype = {
   classID: Components.ID("{6b21b5a8-9816-11e2-86f8-fb54170a814d}"),
+  _enabled: false,
+  _listener: null,
 
   observe: function (aSubject, aTopic, aData) {
     switch(aTopic) {
@@ -55,8 +75,24 @@ EmbedLiteConsoleListener.prototype = {
           dumpToStdOut = runConsolePref == 1;
         } catch (e) {/*pref is missing*/ }
         if (runConsolePref > 0 || runConsoleEnv > 0) {
-          let listener = new SPConsoleListener(dumpToStdOut);
-          Services.console.registerListener(listener);
+          this._listener = new SPConsoleListener(dumpToStdOut);
+          Services.console.registerListener(this._listener);
+          this._enabled = true;
+          Services.obs.addObserver(this, "embedui:logger", true);
+        }
+        break;
+      }
+      case "embedui:logger": {
+        var data = JSON.parse(aData);
+        if (data.enabled) {
+          if (this._enabled) {
+            this._listener.flushCache();
+          } else {
+            Services.console.registerListener(this._listener);
+          }
+        } else if (!data.enabled && this._enabled) {
+          Services.console.unregisterListener(this._listener);
+          this._listener.clearCache();
         }
         break;
       }
