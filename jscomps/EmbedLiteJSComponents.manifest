@@ -1,6 +1,6 @@
 # EmbedLiteConsoleListener.js
 component {6b21b5a8-9816-11e2-86f8-fb54170a814d} EmbedLiteConsoleListener.js
-contract @mozilla.org/embedlite-helper-component;1 {6b21b5a8-9816-11e2-86f8-fb54170a814d}
+contract @mozilla.org/embedlite-console-listener;1 {6b21b5a8-9816-11e2-86f8-fb54170a814d}
 category app-startup EmbedLiteConsoleListener service,@mozilla.org/embedlite-console-listener;1
 
 # AlertsService.js
