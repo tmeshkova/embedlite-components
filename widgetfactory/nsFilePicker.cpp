@@ -13,10 +13,8 @@
 #include "nsIURI.h"
 #include "nsIVariant.h"
 #include "nsArrayEnumerator.h"
-// Would be nice to get nsDOMFile.h using nsStringGlue.h
-#define nsString_h___
-#include "nsDOMFile.h"
-#undef nsString_h___
+#include "nsIDOMFile.h"
+#include "nsIDOMWindowUtils.h"
 
 //-----------------------------
 
@@ -328,8 +326,10 @@ nsEmbedFilePicker::GetDomfile(nsIDOMFile * *aDomfile)
     return NS_OK;
   }
 
-  nsRefPtr<nsDOMFileFile> domFile = new nsDOMFileFile(localFile);
-  domFile.forget(aDomfile);
+  nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(mWin);
+  nsCOMPtr<nsIDOMFile> file;
+  utils->WrapDOMFile(localFile, getter_AddRefs(file));
+  file.forget(aDomfile);
   return NS_OK;
 }
 
@@ -338,9 +338,11 @@ class nsBaseFilePickerEnumerator : public nsISimpleEnumerator
 public:
   NS_DECL_ISUPPORTS
 
-  nsBaseFilePickerEnumerator(nsISimpleEnumerator* iterator)
+  nsBaseFilePickerEnumerator(nsISimpleEnumerator* iterator, nsIDOMWindow* aWin)
     : mIterator(iterator)
-  {}
+  {
+    utils = do_GetInterface(aWin);
+  }
 
   virtual ~nsBaseFilePickerEnumerator()
   {}
@@ -361,8 +363,9 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIDOMFile> domFile = new nsDOMFileFile(localFile);
-    domFile.forget(aResult);
+    nsCOMPtr<nsIDOMFile> file;
+    utils->WrapDOMFile(localFile, getter_AddRefs(file));
+    file.forget(aResult);
     return NS_OK;
   }
 
@@ -374,6 +377,7 @@ public:
 
 private:
   nsCOMPtr<nsISimpleEnumerator> mIterator;
+  nsCOMPtr<nsIDOMWindowUtils> utils;
 };
 
 NS_IMPL_ISUPPORTS1(nsBaseFilePickerEnumerator, nsISimpleEnumerator)
@@ -386,7 +390,7 @@ nsEmbedFilePicker::GetDomfiles(nsISimpleEnumerator * *aDomfiles)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<nsBaseFilePickerEnumerator> retIter =
-    new nsBaseFilePickerEnumerator(iter);
+    new nsBaseFilePickerEnumerator(iter, mWin);
 
   retIter.forget(aDomfiles);
   return NS_OK;
