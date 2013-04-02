@@ -10,6 +10,7 @@ jscomps_manifest_DATA = \
 	ContentPermissionPrompt.js \
 	EmbedLiteGlobalHelper.js \
 	EmbedLiteConsoleListener.js \
+	EmbedLiteSyncService.js \
 	$(NULL)
 
 INCLUDES = $(DEPS_CFLAGS) 

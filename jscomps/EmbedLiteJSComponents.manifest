@@ -37,3 +37,8 @@ contract @mozilla.org/content-permission/prompt;1 {C6E8C44D-9F39-4AF7-BCC0-76E38
 component {6322b72e-9764-11e2-8566-cbaca05819ea} EmbedLiteGlobalHelper.js
 contract @mozilla.org/embedlite-helper-component;1 {6322b72e-9764-11e2-8566-cbaca05819ea}
 category app-startup EmbedLiteGlobalHelper service,@mozilla.org/embedlite-helper-component;1
+
+# EmbedLiteSyncService.js
+component {36896ad0-9b49-11e2-ae7c-6f7993904c41} EmbedLiteSyncService.js
+contract @mozilla.org/embedlite-sync-component;1 {36896ad0-9b49-11e2-ae7c-6f7993904c41}
+category app-startup EmbedLiteSyncService service,@mozilla.org/embedlite-sync-component;1
