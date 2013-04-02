@@ -15,8 +15,8 @@ libhistory_la_LIBADD = \
     $(ENGINE_LIBS) \
     $(NULL)
 
-IDL = nsIEmbedLiteHistory
-EmbedHistoryListener.cpp: $(IDL).h
-$(IDL).h: $(IDL).idl
-	$(PYTHON) $(SDK_DIR)/sdk/bin/header.py -I$(IDL_DIR) -I. $(srcdir)/$(IDL).idl -o $(IDL).h
-	$(PYTHON) $(SDK_DIR)/sdk/bin/typelib.py -I$(IDL_DIR) -I. $(srcdir)/$(IDL).idl -o $(IDL).xpt
+# IDL = nsIEmbedLiteHistory
+# EmbedHistoryListener.cpp: $(IDL).h
+# $(IDL).h: $(IDL).idl
+# 	$(PYTHON) $(SDK_DIR)/sdk/bin/header.py -I$(IDL_DIR) -I. $(srcdir)/$(IDL).idl -o $(IDL).h
+# 	$(PYTHON) $(SDK_DIR)/sdk/bin/typelib.py -I$(IDL_DIR) -I. $(srcdir)/$(IDL).idl -o $(IDL).xpt
