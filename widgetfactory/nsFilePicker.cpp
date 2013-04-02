@@ -13,6 +13,10 @@
 #include "nsIURI.h"
 #include "nsIVariant.h"
 #include "nsArrayEnumerator.h"
+// Would be nice to get nsDOMFile.h using nsStringGlue.h
+#define nsString_h___
+#include "nsDOMFile.h"
+#undef nsString_h___
 
 //-----------------------------
 
@@ -315,13 +319,75 @@ nsEmbedFilePicker::OnMessageReceived(const char* messageName, const PRUnichar* m
 NS_IMETHODIMP
 nsEmbedFilePicker::GetDomfile(nsIDOMFile * *aDomfile)
 {
-  printf("nsEmbedFilePicker::GetDomfile NOT IMPLEMENTED\n");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIFile> localFile;
+  nsresult rv = GetFile(getter_AddRefs(localFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!localFile) {
+    *aDomfile = nullptr;
+    return NS_OK;
+  }
+
+  nsRefPtr<nsDOMFileFile> domFile = new nsDOMFileFile(localFile);
+  domFile.forget(aDomfile);
+  return NS_OK;
 }
+
+class nsBaseFilePickerEnumerator : public nsISimpleEnumerator
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  nsBaseFilePickerEnumerator(nsISimpleEnumerator* iterator)
+    : mIterator(iterator)
+  {}
+
+  virtual ~nsBaseFilePickerEnumerator()
+  {}
+
+  NS_IMETHOD
+  GetNext(nsISupports** aResult)
+  {
+    nsCOMPtr<nsISupports> tmp;
+    nsresult rv = mIterator->GetNext(getter_AddRefs(tmp));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!tmp) {
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIFile> localFile = do_QueryInterface(tmp);
+    if (!localFile) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIDOMFile> domFile = new nsDOMFileFile(localFile);
+    domFile.forget(aResult);
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  HasMoreElements(bool* aResult)
+  {
+    return mIterator->HasMoreElements(aResult);
+  }
+
+private:
+  nsCOMPtr<nsISimpleEnumerator> mIterator;
+};
+
+NS_IMPL_ISUPPORTS1(nsBaseFilePickerEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsEmbedFilePicker::GetDomfiles(nsISimpleEnumerator * *aDomfiles)
 {
-  printf("nsEmbedFilePicker::GetDomfiles NOT IMPLEMENTED\n");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsISimpleEnumerator> iter;
+  nsresult rv = GetFiles(getter_AddRefs(iter));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<nsBaseFilePickerEnumerator> retIter =
+    new nsBaseFilePickerEnumerator(iter);
+
+  retIter.forget(aDomfiles);
+  return NS_OK;
 }
