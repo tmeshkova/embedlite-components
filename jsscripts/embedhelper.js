@@ -38,6 +38,8 @@ EmbedHelper.prototype = {
   _init: function()
   {
     dump("Init Called:" + this + "\n");
+    Services.prefs.setBoolPref("embedlite.azpc.handle.singletap", false);
+    Services.prefs.setBoolPref("embedlite.azpc.json.singletap", true);
     addEventListener("touchstart", this, false);
     addEventListener("touchmove", this, false);
     addEventListener("touchend", this, false);
@@ -66,8 +68,73 @@ EmbedHelper.prototype = {
     }
   },
 
+  _touchElement: null,
+
   receiveMessage: function receiveMessage(aMessage) {
-    dump("Child Script: Message: name:" + aMessage.name + ", json:" + JSON.stringify(aMessage.json) + "\n");
+    switch (aMessage.name) {
+      case "Gesture:SingleTap": {
+        let element = this._touchElement;
+        if (element) {
+          try {
+            let [x, y] = [aMessage.json.x, aMessage.json.y];
+            if (ElementTouchHelper.isElementClickable(element)) {
+              [x, y] = this._moveClickPoint(element, x, y);
+            }
+
+            this._sendMouseEvent("mousemove", element, x, y);
+            this._sendMouseEvent("mousedown", element, x, y);
+            this._sendMouseEvent("mouseup",   element, x, y);
+
+          } catch(e) {
+            Cu.reportError(e);
+          }
+        }
+        this._touchElement = null;
+        break;
+      }
+      default: {
+        dump("Child Script: Message: name:" + aMessage.name + ", json:" + JSON.stringify(aMessage.json) + "\n");
+      }
+    }
+  },
+
+  _moveClickPoint: function(aElement, aX, aY) {
+    // the element can be out of the aX/aY point because of the touch radius
+    // if outside, we gracefully move the touch point to the edge of the element
+    if (!(aElement instanceof Ci.nsIDOMHTMLHtmlElement)) {
+      let isTouchClick = true;
+      let rects = ElementTouchHelper.getContentClientRects(aElement);
+      for (let i = 0; i < rects.length; i++) {
+        let rect = rects[i];
+        let inBounds =
+          (aX > rect.left && aX < (rect.left + rect.width)) &&
+          (aY > rect.top && aY < (rect.top + rect.height));
+        if (inBounds) {
+          isTouchClick = false;
+          break;
+        }
+        }
+
+      if (isTouchClick) {
+        let rect = rects[0];
+        // if either width or height is zero, we don't want to move the click to the edge of the element. See bug 757208
+        if (rect.width != 0 && rect.height != 0) {
+          aX = Math.min(Math.floor(rect.left + rect.width), Math.max(Math.ceil(rect.left), aX));
+          aY = Math.min(Math.floor(rect.top + rect.height), Math.max(Math.ceil(rect.top),  aY));
+        }
+      }
+    }
+    return [aX, aY];
+  },
+
+  _sendMouseEvent: function _sendMouseEvent(aName, aElement, aX, aY) {
+    let window = aElement.ownerDocument.defaultView;
+    try {
+      let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      cwu.sendMouseEventToWindow(aName, aX, aY, 0, 1, 0, true);
+    } catch(e) {
+      Cu.reportError(e);
+    }
   },
 
   handleEvent: function(aEvent) {
@@ -193,6 +260,7 @@ EmbedHelper.prototype = {
   _doTapHighlight: function _doTapHighlight(aElement) {
     DOMUtils.setContentState(aElement, kStateActive);
     this._highlightElement = aElement;
+    this._touchElement = aElement;
   },
 
   _cancelTapHighlight: function _cancelTapHighlight() {
