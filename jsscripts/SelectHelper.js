@@ -72,7 +72,7 @@ SelectHelper.prototype = {
     var changed = false;
     if (aElement instanceof Ci.nsIDOMXULMenuListElement) {
       aElement.selectedIndex = selected;
-    } else if (aElement instanceof HTMLSelectElement) {
+    } else if (aElement instanceof Ci.nsIDOMHTMLSelectElement) {
       if (!(selected instanceof Array)) {
         let temp = [];
         for (let i = 0; i < list.listitems.length; i++) {
@@ -93,7 +93,7 @@ SelectHelper.prototype = {
   },
 
   _isMenu: function(aElement) {
-    return (aElement instanceof HTMLSelectElement ||
+    return (aElement instanceof Ci.nsIDOMHTMLSelectElement ||
             aElement instanceof Ci.nsIDOMXULMenuListElement);
   },
 

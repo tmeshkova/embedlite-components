@@ -88,8 +88,8 @@ EmbedHelper.prototype = {
           } catch(e) {
             Cu.reportError(e);
           }
+          this._touchElement = null;
         }
-        this._touchElement = null;
         break;
       }
       default: {
@@ -171,6 +171,9 @@ EmbedHelper.prototype = {
   },
 
   _handleTouchStart: function(aEvent) {
+    if (this._touchElement) {
+      this._touchElement = null;
+    }
     if (!this.isBrowserContentDocumentDisplayed() || aEvent.touches.length > 1 || aEvent.defaultPrevented)
       return;
 
