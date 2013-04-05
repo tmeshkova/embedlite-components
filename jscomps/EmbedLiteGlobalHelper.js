@@ -15,16 +15,16 @@ function InitializeXulAppInfo()
 {
   let XULAppInfo = {
     vendor: "Mozilla",
-    name: "EmbedLiteBrowser",
+    name: "Firefox",
     ID: "embedliteBrowser@embed.mozilla.org",
-    version: "1",
-    appBuildID: "20100621",
-    platformVersion: "",
-    platformBuildID: "20100621",
+    version: "22.0",
+    appBuildID: "20130329080257",
+    platformVersion: "22.0",
+    platformBuildID: "20130329080257",
     inSafeMode: false,
     logConsoleErrors: true,
-    OS: "XPCShell",
-    XPCOMABI: "noarch-spidermonkey",
+    OS: "Linux",
+    XPCOMABI: "noarch",
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULAppInfo, Ci.nsIXULRuntime]),
     invalidateCachesOnRestart: function invalidateCachesOnRestart() { }
   };
