@@ -19,6 +19,10 @@ let HTMLFrameElement = Ci.nsIDOMHTMLFrameElement;
 XPCOMUtils.defineLazyServiceGetter(this, "DOMUtils",
   "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 
+XPCOMUtils.defineLazyServiceGetter(Services, "embedlite",
+                                    "@mozilla.org/embedlite-app-service;1",
+                                    "nsIEmbedAppService");
+
 const kStateActive = 0x00000001; // :active pseudoclass for elements
 
 dump("###################################### embedhelper.js loaded\n");
@@ -40,6 +44,8 @@ EmbedHelper.prototype = {
     dump("Init Called:" + this + "\n");
     Services.prefs.setBoolPref("embedlite.azpc.handle.singletap", false);
     Services.prefs.setBoolPref("embedlite.azpc.json.singletap", true);
+    Services.prefs.setBoolPref("embedlite.azpc.handle.longtap", false);
+    Services.prefs.setBoolPref("embedlite.azpc.json.longtap", true);
     addEventListener("touchstart", this, false);
     addEventListener("touchmove", this, false);
     addEventListener("touchend", this, false);
@@ -70,6 +76,40 @@ EmbedHelper.prototype = {
 
   _touchElement: null,
 
+  getLinkHrefForElement: function getLinkHrefForElement(target) {
+    let element = null;
+    while (target) {
+      if (target instanceof Ci.nsIDOMHTMLAnchorElement || 
+          target instanceof Ci.nsIDOMHTMLAreaElement ||
+          target instanceof Ci.nsIDOMHTMLLinkElement) {
+          if (target.hasAttribute("href"))
+            element = target;
+      }
+      target = target.parentNode;
+    }
+
+    if (element && element.hasAttribute("href"))
+      return element.href;
+    else
+      return null;
+  },
+
+  getImageSrcForElement: function getImageSrcForElement(target) {
+    let element = null;
+    while (target) {
+      if (target instanceof Ci.nsIDOMHTMLImageElement) {
+          if (target.hasAttribute("src"))
+            element = target;
+      }
+      target = target.parentNode;
+    }
+
+    if (element && element.hasAttribute("src"))
+      return element.src;
+    else
+      return null;
+  },
+
   receiveMessage: function receiveMessage(aMessage) {
     switch (aMessage.name) {
       case "Gesture:SingleTap": {
@@ -91,6 +131,19 @@ EmbedHelper.prototype = {
           this._touchElement = null;
         }
         break;
+      }
+      case "Gesture:LongTap": {
+        let element = this._touchElement;
+        if (element) {
+          let linkHref = this.getLinkHrefForElement(element);
+          let imageSrc = this.getImageSrcForElement(element);
+          if (linkHref || imageSrc) {
+            let window = element.ownerDocument.defaultView;
+            var winid = Services.embedlite.getIDByWindow(window);
+            Services.embedlite.sendAsyncMessage(winid, "context:info", JSON.stringify({LinkHref: linkHref ? linkHref : "", ImageSrc: imageSrc ? imageSrc : ""}));
+          }
+        }
+        this._touchElement = null;
       }
       default: {
         dump("Child Script: Message: name:" + aMessage.name + ", json:" + JSON.stringify(aMessage.json) + "\n");
