@@ -34,6 +34,7 @@ jscomps/ContentPermissionPrompt.js
 jscomps/EmbedLiteGlobalHelper.js
 jscomps/EmbedLiteConsoleListener.js
 jscomps/EmbedLiteSyncService.js
+jscomps/EmbedLiteFaviconService.js
 "
 
 for str in $FILES_LIST; do

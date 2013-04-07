@@ -42,3 +42,8 @@ category app-startup EmbedLiteGlobalHelper service,@mozilla.org/embedlite-helper
 component {36896ad0-9b49-11e2-ae7c-6f7993904c41} EmbedLiteSyncService.js
 contract @mozilla.org/embedlite-sync-component;1 {36896ad0-9b49-11e2-ae7c-6f7993904c41}
 category app-startup EmbedLiteSyncService service,@mozilla.org/embedlite-sync-component;1
+
+# EmbedLiteFaviconService.js
+component {c48047b0-9e6d-11e2-a162-bb9036ce396c} EmbedLiteFaviconService.js
+contract @mozilla.org/embedlite-favicon-component;1 {c48047b0-9e6d-11e2-a162-bb9036ce396c}
+category app-startup EmbedLiteFaviconService service,@mozilla.org/embedlite-favicon-component;1
