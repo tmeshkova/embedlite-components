@@ -237,8 +237,6 @@ EmbedTouchListener::ZoomToElement(nsIDOMElement* aElement, int aClickY, bool aCa
     LOGT();
     const int margin = 15;
     gfx::Rect clrect = GetBoundingContentRect(aElement);
-    printf("EmbedTouchListener::ZoomToElement GetBoundingContentRect x:%f y:%f w:%f h:%f\n", clrect.x, clrect.y, clrect.width, clrect.height);
-    printf("EmbedTouchListener::ZoomToElement mCssCompositedRect x:%f y:%f w:%f h:%f\n", mCssCompositedRect.x, mCssCompositedRect.y, mCssCompositedRect.width, mCssCompositedRect.height);
     float elementAspectRatio = clrect.width / clrect.height;
     float viewportAspectRatio = mCssCompositedRect.width / mCssCompositedRect.height;
     bool zoomed = false;
@@ -268,6 +266,57 @@ EmbedTouchListener::ZoomToElement(nsIDOMElement* aElement, int aClickY, bool aCa
     }
 }
 
+static bool HasFrameElement(nsIDOMDocument* aDocument, nsIDOMElement* *aFrameElement = nullptr)
+{
+    if (!aDocument) {
+        return false;
+    }
+    nsCOMPtr<nsIDOMWindow> newWin;
+    if (NS_FAILED(aDocument->GetDefaultView(getter_AddRefs(newWin))) || !newWin) {
+        return false;
+    }
+    nsCOMPtr<nsIDOMElement> frameElement;
+    if (NS_FAILED(newWin->GetFrameElement(getter_AddRefs(frameElement))) || !frameElement) {
+        return false;
+    }
+    if (aFrameElement) {
+        *aFrameElement = frameElement.forget().get();
+    }
+    return true;
+}
+
+static void GetDefViewFrameElemOwnerDocument(nsIDOMDocument* aDocument, nsIDOMDocument* *aOutDocument)
+{
+    nsCOMPtr<nsIDOMElement> frameElement;
+    if (HasFrameElement(aDocument, getter_AddRefs(frameElement)) && frameElement) {
+        nsCOMPtr<nsIDOMNode> node = do_QueryInterface(frameElement);
+        if (node) {
+            node->GetOwnerDocument(aOutDocument);
+        }
+    }
+}
+
+static bool _HasFrameElement(nsIDOMWindow* aWindow)
+{
+    if (!aWindow) {
+        return false;
+    }
+    nsCOMPtr<nsIDOMElement> frameElement;
+    if (NS_FAILED(aWindow->GetFrameElement(getter_AddRefs(frameElement))) || !frameElement) {
+        return false;
+    }
+    return true;
+}
+
+static void GetParentFrame(nsIDOMWindow* aWindow, nsIDOMWindow** outWindow)
+{
+    nsCOMPtr<nsIDOMWindow> newWin;
+    if (aWindow) {
+      aWindow->GetParent(getter_AddRefs(newWin));
+      *outWindow = newWin.forget().get();
+    }
+}
+
 gfx::Rect
 EmbedTouchListener::GetBoundingContentRect(nsIDOMElement* aElement)
 {
@@ -278,22 +327,22 @@ EmbedTouchListener::GetBoundingContentRect(nsIDOMElement* aElement)
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
     NS_ENSURE_TRUE(node, retRect);
     
+    nsCOMPtr<nsIDOMDocument> origDocument;
     nsCOMPtr<nsIDOMDocument> document;
     NS_ENSURE_SUCCESS(node->GetOwnerDocument(getter_AddRefs(document)), retRect);
-    nsCOMPtr<nsIDOMWindow> newWin;
-    NS_ENSURE_SUCCESS(document->GetDefaultView(getter_AddRefs(newWin)), retRect);
-    nsCOMPtr<nsIDOMElement> element;
-    newWin->GetFrameElement(getter_AddRefs(element));
-    nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(element);
-    while (element && newNode) {
-        node = newNode;
-        if (NS_FAILED(node->GetOwnerDocument(getter_AddRefs(document))) ||
-            NS_FAILED(document->GetDefaultView(getter_AddRefs(newWin))) ||
-            NS_FAILED(newWin->GetFrameElement(getter_AddRefs(element)))) {
-            element = nullptr;
+    origDocument = document;
+    while (HasFrameElement(document)) {
+        nsCOMPtr<nsIDOMDocument> newDocument;
+        GetDefViewFrameElemOwnerDocument(document, getter_AddRefs(newDocument));
+        if (newDocument)
+            document = newDocument;
+        else
             break;
-        }
-        newNode = do_QueryInterface(element);
+    }
+
+    nsCOMPtr<nsIDOMWindow> newWin;
+    if (NS_FAILED(document->GetDefaultView(getter_AddRefs(newWin))) || !newWin) {
+        return retRect;
     }
 
     nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(newWin);
@@ -302,28 +351,23 @@ EmbedTouchListener::GetBoundingContentRect(nsIDOMElement* aElement)
     nsCOMPtr<nsIDOMClientRect> r;
     aElement->GetBoundingClientRect(getter_AddRefs(r));
 
-    // step out of iframes and frames, offsetting scroll values
-    nsCOMPtr<nsIDOMWindow> itWin;
-    NS_ENSURE_SUCCESS(node->GetOwnerDocument(getter_AddRefs(document)), retRect);
-    NS_ENSURE_SUCCESS(document->GetDefaultView(getter_AddRefs(itWin)), retRect);
-    itWin->GetFrameElement(getter_AddRefs(element));
-    while (element && itWin != DOMWindow) {
-        // adjust client coordinates' origin to be top left of iframe viewport
+    nsCOMPtr<nsIDOMWindow> defView;
+    origDocument->GetDefaultView(getter_AddRefs(defView));
+    for (nsCOMPtr<nsIDOMWindow> frame = defView; _HasFrameElement(frame) && frame != DOMWindow; GetParentFrame(frame, getter_AddRefs(frame))) {
+        nsCOMPtr<nsIDOMElement> frElement;
+        frame->GetFrameElement(getter_AddRefs(frElement));
         nsCOMPtr<nsIDOMClientRect> gr;
-        element->GetBoundingClientRect(getter_AddRefs(gr));
+        frElement->GetBoundingClientRect(getter_AddRefs(gr));
         float grleft, grtop;
         gr->GetLeft(&grleft);
         gr->GetTop(&grtop);
-
         nsCOMPtr<nsIDOMCSSStyleDeclaration> bW;
-        itWin->GetComputedStyle(element, NS_LITERAL_STRING(""), getter_AddRefs(bW));
+        frame->GetComputedStyle(frElement, NS_LITERAL_STRING(""), getter_AddRefs(bW));
         nsString blw, btw;
         bW->GetPropertyValue(NS_LITERAL_STRING("border-left-width"), blw);
         bW->GetPropertyValue(NS_LITERAL_STRING("border-top-width"), btw);
         scrollX += grleft + atoi(NS_ConvertUTF16toUTF8(blw).get());
         scrollY += grtop + atoi(NS_ConvertUTF16toUTF8(btw).get());
-        itWin->GetParent(getter_AddRefs(itWin));
-        itWin->GetFrameElement(getter_AddRefs(element));
     }
 
     float rleft = 0, rtop = 0, rwidth = 0, rheight = 0;
