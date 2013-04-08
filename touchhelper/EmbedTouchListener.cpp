@@ -234,53 +234,38 @@ EmbedTouchListener::ShouldZoomToElement(nsIDOMElement* aElement)
 void
 EmbedTouchListener::ZoomToElement(nsIDOMElement* aElement, int aClickY, bool aCanZoomOut, bool aCanZoomIn)
 {
+    LOGT();
     const int margin = 15;
     gfx::Rect clrect = GetBoundingContentRect(aElement);
-    gfxRect rect(clrect.x, clrect.y, clrect.width, clrect.height);
-
-    gfx::Rect bRect = gfx::Rect(aCanZoomIn ? std::max(mCssPageRect.x, clrect.x - margin) : mCssPageRect.x,
-                                clrect.y,
-                                aCanZoomIn ? clrect.width + 2 * margin : mCssPageRect.width,
-                                clrect.height);
-
-    // constrict the rect to the screen's right edge
-    bRect.width = std::min(bRect.width, (mCssPageRect.x + mCssPageRect.width) - bRect.x);
-
-    // if the rect is already taking up most of the visible area and is stretching the
-    // width of the page, then we want to zoom out instead.
-    if (IsRectZoomedIn(bRect, mCssCompositedRect)) {
+    printf("EmbedTouchListener::ZoomToElement GetBoundingContentRect x:%f y:%f w:%f h:%f\n", clrect.x, clrect.y, clrect.width, clrect.height);
+    printf("EmbedTouchListener::ZoomToElement mCssCompositedRect x:%f y:%f w:%f h:%f\n", mCssCompositedRect.x, mCssCompositedRect.y, mCssCompositedRect.width, mCssCompositedRect.height);
+    float elementAspectRatio = clrect.width / clrect.height;
+    float viewportAspectRatio = mCssCompositedRect.width / mCssCompositedRect.height;
+    bool zoomed = false;
+    if (IsRectZoomedIn(clrect, mCssCompositedRect)) {
         if (aCanZoomOut) {
             mService->ZoomToRect(mTopWinid, 0, 0, 0, 0);
         }
         return;
     }
-
-    rect.x = round(bRect.x);
-    rect.y = round(bRect.y);
-    rect.width = round(bRect.width);
-    rect.height = round(bRect.height);
-
-    // if the block we're zooming to is really tall, and the user double-tapped
-    // more than a screenful of height from the top of it, then adjust the y-coordinate
-    // so that we center the actual point the user double-tapped upon. this prevents
-    // flying to the top of a page when double-tapping to zoom in (bug 761721).
-    // the 1.2 multiplier is just a little fuzz to compensate for bRect including horizontal
-    // margins but not vertical ones.
-    float cssTapY = mViewport.y + aClickY;
-    if ((bRect.height > rect.height) && (cssTapY > rect.y + (rect.height * 1.2))) {
-        rect.y = cssTapY - (rect.height / 2);
-    }
-
-    // rect.height by default equals to element height, and will cause zoomIn
-    if (!aCanZoomIn) {
-        // set rect height to current page height and adjust rect.y in order to cover possible CSS page size
-        rect.height = mCssCompositedRect.height;
-        if (rect.YMost() > mCssPageRect.YMost()) {
-            rect.y -= rect.YMost() - mCssPageRect.YMost();
+    if (elementAspectRatio > viewportAspectRatio) {
+        if ((clrect.width < mCssCompositedRect.width && aCanZoomIn) ||
+            (clrect.width > mCssCompositedRect.width && aCanZoomOut) ) {
+            mService->ZoomToRect(mTopWinid, clrect.x, clrect.y, clrect.width, clrect.height);
+            zoomed = true;
         }
     }
-
-    mService->ZoomToRect(mTopWinid, rect.x, rect.y, rect.width, rect.height);
+    else if (elementAspectRatio < viewportAspectRatio < 1) {
+        if ((clrect.height < mCssCompositedRect.height && aCanZoomIn) ||
+            (clrect.height > mCssCompositedRect.height && aCanZoomOut) ) {
+            mService->ZoomToRect(mTopWinid, clrect.x, clrect.y, clrect.width, clrect.height);
+            zoomed = true;
+        }
+    }
+    
+    if (!zoomed) {
+        mService->ZoomToRect(mTopWinid, clrect.x, clrect.y, mCssCompositedRect.width, mCssCompositedRect.height);
+    }
 }
 
 gfx::Rect
@@ -299,13 +284,16 @@ EmbedTouchListener::GetBoundingContentRect(nsIDOMElement* aElement)
     NS_ENSURE_SUCCESS(document->GetDefaultView(getter_AddRefs(newWin)), retRect);
     nsCOMPtr<nsIDOMElement> element;
     newWin->GetFrameElement(getter_AddRefs(element));
-    while (element) {
+    nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(element);
+    while (element && newNode) {
+        node = newNode;
         if (NS_FAILED(node->GetOwnerDocument(getter_AddRefs(document))) ||
             NS_FAILED(document->GetDefaultView(getter_AddRefs(newWin))) ||
             NS_FAILED(newWin->GetFrameElement(getter_AddRefs(element)))) {
             element = nullptr;
             break;
         }
+        newNode = do_QueryInterface(element);
     }
 
     nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(newWin);
