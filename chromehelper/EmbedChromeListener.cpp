@@ -126,6 +126,13 @@ EmbedChromeListener::HandleEvent(nsIDOMEvent* aEvent)
         disabledIface->GetHref(href);
         nsCOMPtr<nsIDOMDocument> ctDoc;
         window->GetDocument(getter_AddRefs(ctDoc));
+        // ignore on frames and other documents
+        nsCOMPtr<nsIDOMDocument> ownDoc;
+        nsCOMPtr<nsIDOMNode> node = do_QueryInterface(origTarget);
+        node->GetOwnerDocument(getter_AddRefs(ownDoc));
+        if (ownDoc != ctDoc)
+          return NS_OK;
+
         nsString charset, title, rel, type;
         ctDoc->GetCharacterSet(charset);
         ctDoc->GetTitle(title);
