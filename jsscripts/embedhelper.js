@@ -39,6 +39,7 @@ EmbedHelper.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
 
+  _fastFind: null,
   _init: function()
   {
     dump("Init Called:" + this + "\n");
@@ -46,6 +47,7 @@ EmbedHelper.prototype = {
     Services.prefs.setBoolPref("embedlite.azpc.json.singletap", true);
     Services.prefs.setBoolPref("embedlite.azpc.handle.longtap", false);
     Services.prefs.setBoolPref("embedlite.azpc.json.longtap", true);
+    // Services.prefs.setBoolPref("embedlite.azpc.json.viewport", true);
     addEventListener("touchstart", this, false);
     addEventListener("touchmove", this, false);
     addEventListener("touchend", this, false);
@@ -54,6 +56,7 @@ EmbedHelper.prototype = {
     addMessageListener("Gesture:DoubleTap", this);
     addMessageListener("Gesture:SingleTap", this);
     addMessageListener("Gesture:LongTap", this);
+    addMessageListener("embedui:find", this);
     Services.obs.addObserver(this, "before-first-paint", true);
   },
 
@@ -144,9 +147,26 @@ EmbedHelper.prototype = {
           }
         }
         this._touchElement = null;
+        break;
+      }
+      case "embedui:find": {
+        let searchText = aMessage.json.text;
+        this._fastFind = Cc["@mozilla.org/typeaheadfind;1"].createInstance(Ci.nsITypeAheadFind);
+        this._fastFind.init(docShell);
+        let result = this._fastFind.find(searchText, false);
+        if (aResult == Ci.nsITypeAheadFind.FIND_NOTFOUND)
+          dump("Page Find: " + searchText + " - not found");
+        else
+          dump("Page Find: " + searchText + " - found");
+        break;
+      }
+      case "Viewport:Change": {
+        dump("Child Script: Message: name:" + aMessage.name + ", json:" + JSON.stringify(aMessage.json) + "\n");
+        break;
       }
       default: {
         dump("Child Script: Message: name:" + aMessage.name + ", json:" + JSON.stringify(aMessage.json) + "\n");
+        break;
       }
     }
   },
