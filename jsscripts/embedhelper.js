@@ -47,7 +47,7 @@ EmbedHelper.prototype = {
     Services.prefs.setBoolPref("embedlite.azpc.json.singletap", true);
     Services.prefs.setBoolPref("embedlite.azpc.handle.longtap", false);
     Services.prefs.setBoolPref("embedlite.azpc.json.longtap", true);
-    // Services.prefs.setBoolPref("embedlite.azpc.json.viewport", true);
+    Services.prefs.setBoolPref("embedlite.azpc.json.viewport", true);
     addEventListener("touchstart", this, false);
     addEventListener("touchmove", this, false);
     addEventListener("touchend", this, false);
@@ -58,6 +58,7 @@ EmbedHelper.prototype = {
     addMessageListener("Gesture:LongTap", this);
     addMessageListener("embedui:find", this);
     Services.obs.addObserver(this, "before-first-paint", true);
+    Services.prefs.addObserver("browser.zoom.reflowOnZoom", this, false);
   },
 
   observe: function(aSubject, aTopic, data) {
@@ -73,7 +74,48 @@ EmbedHelper.prototype = {
           }
           break;
         case "nsPref:changed":
+          if (data == "browser.zoom.reflowOnZoom") {
+            this.performReflow();
+          }
           break;
+    }
+  },
+
+  _viewportLastResolution: 0,
+  _viewportData: null,
+  _viewportReadyToChange: false,
+  _lastTarget: null,
+
+  performReflow: function performReflow() {
+    if (this._viewportReadyToChange && this._viewportLastResolution != this._viewportData.resolution.width) {
+      var reflowEnabled = Services.prefs.getBoolPref("browser.zoom.reflowOnZoom");
+      let viewportWidth = this._viewportData.viewport.width;
+      let viewportWResolution = this._viewportData.resolution.width;
+      var fudge = 15 / viewportWResolution;
+      let width = viewportWidth / viewportWResolution;
+      if (!reflowEnabled) {
+        width = viewportWidth;
+      }
+      let utils = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      let webNav = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
+      let docShell = webNav.QueryInterface(Ci.nsIDocShell);
+      let docViewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+      docViewer.changeMaxLineBoxWidth(width - 2*fudge);
+
+      let element = this._lastTarget;
+      if (reflowEnabled && element && viewportWResolution > 1) {
+        let window = element.ownerDocument.defaultView;
+        var winid = Services.embedlite.getIDByWindow(window);
+        let rect = ElementTouchHelper.getBoundingContentRect(element);
+        Services.embedlite.zoomToRect(winid,
+                                      rect.x - fudge,
+                                      this._viewportData.y,
+                                      this._viewportData.viewport.width / this._viewportData.resolution.width,
+                                      this._viewportData.viewport.height / this._viewportData.resolution.height);
+        this._lastTarget = null;
+      }
+      this._viewportReadyToChange = false;
+      this._viewportLastResolution = this._viewportData.resolution.width;
     }
   },
 
@@ -161,7 +203,11 @@ EmbedHelper.prototype = {
         break;
       }
       case "Viewport:Change": {
-        dump("Child Script: Message: name:" + aMessage.name + ", json:" + JSON.stringify(aMessage.json) + "\n");
+        this._viewportData = aMessage.data;
+        if (this._viewportLastResolution == 0) {
+          this._viewportLastResolution = aMessage.data.resolution.width;
+        }
+        this.performReflow();
         break;
       }
       default: {
@@ -240,6 +286,7 @@ EmbedHelper.prototype = {
   },
 
   _handleTouchEnd: function(aEvent) {
+    this._viewportReadyToChange = true;
     this._cancelTapHighlight();
   },
 
@@ -251,6 +298,7 @@ EmbedHelper.prototype = {
       return;
 
     let closest = aEvent.target;
+    this._lastTarget = aEvent.target;
 
     if (closest) {
       // If we've pressed a scrollable element, let Java know that we may
