@@ -13,6 +13,7 @@
 #include "nsThreadUtils.h"
 #include "nsIEmbedAppService.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIObserver.h"
 
 #define NS_EMBEDLITEHISTORY_CID \
 { 0xec7cf1e2, \
@@ -20,31 +21,34 @@
   0x11e2, \
   { 0xa7, 0x9a, 0xfb, 0x19, 0xfe, 0x29, 0x97 }}
 
-class EmbedHistoryListener : public mozilla::IHistory, public nsIRunnable
+class EmbedHistoryListener : public mozilla::IHistory
+                           , public nsIRunnable
+                           , public nsIObserver
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_IHISTORY
-    NS_DECL_NSIRUNNABLE
+  NS_DECL_ISUPPORTS
+  NS_DECL_IHISTORY
+  NS_DECL_NSIRUNNABLE
+  NS_DECL_NSIOBSERVER
 
-    nsresult Init() { return NS_OK; }
+  nsresult Init() { return NS_OK; }
 
-    /**
-     * Obtains a pointer that has had AddRef called on it.  Used by the service
-     * manager only.
-     */
-    static EmbedHistoryListener* GetSingleton();
+  /**
+   * Obtains a pointer that has had AddRef called on it.  Used by the service
+   * manager only.
+   */
+  static EmbedHistoryListener* GetSingleton();
 
-    EmbedHistoryListener();
+  EmbedHistoryListener();
 
 private:
-    nsIEmbedAppService* GetService();
+  nsIEmbedAppService* GetService();
 
-    static EmbedHistoryListener* sHistory;
+  static EmbedHistoryListener* sHistory;
 
-    nsDataHashtable<nsStringHashKey, nsTArray<mozilla::dom::Link *> *> mListeners;
-    nsTPriorityQueue<nsString> mPendingURIs;
-    nsCOMPtr<nsIEmbedAppService> mService;
+  nsDataHashtable<nsCStringHashKey, nsTArray<mozilla::dom::Link*> *> mListeners;
+  nsTPriorityQueue<nsCString> mPendingURIs;
+  nsCOMPtr<nsIEmbedAppService> mService;
 };
 
 #define NS_EMBED_HISTORY_CONTRACTID "@mozilla.org/embed-history-component;1"

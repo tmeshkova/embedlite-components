@@ -13,46 +13,25 @@
 #include "nsDocShellCID.h"
 #include <iostream>
 
-// XPCOMGlueStartup
-#include "nsXPCOMGlue.h"
-
 /* ===== XPCOM registration stuff ======== */
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(EmbedHistoryListener, EmbedHistoryListener::GetSingleton)
 NS_DEFINE_NAMED_CID(NS_EMBED_HISTORY_SERVICE_CID);
 
 static const mozilla::Module::CIDEntry kEMBEDHISTORYCIDs[] = {
-    { &kNS_EMBED_HISTORY_SERVICE_CID, false, NULL, EmbedHistoryListenerConstructor },
-    { NULL }
+  { &kNS_EMBED_HISTORY_SERVICE_CID, false, NULL, EmbedHistoryListenerConstructor },
+  { NULL }
 };
 
 static const mozilla::Module::ContractIDEntry kEMBEDHISTORYContracts[] = {
-    { NS_IHISTORY_CONTRACTID, &kNS_EMBED_HISTORY_SERVICE_CID },
-    { NULL }
+  { NS_IHISTORY_CONTRACTID, &kNS_EMBED_HISTORY_SERVICE_CID },
+  { NULL }
 };
 
-static nsresult
-EmbedHistory_Initialize()
-{
-#ifdef XPCOM_GLUE
-    XPCOMGlueStartup(getenv("XRE_LIBXPCOM_PATH"));
-#endif
-    return NS_OK;
-}
-
-static void
-EmbedHistory_Shutdown()
-{
-}
-
 static const mozilla::Module kEMBEDHISTORYModule = {
-    mozilla::Module::kVersion,
-    kEMBEDHISTORYCIDs,
-    kEMBEDHISTORYContracts,
-    NULL,
-    NULL,
-    EmbedHistory_Initialize,
-    EmbedHistory_Shutdown
+  mozilla::Module::kVersion,
+  kEMBEDHISTORYCIDs,
+  kEMBEDHISTORYContracts
 };
 
 NSMODULE_DEFN(nsEmbedHistoryModule) = &kEMBEDHISTORYModule;
