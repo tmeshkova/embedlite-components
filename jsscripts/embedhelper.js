@@ -85,12 +85,21 @@ EmbedHelper.prototype = {
   _viewportData: null,
   _viewportReadyToChange: false,
   _lastTarget: null,
+  _lastTargetY: 0,
 
   performReflow: function performReflow() {
-    if (this._viewportReadyToChange && this._viewportLastResolution != this._viewportData.resolution.width) {
+    let reflowMobile = Services.prefs.getBoolPref("browser.zoom.reflowMobilePages");
+    let isMobileView = this._viewportData.viewport.width == this._viewportData.cssPageRect.width;
+    if (this._viewportReadyToChange &&
+        this._viewportLastResolution != this._viewportData.resolution.width) {
+      if (isMobileView && !reflowMobile)
+        return; //dont reflow if pref not allowing reflow Mobile view pages
       var reflowEnabled = Services.prefs.getBoolPref("browser.zoom.reflowOnZoom");
       let viewportWidth = this._viewportData.viewport.width;
+      let viewportHeight = this._viewportData.viewport.height;
       let viewportWResolution = this._viewportData.resolution.width;
+      let viewportHResolution = this._viewportData.resolution.height;
+      let viewportY = this._viewportData.y;
       var fudge = 15 / viewportWResolution;
       let width = viewportWidth / viewportWResolution;
       if (!reflowEnabled) {
@@ -109,9 +118,9 @@ EmbedHelper.prototype = {
         let rect = ElementTouchHelper.getBoundingContentRect(element);
         Services.embedlite.zoomToRect(winid,
                                       rect.x - fudge,
-                                      this._viewportData.y,
-                                      this._viewportData.viewport.width / this._viewportData.resolution.width,
-                                      this._viewportData.viewport.height / this._viewportData.resolution.height);
+                                      viewportY + (rect.y - this._lastTargetY),
+                                      viewportWidth / viewportWResolution,
+                                      viewportHeight / viewportHResolution);
         this._lastTarget = null;
       }
       this._viewportReadyToChange = false;
@@ -299,6 +308,7 @@ EmbedHelper.prototype = {
 
     let closest = aEvent.target;
     this._lastTarget = aEvent.target;
+    this._lastTargetY = ElementTouchHelper.getBoundingContentRect(aEvent.target).y;
 
     if (closest) {
       // If we've pressed a scrollable element, let Java know that we may
