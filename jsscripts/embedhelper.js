@@ -88,13 +88,19 @@ EmbedHelper.prototype = {
   _lastTargetY: 0,
 
   performReflow: function performReflow() {
-    let reflowMobile = Services.prefs.getBoolPref("browser.zoom.reflowMobilePages");
+    let reflowMobile = false;
+    try {
+      reflowMobile = Services.prefs.getBoolPref("browser.zoom.reflowMobilePages");
+    } catch (e) {}
     let isMobileView = this._viewportData.viewport.width == this._viewportData.cssPageRect.width;
     if (this._viewportReadyToChange &&
         this._viewportLastResolution != this._viewportData.resolution.width) {
       if (isMobileView && !reflowMobile)
         return; //dont reflow if pref not allowing reflow Mobile view pages
-      var reflowEnabled = Services.prefs.getBoolPref("browser.zoom.reflowOnZoom");
+      var reflowEnabled = false;
+      try {
+        reflowEnabled = Services.prefs.getBoolPref("browser.zoom.reflowOnZoom");
+      } catch (e) {}
       let viewportWidth = this._viewportData.viewport.width;
       let viewportHeight = this._viewportData.viewport.height;
       let viewportWResolution = this._viewportData.resolution.width;
