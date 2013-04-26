@@ -10,6 +10,7 @@ URL:        http://www.mozilla.com
 Source0:    %{name}-%{version}.tar.bz2
 BuildRequires:  pkgconfig(libxul)
 BuildRequires:  python
+BuildRequires:  libtool
 
 %description
 EmbedLite Components
@@ -54,5 +55,5 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 # >> files
-%{_libdir}/*
+%{_libdir}/mozembedlite/*
 # << files

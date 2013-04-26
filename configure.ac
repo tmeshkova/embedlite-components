@@ -41,7 +41,7 @@ AC_ARG_WITH(engine-path,
 if test "$OBJ_PATH" != ""; then
 SDK_DIR=$OBJ_PATH/dist
 IDL_DIR=$OBJ_PATH/dist/idl
-ENGINE_CFLAGS="-I$OBJ_PATH/dist/include -I$OBJ_PATH/dist/include/nspr -I$OBJ_PATH/dist/include/mozilla -I$OBJ_PATH/dist/include/dom"
+ENGINE_CFLAGS="-I$OBJ_PATH/dist/include -I$OBJ_PATH/dist/include/nspr -I$OBJ_PATH/dist/include/mozilla -I$OBJ_PATH/dist/include/dom -I/usr/include/nspr4"
 ENGINE_LIBS="-L$OBJ_PATH/dist/sdk/lib -lxpcomglue_s -lxul -lmozalloc"
 else
 PKG_CHECK_MODULES(ENGINE, libxul mozilla-nspr,
