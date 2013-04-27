@@ -159,6 +159,7 @@ function DownloadManagerUI()
 
 DownloadManagerUI.prototype = {
   classID: Components.ID("{2137921e-910e-11e2-b344-2bda2844afe1}"),
+  _initialized: false,
   _progress: null,
 
   get manager() {
@@ -206,9 +207,16 @@ DownloadManagerUI.prototype = {
       case "app-startup": {
         dump("DownloadManagerUI app-startup\n");
         Services.obs.addObserver(this, "download-manager-initialized", true);
-        Services.tm.mainThread.dispatch(function() {    
-            this.initDownloadManager();
-        }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
+        Services.obs.addObserver(this, "embedliteInitialized", true);
+        break;
+      }
+      case "embedliteInitialized": {
+        if (!this._initialized) {
+          this._initialized = true;
+          Services.tm.mainThread.dispatch(function() {
+              this.initDownloadManager();
+          }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
+        }
         break;
       }
       case "download-manager-initialized": {
