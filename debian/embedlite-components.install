@@ -1,3 +1,4 @@
+usr/lib/mozembedlite/chrome/*
 usr/lib/mozembedlite/components/*.so
 usr/lib/mozembedlite/components/*.js
 usr/lib/mozembedlite/components/*.manifest

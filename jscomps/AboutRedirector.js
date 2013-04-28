@@ -13,6 +13,17 @@ let modules = {
     privileged: true
   },
 
+  certerror: {
+    uri: "chrome://browser/content/aboutCertError.xhtml",
+    privileged: false,
+    hide: true
+  },
+
+  home: {
+    uri: "about:mozilla",
+    privileged: false
+  },
+
   // about:fennec and about:firefox are aliases for about:,
   // but hidden from about:about
   embedlite: {
@@ -49,7 +60,7 @@ AboutRedirector.prototype = {
               getService(Ci.nsIIOService);
 
     var channel = ios.newChannel(moduleInfo.uri, null, null);
-    
+
     if (!moduleInfo.privileged) {
       // Setting the owner to null means that we'll go through the normal
       // path in GetChannelPrincipal and create a codebase principal based

@@ -1,0 +1,10 @@
+skin browser classic/1.0 chrome/skin/
+content branding chrome/content/branding/
+override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml
+override chrome://global/skin/netError.css chrome://browser/skin/netError.css
+content browser chrome/content/ contentaccessible=yes
+override chrome://global/locale/netError.dtd chrome://browser/locale/netError.dtd
+locale browser en-US en-US/locale/en-US/browser/
+locale branding en-US en-US/locale/branding/
+override chrome://global/locale/netError.dtd chrome://browser/locale/netError.dtd
+locale browser en-US en-US/locale/en-US/browser/

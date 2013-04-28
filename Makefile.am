@@ -1,7 +1,7 @@
 EXTRA_DIST = \
 	autogen.sh
 
-SUBDIRS = history chromehelper prompt widgetfactory jscomps touchhelper jsscripts
+SUBDIRS = history chromehelper prompt widgetfactory jscomps touchhelper jsscripts overrides
 
 INCLUDES = $(DEPS_CFLAGS) 
 
