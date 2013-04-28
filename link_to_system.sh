@@ -15,6 +15,7 @@ fi
 LAST_OBJ_DIR="$OBJPREFIX"
 
 mkdir -p $TARGET_DIR
+mkdir -p $TARGET_DIR/components
 
 FILES_LIST="
 $OBJPREFIX/chromehelper/.libs/libchromehelper.so
