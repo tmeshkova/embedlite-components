@@ -11,7 +11,8 @@ jscomps_manifest_DATA = \
 	EmbedLiteGlobalHelper.js \
 	EmbedLiteConsoleListener.js \
 	EmbedLiteSyncService.js \
-	EmbedLiteFaviconService.js
+	EmbedLiteFaviconService.js \
+	EmbedLiteSearchEngine.js \
 	$(NULL)
 
 INCLUDES = $(DEPS_CFLAGS) 

@@ -5,9 +5,11 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
+const Cu = Components.utils;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 
 let DownloadListener = {
   init: function () {
@@ -213,9 +215,9 @@ DownloadManagerUI.prototype = {
       case "embedliteInitialized": {
         if (!this._initialized) {
           this._initialized = true;
-          Services.tm.mainThread.dispatch(function() {
-              this.initDownloadManager();
-          }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
+          setTimeout(function(self) {
+            self.initDownloadManager();
+          }, 500, this);
         }
         break;
       }

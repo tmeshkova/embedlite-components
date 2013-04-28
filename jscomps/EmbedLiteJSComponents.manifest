@@ -47,3 +47,8 @@ category app-startup EmbedLiteSyncService service,@mozilla.org/embedlite-sync-co
 component {c48047b0-9e6d-11e2-a162-bb9036ce396c} EmbedLiteFaviconService.js
 contract @mozilla.org/embedlite-favicon-component;1 {c48047b0-9e6d-11e2-a162-bb9036ce396c}
 category app-startup EmbedLiteFaviconService service,@mozilla.org/embedlite-favicon-component;1
+
+# EmbedLiteSearchEngine.js
+component {924fe7ba-afa1-11e2-9d4f-533572064b73} EmbedLiteSearchEngine.js
+contract @mozilla.org/embedlite-search-component;1 {924fe7ba-afa1-11e2-9d4f-533572064b73}
+category app-startup EmbedLiteSearchEngine service,@mozilla.org/embedlite-search-component;1

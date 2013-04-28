@@ -35,6 +35,7 @@ jscomps/EmbedLiteGlobalHelper.js
 jscomps/EmbedLiteConsoleListener.js
 jscomps/EmbedLiteSyncService.js
 jscomps/EmbedLiteFaviconService.js
+jscomps/EmbedLiteSearchEngine.js
 "
 
 for str in $FILES_LIST; do
@@ -50,3 +51,4 @@ rm -rf $TARGET_DIR/chrome/embedlite;
 mkdir -p $TARGET_DIR/chrome/embedlite/content;
 ln -s $(pwd)/jsscripts/embedhelper.js $TARGET_DIR/chrome/embedlite/content/embedhelper.js;
 ln -s $(pwd)/jsscripts/SelectHelper.js $TARGET_DIR/chrome/embedlite/content/SelectHelper.js;
+ln -s $(pwd)/jsscripts/google.xml $TARGET_DIR/chrome/embedlite/content/google.xml;
