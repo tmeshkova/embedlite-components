@@ -37,6 +37,7 @@ jscomps/EmbedLiteConsoleListener.js
 jscomps/EmbedLiteSyncService.js
 jscomps/EmbedLiteFaviconService.js
 jscomps/EmbedLiteSearchEngine.js
+jscomps/EmbedLiteErrorPageHandler.js
 "
 
 for str in $FILES_LIST; do
