@@ -26,8 +26,7 @@ function EmbedLiteErrorPageHandler()
 function EventLinkListener(aWindow)
 {
   this._winID = Services.embedlite.getIDByWindow(aWindow);
-  let browser = Services.embedlite.getBrowserByID(this._winID);
-  this._targetWindow = browser.contentDOMWindow;
+  this._targetWindow = Services.embedlite.getContentWindowByID(this._winID);
 }
 
 EventLinkListener.prototype = {
@@ -70,9 +69,9 @@ EmbedLiteErrorPageHandler.prototype = {
     switch(aTopic) {
       case "app-startup": {
         // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
-        Services.prefs.setCharPref("security.alternate_certificate_error_page", "certerror");
         Services.obs.addObserver(this, "embedliteviewcreated", true);
         Services.obs.addObserver(this, "domwindowclosed", true);
+        Services.obs.addObserver(this, "xpcom-shutdown", true);
         break;
       }
       case "embedliteviewcreated": {
@@ -83,15 +82,12 @@ EmbedLiteErrorPageHandler.prototype = {
         self.onWindowClose(aSubject);
         break;
       }
+      case "xpcom-shutdown": {
+        Services.obs.removeObserver(this, "embedliteviewcreated", true);
+        Services.obs.removeObserver(this, "domwindowclosed", true);
+        Services.obs.removeObserver(this, "xpcom-shutdown", true);
+      }
     }
-  },
-
-  _getProgress: function(aWindow) {
-    return aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIWebNavigation)
-                  .QueryInterface(Ci.nsIDocShell)
-                  .QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIWebProgress);
   },
 
   onWindowOpen: function ss_onWindowOpen(aWindow) {

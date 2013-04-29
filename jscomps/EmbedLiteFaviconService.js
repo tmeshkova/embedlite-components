@@ -65,8 +65,7 @@ var gProgressListener = {
 function EventLinkListener(aWindow)
 {
   this._winID = Services.embedlite.getIDByWindow(aWindow);
-  let browser = Services.embedlite.getBrowserByID(this._winID);
-  this._targetWindow = browser.contentDOMWindow;
+  this._targetWindow = Services.embedlite.getContentWindowByID(this._winID);
 }
 
 EventLinkListener.prototype = {

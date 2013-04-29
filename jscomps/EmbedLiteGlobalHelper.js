@@ -69,6 +69,7 @@ EmbedLiteGlobalHelper.prototype = {
       case "xpcom-shutdown": {
         dump("EmbedLiteGlobalHelper xpcom-shutdown\n");
         Services.obs.removeObserver(this, "invalidformsubmit", false);
+        Services.obs.removeObserver(this, "xpcom-shutdown", false);
         break;
       }
     }
