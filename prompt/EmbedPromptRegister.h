@@ -11,7 +11,7 @@
 #include "nsIObserver.h"
 
 class EmbedPromptRegister : public nsIObserver,
-                           public nsSupportsWeakReference
+                            public nsSupportsWeakReference
 {
 public:
     EmbedPromptRegister();

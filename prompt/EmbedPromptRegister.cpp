@@ -69,15 +69,6 @@ EmbedPromptRegister::Init()
     rv = cr->RegisterFactory(promptCID, "EmbedLite Prompt",
                              "@mozilla.org/prompter;1", f);
 
-    nsCOMPtr<nsIObserverService> observerService =
-        do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-
-    if (observerService) {
-        observerService->AddObserver(this,
-                                     "outer-window-destroyed",
-                                     true);
-    }
-
     f = new mozilla::embedlite::GenericFactory(nsEmbedAlertsServiceConstructor);
     if (!f) {
         NS_WARNING("Unable to create factory for component");

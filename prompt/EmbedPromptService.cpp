@@ -25,10 +25,46 @@
 #include "nsIProtocolHandler.h"
 #include "nsIDOMWindow.h"
 #include "nsIEmbedLiteJSON.h"
+#include "nsIObserverService.h"
 
 // Prompt Factory Implementation
 
 using namespace mozilla::embedlite;
+
+EmbedPromptOuterObserver::EmbedPromptOuterObserver(IDestroyNotification* aNotifier, nsIDOMWindow* aWin)
+  : mNotifier(aNotifier)
+  , mWin(aWin)
+{
+    mService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    if (mService) {
+        mService->AddObserver(this, "outer-window-destroyed", false);
+    }
+}
+
+void EmbedPromptOuterObserver::OnDestroy()
+{
+    mService->RemoveObserver(this, "outer-window-destroyed");
+}
+
+EmbedPromptOuterObserver::~EmbedPromptOuterObserver()
+{
+    OnDestroy();
+}
+
+NS_IMPL_ISUPPORTS2(EmbedPromptOuterObserver, nsIObserver, nsSupportsWeakReference)
+
+NS_IMETHODIMP
+EmbedPromptOuterObserver::Observe(nsISupports *aSubject,
+                                  const char *aTopic,
+                                  const PRUnichar *aData)
+{
+    if (!strcmp(aTopic, "outer-window-destroyed")) {
+        OnDestroy();
+        mNotifier->OnDestroyNotification();
+        mNotifier = nullptr;
+    }
+    return NS_OK;
+}
 
 EmbedPromptFactory::EmbedPromptFactory()
 {
@@ -63,6 +99,13 @@ EmbedPromptService::EmbedPromptService(nsIDOMWindow* aWin)
   , mModalDepth(0)
 {
     mService = do_GetService("@mozilla.org/embedlite-app-service;1");
+    mOuterService = new EmbedPromptOuterObserver(this, aWin);
+}
+
+void
+EmbedPromptService::OnDestroyNotification()
+{
+    CancelResponse();
 }
 
 EmbedPromptService::~EmbedPromptService()
@@ -79,11 +122,20 @@ EmbedPromptService::Alert(const PRUnichar* aDialogTitle,
     return NS_OK;
 }
 
+void
+EmbedPromptService::CancelResponse()
+{
+    std::map<uint32_t, EmbedPromptResponse>::iterator it;
+    for (it = mResponseMap.begin(); it != mResponseMap.end(); it++) {
+        EmbedPromptResponse& response = it->second;
+        mModalDepth--;
+    }
+}
+
 NS_IMETHODIMP
 EmbedPromptService::OnMessageReceived(const char* messageName, const PRUnichar* message)
 {
     nsCOMPtr<nsIEmbedLiteJSON> json = do_GetService("@mozilla.org/embedlite-json;1");
-    printf(">>>>>>Func:%s::%d name:%s, msg:%s\n", __PRETTY_FUNCTION__, __LINE__, messageName, NS_ConvertUTF16toUTF8(message).get());
     nsCOMPtr<nsIPropertyBag2> root;
     NS_ENSURE_SUCCESS(json->ParseJSON(nsDependentString(message), getter_AddRefs(root)), NS_ERROR_FAILURE);
 
@@ -105,6 +157,31 @@ EmbedPromptService::OnMessageReceived(const char* messageName, const PRUnichar* 
 
     return NS_OK;
 }
+
+uint32_t
+EmbedPromptService::CheckWinID()
+{
+    uint32_t winid = 0;
+    mService->GetIDByWindow(mWin, &winid);
+    if (!winid) {
+        mOuterService->OnDestroy();
+        mOuterService = nullptr;
+    }
+    return winid;
+}
+
+uint32_t
+EmbedAuthPromptService::CheckWinID()
+{
+    uint32_t winid = 0;
+    mService->GetIDByWindow(mWin, &winid);
+    if (!winid) {
+        mOuterService->OnDestroy();
+        mOuterService = nullptr;
+    }
+    return winid;
+}
+
 
 NS_IMETHODIMP
 EmbedPromptService::AlertCheck(const PRUnichar* aDialogTitle,
@@ -150,7 +227,7 @@ EmbedPromptService::AlertCheck(const PRUnichar* aDialogTitle,
     while (mModalDepth == origModalDepth && NS_SUCCEEDED(rv)) {
         bool processedEvent;
         rv = thread->ProcessNextEvent(true, &processedEvent);
-        if (NS_SUCCEEDED(rv) && !processedEvent) {
+        if (NS_SUCCEEDED(rv) && (!processedEvent || !CheckWinID())) {
             rv = NS_ERROR_UNEXPECTED;
         }
     }
@@ -236,7 +313,7 @@ EmbedPromptService::ConfirmCheck(const PRUnichar* aDialogTitle,
     while (mModalDepth == origModalDepth && NS_SUCCEEDED(rv)) {
         bool processedEvent;
         rv = thread->ProcessNextEvent(true, &processedEvent);
-        if (NS_SUCCEEDED(rv) && !processedEvent) {
+        if (NS_SUCCEEDED(rv) && (!processedEvent || !CheckWinID())) {
             rv = NS_ERROR_UNEXPECTED;
         }
     }
@@ -333,7 +410,7 @@ EmbedPromptService::Prompt(const PRUnichar* aDialogTitle,
     while (mModalDepth == origModalDepth && NS_SUCCEEDED(rv)) {
         bool processedEvent;
         rv = thread->ProcessNextEvent(true, &processedEvent);
-        if (NS_SUCCEEDED(rv) && !processedEvent) {
+        if (NS_SUCCEEDED(rv) && (!processedEvent || !CheckWinID())) {
             rv = NS_ERROR_UNEXPECTED;
         }
     }
@@ -412,10 +489,27 @@ EmbedAuthPromptService::EmbedAuthPromptService(nsIDOMWindow* aWin)
   : mWin(aWin)
 {
     mService = do_GetService("@mozilla.org/embedlite-app-service;1");
+    mOuterService = new EmbedPromptOuterObserver(this, mWin);
 }
 
 EmbedAuthPromptService::~EmbedAuthPromptService()
 {
+}
+
+void
+EmbedAuthPromptService::CancelResponse()
+{
+    std::map<uint32_t, EmbedPromptResponse>::iterator it;
+    for (it = mResponseMap.begin(); it != mResponseMap.end(); it++) {
+        EmbedPromptResponse& response = it->second;
+        mModalDepth--;
+    }
+}
+
+void
+EmbedAuthPromptService::OnDestroyNotification()
+{
+    CancelResponse();
 }
 
 NS_IMPL_ISUPPORTS2(EmbedAuthPromptService, nsIAuthPrompt2, nsIEmbedMessageListener)
@@ -643,7 +737,7 @@ EmbedAuthPromptService::DoSendAsyncPrompt(EmbedAsyncAuthPrompt* mPrompt)
     while (mModalDepth == origModalDepth && NS_SUCCEEDED(rv)) {
         bool processedEvent;
         rv = thread->ProcessNextEvent(true, &processedEvent);
-        if (NS_SUCCEEDED(rv) && !processedEvent) {
+        if (NS_SUCCEEDED(rv) && (!processedEvent || !CheckWinID())) {
             rv = NS_ERROR_UNEXPECTED;
         }
     }

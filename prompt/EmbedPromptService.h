@@ -18,8 +18,12 @@
 #include "nsDataHashtable.h"
 #include "nsIEmbedAppService.h"
 #include "nsIChannel.h"
+#include "nsWeakReference.h"
+#include "nsIObserver.h"
 #include <map>
 #include <string>
+
+class nsIObserverService;
 
 namespace mozilla {
 namespace embedlite {
@@ -39,7 +43,28 @@ public:
     nsString password;
 };
 
-class EmbedPromptService : public nsIPrompt, public nsIEmbedMessageListener
+class IDestroyNotification
+{
+public:
+    virtual void OnDestroyNotification() = 0;
+};
+
+class EmbedPromptOuterObserver : public nsIObserver, public nsSupportsWeakReference
+{
+public:
+    EmbedPromptOuterObserver(IDestroyNotification* aNotifier, nsIDOMWindow* aWin);
+    virtual ~EmbedPromptOuterObserver();
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+    void OnDestroy();
+private:
+    IDestroyNotification* mNotifier;
+    nsCOMPtr<nsIDOMWindow> mWin;
+    nsCOMPtr<nsIObserverService> mService;
+};
+
+class EmbedPromptService : public nsIPrompt, public nsIEmbedMessageListener, public IDestroyNotification
 {
 public:
     EmbedPromptService(nsIDOMWindow* aWin);
@@ -48,11 +73,18 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROMPT
     NS_DECL_NSIEMBEDMESSAGELISTENER
+
+    virtual void OnDestroyNotification();
+
 private:
+    void CancelResponse();
+    uint32_t CheckWinID();
+
     nsCOMPtr<nsIDOMWindow> mWin;
     int mModalDepth;
     nsCOMPtr<nsIEmbedAppService> mService;
     std::map<uint32_t, EmbedPromptResponse> mResponseMap;
+    RefPtr<EmbedPromptOuterObserver> mOuterService;
 };
 
 class EmbedAuthPromptService;
@@ -82,7 +114,7 @@ public:
     RefPtr<EmbedAuthPromptService> mService;
 };
 
-class EmbedAuthPromptService : public nsIAuthPrompt2, public nsIEmbedMessageListener
+class EmbedAuthPromptService : public nsIAuthPrompt2, public nsIEmbedMessageListener, public IDestroyNotification
 {
 public:
     EmbedAuthPromptService(nsIDOMWindow* aWin);
@@ -98,10 +130,12 @@ public:
                                const bool& confirmed,
                                const nsString& username,
                                const nsString& password);
+    virtual void OnDestroyNotification();
 
 private:
     void DoAsyncPrompt();
-
+    void CancelResponse();
+    uint32_t CheckWinID();
 
     nsCOMPtr<nsIDOMWindow> mWin;
     std::map<std::string, EmbedAsyncAuthPrompt*> asyncPrompts;
@@ -109,6 +143,7 @@ private:
     nsCOMPtr<nsIEmbedAppService> mService;
     int mModalDepth;
     std::map<uint32_t, EmbedPromptResponse> mResponseMap;
+    RefPtr<EmbedPromptOuterObserver> mOuterService;
 };
 
 class EmbedPromptFactory :  public nsIPromptFactory
