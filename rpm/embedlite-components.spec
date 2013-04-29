@@ -8,7 +8,7 @@ Group:      Applications/Internet
 License:    Mozilla License
 URL:        http://www.mozilla.com
 Source0:    %{name}-%{version}.tar.bz2
-BuildRequires:  pkgconfig(libxul)
+BuildRequires:  pkgconfig(libxul) >= 23.0a1
 BuildRequires:  python
 BuildRequires:  libtool
 
