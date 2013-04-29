@@ -43,7 +43,9 @@ EmbedPromptOuterObserver::EmbedPromptOuterObserver(IDestroyNotification* aNotifi
 
 void EmbedPromptOuterObserver::OnDestroy()
 {
-    mService->RemoveObserver(this, "outer-window-destroyed");
+    if (mService) {
+        mService->RemoveObserver(this, "outer-window-destroyed");
+    }
 }
 
 EmbedPromptOuterObserver::~EmbedPromptOuterObserver()
@@ -60,8 +62,9 @@ EmbedPromptOuterObserver::Observe(nsISupports *aSubject,
 {
     if (!strcmp(aTopic, "outer-window-destroyed")) {
         OnDestroy();
-        mNotifier->OnDestroyNotification();
-        mNotifier = nullptr;
+        if (mNotifier) {
+            mNotifier->OnDestroyNotification();
+        }
     }
     return NS_OK;
 }
@@ -110,6 +113,9 @@ EmbedPromptService::OnDestroyNotification()
 
 EmbedPromptService::~EmbedPromptService()
 {
+    if (mOuterService) {
+        mOuterService->OnDestroy();
+    }
 }
 
 NS_IMPL_ISUPPORTS2(EmbedPromptService, nsIPrompt, nsIEmbedMessageListener)
@@ -127,7 +133,6 @@ EmbedPromptService::CancelResponse()
 {
     std::map<uint32_t, EmbedPromptResponse>::iterator it;
     for (it = mResponseMap.begin(); it != mResponseMap.end(); it++) {
-        EmbedPromptResponse& response = it->second;
         mModalDepth--;
     }
 }
@@ -163,7 +168,7 @@ EmbedPromptService::CheckWinID()
 {
     uint32_t winid = 0;
     mService->GetIDByWindow(mWin, &winid);
-    if (!winid) {
+    if (!winid && mOuterService) {
         mOuterService->OnDestroy();
         mOuterService = nullptr;
     }
@@ -494,6 +499,9 @@ EmbedAuthPromptService::EmbedAuthPromptService(nsIDOMWindow* aWin)
 
 EmbedAuthPromptService::~EmbedAuthPromptService()
 {
+    if (mOuterService) {
+        mOuterService->OnDestroy();
+    }
 }
 
 void
@@ -501,7 +509,6 @@ EmbedAuthPromptService::CancelResponse()
 {
     std::map<uint32_t, EmbedPromptResponse>::iterator it;
     for (it = mResponseMap.begin(); it != mResponseMap.end(); it++) {
-        EmbedPromptResponse& response = it->second;
         mModalDepth--;
     }
 }
