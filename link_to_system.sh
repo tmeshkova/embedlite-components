@@ -54,6 +54,8 @@ mkdir -p $TARGET_DIR/chrome/embedlite/content;
 ln -s $(pwd)/jsscripts/embedhelper.js $TARGET_DIR/chrome/embedlite/content/embedhelper.js;
 ln -s $(pwd)/jsscripts/SelectHelper.js $TARGET_DIR/chrome/embedlite/content/SelectHelper.js;
 ln -s $(pwd)/jsscripts/google.xml $TARGET_DIR/chrome/embedlite/content/google.xml;
+ln -s $(pwd)/jsscripts/bing.xml $TARGET_DIR/chrome/embedlite/content/bing.xml;
+ln -s $(pwd)/jsscripts/yahoo.xml $TARGET_DIR/chrome/embedlite/content/yahoo.xml;
 
 rm -f $TARGET_DIR/chrome/EmbedLiteOverrides.manifest;
 ln -s $(pwd)/overrides/EmbedLiteOverrides.manifest $TARGET_DIR/chrome/EmbedLiteOverrides.manifest;

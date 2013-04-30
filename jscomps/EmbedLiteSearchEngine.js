@@ -22,25 +22,54 @@ EmbedLiteSearchEngine.prototype = {
     switch(aTopic) {
       // Engine DownloadManager notifications
       case "app-startup": {
-        dump("EmbedLiteSearchEngine app-startup\n");
-        Services.obs.addObserver(this, "browser-search-engine-modified", true);
+        Services.obs.addObserver(this, "xpcom-shutdown", true);
+        Services.obs.addObserver(this, "embedui:search", true);
         Services.obs.addObserver(this, "embedliteInitialized", true);
-        // Init LoginManager
         break;
       }
       case "embedliteInitialized": {
+        Services.obs.removeObserver(this, "embedliteInitialized");
         Services.search.init(function addEngine_cb(rv) {
-            Services.search.addEngine("chrome://embedlite/content/google.xml", Ci.nsISearchEngine.DATA_XML, null, false);
+            Services.obs.notifyObservers(null, "embed:search", JSON.stringify({ msg: "init", defaultEngine: Services.search.defaultEngine ? Services.search.defaultEngine.name : null }));
         });
         break;
       }
-      case "browser-search-engine-modified": {
+      case "embedui:search": {
+        var data = JSON.parse(aData);
+        switch (data.msg) {
+          case "loadxml": {
+            Services.search.addEngine(data.uri, Ci.nsISearchEngine.DATA_XML, null, data.confirm);
+            break;
+          }
+          case "loadtext": {
+            Services.search.addEngine(data.uri, Ci.nsISearchEngine.DATA_TEXT, null, data.confirm);
+            break;
+          }
+          case "getlist": {
+            let engines = Services.search.getEngines({});
+            if (engines) {
+              var json = [];
+              for (var i = 0; i < engines.length; i++) {
+                let engine = engines[i];
+                let serEn = { name: engine.name,
+                              isDefault: Services.search.defaultEngine === engine,
+                              isCurrent: Services.search.currentEngine === engine }
+                json.push(serEn);
+              }
+              Services.obs.notifyObservers(null, "embed:search", JSON.stringify({ msg: "pluginslist", list: json}));
+            }
+            break;
+          }
+        }
         break;
       }
-      default: {
-        dump("EmbedLiteSearchEngine observe: top:" + aTopic + "\n");
+      case "xpcom-shutdown": {
+        Services.obs.removeObserver(this, "embedui:search");
+        Services.obs.removeObserver(this, "xpcom-shutdown");
         break;
       }
+      default:
+        break;
     }
   },
 
