@@ -41,14 +41,18 @@ EmbedLiteSearchEngine.prototype = {
             Services.search.addEngine(data.uri, Ci.nsISearchEngine.DATA_XML, null, data.confirm);
             break;
           }
+          case "restoreDefault": {
+            Services.search.restoreDefaultEngines();
+            break;
+          }
           case "loadtext": {
             Services.search.addEngine(data.uri, Ci.nsISearchEngine.DATA_TEXT, null, data.confirm);
             break;
           }
           case "getlist": {
             let engines = Services.search.getEngines({});
+            var json = [];
             if (engines) {
-              var json = [];
               for (var i = 0; i < engines.length; i++) {
                 let engine = engines[i];
                 let serEn = { name: engine.name,
@@ -56,8 +60,8 @@ EmbedLiteSearchEngine.prototype = {
                               isCurrent: Services.search.currentEngine === engine }
                 json.push(serEn);
               }
-              Services.obs.notifyObservers(null, "embed:search", JSON.stringify({ msg: "pluginslist", list: json}));
             }
+            Services.obs.notifyObservers(null, "embed:search", JSON.stringify({ msg: "pluginslist", list: json}));
             break;
           }
         }
