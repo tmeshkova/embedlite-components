@@ -16,6 +16,9 @@ AC_PROG_RANLIB
 AC_HEADER_STDC
 AM_PROG_LIBTOOL
 AC_PROG_CPP
+PKG_PROG_PKG_CONFIG
+
+NSPR_VERSION=4.9.6
 
 if test "$PYTHON" == ""; then
     PYTHON=python
@@ -38,13 +41,26 @@ AC_ARG_WITH(engine-path,
   fi
 ])
 
+NSPR=mozilla-nspr
+AC_ARG_WITH([system-nspr],
+  [AS_HELP_STRING([--with-system-nspr],
+    [Use system installed NSPR(default=no)])
+  ]
+)
+
+AS_IF([test "x$with_system_nspr" = "xyes"],
+  [PKG_CHECK_MODULES([nspr], [nspr >= $NSPR_VERSION], [NSPR=nspr],
+    [AC_MSG_ERROR([--with-system-nspr requested but no nspr(>=$NSPR_VERSION) package found])
+  ])
+])
+
 if test "$OBJ_PATH" != ""; then
 SDK_DIR=$OBJ_PATH/dist
 IDL_DIR=$OBJ_PATH/dist/idl
 ENGINE_CFLAGS="-I$OBJ_PATH/dist/include -I$OBJ_PATH/dist/include/nspr -I$OBJ_PATH/dist/include/mozilla -I$OBJ_PATH/dist/include/dom -I/usr/include/nspr4"
 ENGINE_LIBS="-L$OBJ_PATH/dist/sdk/lib -lxpcomglue_s -lxul -lmozalloc"
 else
-PKG_CHECK_MODULES(ENGINE, libxul nspr,
+PKG_CHECK_MODULES(ENGINE, libxul $NSPR,
 [
     SDK_DIR=`pkg-config --variable=sdkdir libxul`
     IDL_DIR=`pkg-config --variable=idldir libxul`
