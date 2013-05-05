@@ -68,14 +68,14 @@ var UserAgent = {
     if (aUri.schemeIs("http") || aUri.schemeIs("https")) {
       if (this.GOOGLE_DOMAIN.test(aUri.host)) {
         // Send the phone UA to google
-        if (!defaultUA.contains("Android")) {
+        if (!defaultUA.contains("Mobile")) {
           return defaultUA.replace("X11", "Android").replace("Linux", "Mobile");
         }
       } else if (this.YOUTUBE_DOMAIN.test(aUri.host)) {
         // Send the phone UA to google
-        if (!defaultUA.contains("Android")) {
+        if (!defaultUA.contains("Safari/535.19")) {
           // Nexus 7 Android chrome has best capabilities
-          return "Mozilla/5.0 (Linux; Android 4.1.1; Nexus 7 Build/JRO03D) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166  Safari/535.19";
+          return defaultUA.replace("X11", "Android 4.4.1").concat(" Safari/535.19");
         }
       }
     }
