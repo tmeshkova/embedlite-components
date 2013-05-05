@@ -14,6 +14,7 @@ jscomps_manifest_DATA = \
 	EmbedLiteFaviconService.js \
 	EmbedLiteSearchEngine.js \
 	EmbedLiteErrorPageHandler.js \
+	UserAgentOverrideHelper.js \
 	$(NULL)
 
-INCLUDES = $(DEPS_CFLAGS) 
+INCLUDES = $(DEPS_CFLAGS)

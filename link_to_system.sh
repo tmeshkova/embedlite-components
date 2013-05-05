@@ -38,6 +38,7 @@ jscomps/EmbedLiteSyncService.js
 jscomps/EmbedLiteFaviconService.js
 jscomps/EmbedLiteSearchEngine.js
 jscomps/EmbedLiteErrorPageHandler.js
+jscomps/UserAgentOverrideHelper.js
 "
 
 for str in $FILES_LIST; do

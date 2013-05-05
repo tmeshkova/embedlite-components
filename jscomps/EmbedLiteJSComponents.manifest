@@ -59,3 +59,8 @@ category app-startup EmbedLiteSearchEngine service,@mozilla.org/embedlite-search
 component {ad8b729c-b000-11e2-8ed2-bfd39531b0a6} EmbedLiteErrorPageHandler.js
 contract @mozilla.org/embedlite-errorpage-handler;1 {ad8b729c-b000-11e2-8ed2-bfd39531b0a6}
 category app-startup EmbedLiteErrorPageHandler service,@mozilla.org/embedlite-errorpage-handler;1
+
+# UserAgentOverrideHelper.js
+component {69d68654-b5a0-11e2-bb91-2b8ad5eb98ac} UserAgentOverrideHelper.js
+contract @mozilla.org/embedlite-uahelper-component;1 {69d68654-b5a0-11e2-bb91-2b8ad5eb98ac}
+category app-startup UserAgentOverrideHelper service,@mozilla.org/embedlite-uahelper-component;1
