@@ -29,6 +29,10 @@ dump("###################################### embedhelper.js loaded\n");
 
 var globalObject = null;
 
+function fuzzyEquals(a, b) {
+  return (Math.abs(a - b) < 1e-6);
+}
+
 function EmbedHelper() {
   this.lastTouchedAt = Date.now();
   this.contentDocumentIsDisplayed = true;
@@ -86,6 +90,13 @@ EmbedHelper.prototype = {
   _viewportReadyToChange: false,
   _lastTarget: null,
   _lastTargetY: 0,
+
+  resetMaxLineBoxWidth: function() {
+    let webNav = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
+    let docShell = webNav.QueryInterface(Ci.nsIDocShell);
+    let docViewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+    docViewer.changeMaxLineBoxWidth(0);
+  },
 
   performReflow: function performReflow() {
     let reflowMobile = false;
@@ -192,6 +203,11 @@ EmbedHelper.prototype = {
         }
         break;
       }
+      case "Gesture:DoubleTap": {
+        this._cancelTapHighlight();
+        // this.onDoubleTap(aMessage.json);
+        break;
+      }
       case "Gesture:LongTap": {
         let element = this._touchElement;
         if (element) {
@@ -230,6 +246,123 @@ EmbedHelper.prototype = {
         break;
       }
     }
+  },
+
+  _shouldZoomToElement: function(aElement) {
+    let win = aElement.ownerDocument.defaultView;
+    if (win.getComputedStyle(aElement, null).display == "inline")
+      return false;
+    if (aElement instanceof Ci.nsIDOMHTMLLIElement)
+      return false;
+    if (aElement instanceof Ci.nsIDOMHTMLQuoteElement)
+      return false;
+    return true;
+  },
+
+  onDoubleTap: function(aData) {
+    let data = aData;
+
+    let element = ElementTouchHelper.anyElementFromPoint(data.x, data.y);
+    if (!element) {
+      this._zoomOut();
+      return;
+    }
+
+    while (element && !this._shouldZoomToElement(element))
+      element = element.parentNode;
+
+    if (!element) {
+      this._zoomOut();
+    } else {
+      this._zoomToElement(element, data.y);
+    }
+  },
+
+  _zoomOut: function() {
+    this.resetMaxLineBoxWidth();
+    var winid = Services.embedlite.getIDByWindow(content);
+    Services.embedlite.zoomToRect(winid, 0, this._viewportData.y, this._viewportData.cssPageRect.width, this._viewportData.cssPageRect.height);
+  },
+
+  _isRectZoomedIn: function(aRect) {
+    // This function checks to see if the area of the rect visible in the
+    // viewport (i.e. the "overlapArea" variable below) is approximately
+    // the max area of the rect we can show. It also checks that the rect
+    // is actually on-screen by testing the left and right edges of the rect.
+    // In effect, this tells us whether or not zooming in to this rect
+    // will significantly change what the user is seeing.
+    const minDifference = -20;
+    const maxDifference = 20;
+    const maxZoomAllowed = 4; // keep this in sync with mobile/android/base/ui/PanZoomController.MAX_ZOOM
+
+    let vRect = new Rect((this._viewportData.compositionBounds.x + this._viewportData.x),
+                         (this._viewportData.compositionBounds.y + this._viewportData.y),
+                         this._viewportData.compositionBounds.width / this._viewportData.resolution.width,
+                         this._viewportData.compositionBounds.height / this._viewportData.resolution.width);
+    let overlap = vRect.intersect(aRect);
+    let overlapArea = overlap.width * overlap.height;
+    let availHeight = Math.min(aRect.width * vRect.height / vRect.width, aRect.height);
+    let showing = overlapArea / (aRect.width * availHeight);
+    let dw = (aRect.width - vRect.width);
+    let dx = (aRect.x - vRect.x);
+
+    if (fuzzyEquals(this._viewportData.resolution.width, maxZoomAllowed) && overlap.width / aRect.width > 0.9) {
+      // we're already at the max zoom and the block is not spilling off the side of the screen so that even
+      // if the block isn't taking up most of the viewport we can't pan/zoom in any more. return true so that we zoom out
+      return true;
+    }
+
+    return (showing > 0.9 &&
+            dx > minDifference && dx < maxDifference &&
+            dw > minDifference && dw < maxDifference);
+  },
+
+
+  /* Zoom to an element, optionally keeping a particular part of it
+   * in view if it is really tall.
+   */
+  _zoomToElement: function(aElement, aClickY = -1, aCanZoomOut = true, aCanScrollHorizontally = true) {
+    const margin = 15;
+    let rect = ElementTouchHelper.getBoundingContentRect(aElement);
+
+    dump("_zoomToElement: rect[" + rect.x + "," + rect.y + "," + rect.w + "," + rect.h + "]\n");
+    let bRect = new Rect(aCanScrollHorizontally ? Math.max(this._viewportData.cssPageRect.x + this._viewportData.x, rect.x - margin) : content.scrollX || 0,
+                         rect.y,
+                         aCanScrollHorizontally ? rect.w + 2 * margin : this._viewportData.compositionBounds.width,
+                         rect.h);
+    // constrict the rect to the screen's right edge
+    bRect.width = Math.min(bRect.width, (this._viewportData.cssPageRect.x + this._viewportData.x + this._viewportData.cssPageRect.width) - bRect.x);
+
+    // if the rect is already taking up most of the visible area and is stretching the
+    // width of the page, then we want to zoom out instead.
+    if (this._isRectZoomedIn(bRect)) {
+      if (aCanZoomOut)
+        this._zoomOut();
+      return;
+    }
+
+    rect.x = bRect.x;
+    rect.y = bRect.y;
+    rect.w = bRect.width;
+    rect.h = Math.min(bRect.width * this._viewportData.compositionBounds.height / this._viewportData.compositionBounds.width, bRect.height);
+
+    if (aClickY >= 0) {
+      // if the block we're zooming to is really tall, and we want to keep a particular
+      // part of it in view, then adjust the y-coordinate of the target rect accordingly.
+      // the 1.2 multiplier is just a little fuzz to compensate for bRect including horizontal
+      // margins but not vertical ones.
+      let cssTapY = this._viewportData.compositionBounds.y + aClickY;
+      if ((bRect.height > rect.h) && (cssTapY > rect.y + (rect.h * 1.2))) {
+        rect.y = cssTapY - (rect.h / 2);
+      }
+    }
+
+    if (rect.w > this._viewportData.compositionBounds.width || rect.h > this._viewportData.compositionBounds.height) {
+      this.resetMaxLineBoxWidth();
+    }
+
+    var winid = Services.embedlite.getIDByWindow(content);
+    Services.embedlite.zoomToRect(winid, rect.x, rect.y, rect.w, rect.h);
   },
 
   _moveClickPoint: function(aElement, aX, aY) {
@@ -425,7 +558,7 @@ const ElementTouchHelper = {
      the currently selected tab is used. The coordinates provided should be CSS pixels
      relative to the window's scroll position. */
   anyElementFromPoint: function(aX, aY, aWindow) {
-    let win = (aWindow ? aWindow : BrowserApp.selectedBrowser.contentWindow);
+    let win = (aWindow ? aWindow : content);
     let cwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     let elem = cwu.elementFromPoint(aX, aY, false, true);
 

@@ -151,7 +151,7 @@ void EmbedTouchListener::HandleDoubleTap(const nsIntPoint& aPoint)
             element = elementtest;
         }
     }
-        
+
     if (!element) {
         mService->ZoomToRect(mTopWinid, 0, 0, 0, 0);
     } else {
@@ -260,7 +260,7 @@ EmbedTouchListener::ZoomToElement(nsIDOMElement* aElement, int aClickY, bool aCa
             zoomed = true;
         }
     }
-    
+
     if (!zoomed) {
         mService->ZoomToRect(mTopWinid, clrect.x, clrect.y, mCssCompositedRect.width, mCssCompositedRect.height);
     }
