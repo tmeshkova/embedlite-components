@@ -24,8 +24,8 @@ EmbedLite Components required for embeded browser UI
 # >> build pre
 # << build pre
 
-NO_CONFIGURE=YES ./autogen.sh
-%configure --prefix=/usr \
+NO_CONFIGURE=yes ./autogen.sh
+%configure --with-system-nspr
 
 make %{?jobs:-j%jobs}
 
