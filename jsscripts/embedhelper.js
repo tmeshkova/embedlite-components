@@ -59,6 +59,7 @@ EmbedHelper.prototype = {
     addMessageListener("Gesture:LongTap", this);
     addMessageListener("embedui:find", this);
     addMessageListener("Gesture:ContextMenuSynth", this);
+    addMessageListener("embed:ContextMenuCreate", this);
     Services.obs.addObserver(this, "before-first-paint", true);
     Services.prefs.addObserver("browser.zoom.reflowOnZoom", this, false);
   },
@@ -185,6 +186,12 @@ EmbedHelper.prototype = {
         let [x, y] = [aMessage.json.x, aMessage.json.y];
         let element = this._touchElement;
         this._sendContextMenuEvent(element, x, y);
+        break;
+      }
+      case "embed:ContextMenuCreate": {
+        let [x, y] = [aMessage.json.x, aMessage.json.y];
+        let element = this._touchElement;
+        ContextMenuHandler._processPopupNode(element, x, y, Ci.nsIDOMMouseEvent.MOZ_SOURCE_UNKNOWN);
         break;
       }
       case "Gesture:SingleTap": {
