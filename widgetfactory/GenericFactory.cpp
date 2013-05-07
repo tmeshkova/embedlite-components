@@ -12,7 +12,7 @@ NS_IMPL_ISUPPORTS1(GenericFactory, nsIFactory)
 
 NS_IMETHODIMP
 GenericFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
-			       void** aResult)
+                               void** aResult)
 {
   return mCtor(aOuter, aIID, aResult);
 }

@@ -15,6 +15,8 @@ let HTMLSelectElement = Ci.nsIDOMHTMLSelectElement;
 let HTMLLabelElement = Ci.nsIDOMHTMLLabelElement;
 let HTMLIFrameElement = Ci.nsIDOMHTMLIFrameElement;
 let HTMLFrameElement = Ci.nsIDOMHTMLFrameElement;
+let HTMLTextAreaElement = Ci.nsIDOMHTMLTextAreaElement;
+let HTMLInputElement = Ci.nsIDOMHTMLInputElement;
 
 XPCOMUtils.defineLazyServiceGetter(this, "DOMUtils",
   "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
@@ -47,11 +49,6 @@ EmbedHelper.prototype = {
   _init: function()
   {
     dump("Init Called:" + this + "\n");
-    Services.prefs.setBoolPref("embedlite.azpc.handle.singletap", false);
-    Services.prefs.setBoolPref("embedlite.azpc.json.singletap", true);
-    Services.prefs.setBoolPref("embedlite.azpc.handle.longtap", false);
-    Services.prefs.setBoolPref("embedlite.azpc.json.longtap", true);
-    Services.prefs.setBoolPref("embedlite.azpc.json.viewport", true);
     addEventListener("touchstart", this, false);
     addEventListener("touchmove", this, false);
     addEventListener("touchend", this, false);
@@ -61,6 +58,7 @@ EmbedHelper.prototype = {
     addMessageListener("Gesture:SingleTap", this);
     addMessageListener("Gesture:LongTap", this);
     addMessageListener("embedui:find", this);
+    addMessageListener("Gesture:ContextMenuSynth", this);
     Services.obs.addObserver(this, "before-first-paint", true);
     Services.prefs.addObserver("browser.zoom.reflowOnZoom", this, false);
   },
@@ -183,6 +181,12 @@ EmbedHelper.prototype = {
 
   receiveMessage: function receiveMessage(aMessage) {
     switch (aMessage.name) {
+      case "Gesture:ContextMenuSynth": {
+        let [x, y] = [aMessage.json.x, aMessage.json.y];
+        let element = this._touchElement;
+        this._sendContextMenuEvent(element, x, y);
+        break;
+      }
       case "Gesture:SingleTap": {
         let element = this._touchElement;
         if (element) {
@@ -404,6 +408,16 @@ EmbedHelper.prototype = {
     }
   },
 
+  _sendContextMenuEvent: function _sendContextMenuEvent(aElement, aX, aY) {
+    let window = aElement.ownerDocument.defaultView;
+    try {
+      let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      cwu.sendMouseEventToWindow("contextmenu", aX, aY, 2, 1, 0, false);
+    } catch(e) {
+      Cu.reportError(e);
+    }
+  },
+
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case 'touchstart':
@@ -463,6 +477,7 @@ EmbedHelper.prototype = {
       closest = aEvent.target;
 
     if (closest) {
+      // SelectionHandler._onSelectionAttach(aEvent.changedTouches[0].screenX, aEvent.changedTouches[0].screenY);
       let uri = this._getLinkURI(closest);
       if (uri) {
         Services.io.QueryInterface(Ci.nsISpeculativeConnect).speculativeConnect(uri, null);
@@ -781,6 +796,10 @@ const ElementTouchHelper = {
             h: r.height };
   }
 };
+
+Services.scriptloader.loadSubScript("chrome://embedlite/content/Util.js");
+Services.scriptloader.loadSubScript("chrome://embedlite/content/ContextMenuHandler.js");
+//Services.scriptloader.loadSubScript("chrome://embedlite/content/SelectionHandler.js");
 
 globalObject = new EmbedHelper();
 

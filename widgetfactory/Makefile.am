@@ -6,6 +6,7 @@ libwidgetfactory_la_SOURCES = \
     nsFilePicker.cpp \
     GenericFactory.cpp \
     nsEmbedChildModule.cpp \
+    nsClipboard.cpp \
     $(NULL)
 
 libwidgetfactory_la_CPPFLAGS = \

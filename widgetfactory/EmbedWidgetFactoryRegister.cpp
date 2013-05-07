@@ -18,10 +18,15 @@
 #include "nsIFormHistory.h"
 #include "nsWidgetsCID.h"
 #include "nsFilePicker.h"
+#include "nsClipboard.h"
 
 using namespace mozilla::embedlite;
 
+const char* clipBoardCONTRACTID = "@mozilla.org/widget/clipboard;1";
+const char* filepickerCONTRACTID = "@mozilla.org/filepicker;1";
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEmbedFilePicker)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsEmbedClipboard)
 
 EmbedWidgetFactoryRegister::EmbedWidgetFactoryRegister()
 {
@@ -49,10 +54,10 @@ EmbedWidgetFactoryRegister::Init()
         NS_WARNING("Unable to create factory for component");
         return NS_ERROR_FAILURE;
     }
-    nsCOMPtr<nsIFactory> oldFactory = do_GetClassObject("@mozilla.org/filepicker;1");
+    nsCOMPtr<nsIFactory> oldFactory = do_GetClassObject(filepickerCONTRACTID);
     if (oldFactory) {
         nsCID* cid = NULL;
-        rv = cr->ContractIDToCID("@mozilla.org/filepicker;1", &cid);
+        rv = cr->ContractIDToCID(filepickerCONTRACTID, &cid);
         if (!NS_FAILED(rv)) {
             rv = cr->UnregisterFactory(*cid, oldFactory.get());
             NS_Free(cid);
@@ -64,7 +69,30 @@ EmbedWidgetFactoryRegister::Init()
 
     nsCID fpickerCID = NS_EMBED_FILEPICKER_SERVICE_CID;
     rv = cr->RegisterFactory(fpickerCID, "EmbedLite FilePicker",
-                             "@mozilla.org/filepicker;1", fp);
+                             filepickerCONTRACTID, fp);
+
+    fp = new mozilla::embedlite::GenericFactory(nsEmbedClipboardConstructor);
+    if (!fp) {
+        NS_WARNING("Unable to create factory for component");
+        return NS_ERROR_FAILURE;
+    }
+    oldFactory = do_GetClassObject(clipBoardCONTRACTID);
+    if (oldFactory) {
+        nsCID* cid = NULL;
+        rv = cr->ContractIDToCID(clipBoardCONTRACTID, &cid);
+        if (!NS_FAILED(rv)) {
+            rv = cr->UnregisterFactory(*cid, oldFactory.get());
+            NS_Free(cid);
+            if (NS_FAILED(rv)) {
+                return NS_ERROR_FAILURE;
+            }
+        }
+    }
+
+    nsCID clipboardCID = NS_EMBED_CLIPBOARD_SERVICE_CID;
+    rv = cr->RegisterFactory(clipboardCID, "EmbedLite ClipBoard",
+                             clipBoardCONTRACTID, fp);
+
 
     return NS_OK;
 }
