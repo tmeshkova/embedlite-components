@@ -320,7 +320,7 @@ var ContextMenuHandler = {
 
     this._previousState = state;
 
-    Util.sendAsyncMessage("Content:ContextMenu", state);
+    sendAsyncMessage("Content:ContextMenu", state);
   },
 
   _getLinkURL: function ch_getLinkURL(aLink) {

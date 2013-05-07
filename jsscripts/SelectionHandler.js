@@ -394,7 +394,7 @@ var SelectionHandler = {
   _onFail: function _onFail(aDbgMessage) {
     if (aDbgMessage && aDbgMessage.length > 0)
       Util.dumpLn(aDbgMessage);
-    Util.sendAsyncMessage("Content:SelectionFail");
+    sendAsyncMessage("Content:SelectionFail");
     this._clearSelection();
     this._closeSelection();
   },
@@ -415,31 +415,31 @@ var SelectionHandler = {
   _repositionInfoRequest: function _repositionInfoRequest(aJsonMsg) {
     if (!this.isActive) {
       Util.dumpLn("unexpected: repositionInfoRequest but selection isn't active.");
-      Util.sendAsyncMessage("Content:RepositionInfoResponse", { reposition: false });
+      sendAsyncMessage("Content:RepositionInfoResponse", { reposition: false });
       return;
     }
     
     if (!this.targetIsEditable) {
       Util.dumpLn("unexpected: repositionInfoRequest but targetIsEditable is false.");
-      Util.sendAsyncMessage("Content:RepositionInfoResponse", { reposition: false });
+      sendAsyncMessage("Content:RepositionInfoResponse", { reposition: false });
     }
     
     let result = this._calcNewContentPosition(aJsonMsg.viewHeight);
 
     // no repositioning needed
     if (result == 0) {
-      Util.sendAsyncMessage("Content:RepositionInfoResponse", { reposition: false });
+      sendAsyncMessage("Content:RepositionInfoResponse", { reposition: false });
       return;
     }
 
-    Util.sendAsyncMessage("Content:RepositionInfoResponse", {
+    sendAsyncMessage("Content:RepositionInfoResponse", {
       reposition: true,
       raiseContent: result,
     });
   },
 
   _onPing: function _onPing(aId) {
-    Util.sendAsyncMessage("Content:SelectionHandlerPong", { id: aId });
+    sendAsyncMessage("Content:SelectionHandlerPong", { id: aId });
   },
 
   /*************************************************
@@ -521,7 +521,7 @@ var SelectionHandler = {
     this._cache.targetIsEditable = this._targetIsEditable;
 
     // Get monocles positioned correctly
-    Util.sendAsyncMessage("Content:SelectionRange", this._cache);
+    sendAsyncMessage("Content:SelectionRange", this._cache);
   },
 
   /*
@@ -1458,7 +1458,7 @@ var SelectionHandler = {
         return;
       }
       // e.offset values are positioned relative to the view.
-      Util.sendAsyncMessage("Content:SelectionDebugRect",
+      sendAsyncMessage("Content:SelectionDebugRect",
         { left:e.offsetLeft - aScrollOffset.x,
           top:e.offsetTop - aScrollOffset.y,
           right:e.offsetLeft + e.offsetWidth - aScrollOffset.x,
@@ -1482,7 +1482,7 @@ var SelectionHandler = {
    * in init().
    */
   _setDebugRect: function _setDebugRect(aRect, aColor, aFill, aId) {
-    Util.sendAsyncMessage("Content:SelectionDebugRect",
+    sendAsyncMessage("Content:SelectionDebugRect",
       { left:aRect.left, top:aRect.top,
         right:aRect.right, bottom:aRect.bottom,
         color:aColor, fill: aFill, id: aId });

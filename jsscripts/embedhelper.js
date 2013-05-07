@@ -225,9 +225,7 @@ EmbedHelper.prototype = {
           let linkHref = this.getLinkHrefForElement(element);
           let imageSrc = this.getImageSrcForElement(element);
           if (linkHref || imageSrc) {
-            let window = element.ownerDocument.defaultView;
-            var winid = Services.embedlite.getIDByWindow(window);
-            Services.embedlite.sendAsyncMessage(winid, "context:info", JSON.stringify({LinkHref: linkHref ? linkHref : "", ImageSrc: imageSrc ? imageSrc : ""}));
+            sendAsyncMessage("context:info", {LinkHref: linkHref ? linkHref : "", ImageSrc: imageSrc ? imageSrc : ""});
           }
         }
         this._touchElement = null;
@@ -806,7 +804,7 @@ const ElementTouchHelper = {
 
 Services.scriptloader.loadSubScript("chrome://embedlite/content/Util.js");
 Services.scriptloader.loadSubScript("chrome://embedlite/content/ContextMenuHandler.js");
-//Services.scriptloader.loadSubScript("chrome://embedlite/content/SelectionHandler.js");
+Services.scriptloader.loadSubScript("chrome://embedlite/content/SelectionHandler.js");
 
 globalObject = new EmbedHelper();
 

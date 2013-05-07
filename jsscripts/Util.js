@@ -7,13 +7,6 @@ let Util = {
    * General purpose utilities
    */
 
-  sendAsyncMessage: function sendAsyncMessage(message, data)
-  {
-    // dump("Selection Msg:" + message + ", data:[" + JSON.stringify(data) + "]\n");
-    var winid = Services.embedlite.getIDByWindow(content);
-    Services.embedlite.sendAsyncMessage(winid, message, JSON.stringify(data));
-  },
-
   getWindowUtils: function getWindowUtils(aWindow) {
     return aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
   },
