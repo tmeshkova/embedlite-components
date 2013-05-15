@@ -24,7 +24,18 @@ let DownloadListener = {
     switch(aTopic) {
       // Engine DownloadManager notifications
       case "dl-start":
-        Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-start", id: dl.id, state: dl.state}));
+        Services.obs.notifyObservers(null, "embed:download",
+                                     JSON.stringify(
+                                         {
+                                             msg: "dl-start",
+                                             id: dl.id,
+                                             displayName: dl.displayName,
+                                             state: dl.state,
+                                             sourceUrl: dl.source.spec,
+                                             targetPath: dl.targetFile.path,
+                                             mimeType: dl.MIMEInfo.MIMEType,
+                                             size: dl.size
+                                         }));
         break;
       case "dl-cancel":
         Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-cancel", id: dl.id, state: dl.state}));
@@ -33,7 +44,14 @@ let DownloadListener = {
         Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-fail", id: dl.id, state: dl.state}));
         break;
       case "dl-done":
-        Services.obs.notifyObservers(null, "embed:download", JSON.stringify({msg: "dl-done", id: dl.id, state: dl.state}));
+        Services.obs.notifyObservers(null, "embed:download",
+                                     JSON.stringify(
+                                         {
+                                             msg: "dl-done",
+                                             id: dl.id,
+                                             state: dl.state,
+                                             targetPath: dl.targetFile.path
+                                         }));
         break;
     }
   },
