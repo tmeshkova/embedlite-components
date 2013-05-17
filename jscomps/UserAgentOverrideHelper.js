@@ -46,6 +46,7 @@ var UserAgent = {
   DESKTOP_UA: null,
   GOOGLE_DOMAIN: /(^|\.)google\.com$/,
   YOUTUBE_DOMAIN: /(^|\.)youtube\.com$/,
+  NOKIA_HERE_DOMAIN: /(^|\.)here\.com$/,
 
   init: function ua_init() {
     Services.obs.addObserver(this, "DesktopMode:Change", false);
@@ -76,6 +77,11 @@ var UserAgent = {
         if (!defaultUA.contains("Safari/535.19")) {
           // Nexus 7 Android chrome has best capabilities
           return defaultUA.replace("X11", "Android 4.4.1").concat(" Safari/535.19");
+        }
+      } else if (this.NOKIA_HERE_DOMAIN.test(aUri.host)) {
+        // Send the phone UA to here
+        if (!defaultUA.contains("Mobile")) {
+          return defaultUA.replace("X11", "Android").replace("Linux", "Mobile");
         }
       }
     }
