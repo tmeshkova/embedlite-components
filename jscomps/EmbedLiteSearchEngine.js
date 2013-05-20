@@ -49,6 +49,27 @@ EmbedLiteSearchEngine.prototype = {
             Services.search.addEngine(data.uri, Ci.nsISearchEngine.DATA_TEXT, null, data.confirm);
             break;
           }
+          case "remove": {
+            var engine = Services.search.getEngineByName(data.name);
+            if (engine) {
+              Services.search.removeEngine(engine);
+            }
+            break;
+          }
+          case "setcurrent": {
+            var engine = Services.search.getEngineByName(data.name);
+            if (engine) {
+              Services.search.currentEngine = engine;
+            }
+            break;
+          }
+          case "setdefault": {
+            var engine = Services.search.getEngineByName(data.name);
+            if (engine) {
+              Services.search.defaultEngine = engine;
+            }
+            break;
+          }
           case "getlist": {
             let engines = Services.search.getEngines({});
             var json = [];
