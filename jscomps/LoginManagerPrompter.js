@@ -155,7 +155,7 @@ LoginManagerPrompter.prototype = {
      * Displays a notification doorhanger.
      *
      */
-    _showLoginNotification : function (aName, aText, aButtons) {
+    _showLoginNotification : function (aName, aText, aButtons, aFormData) {
         this.log("Adding new " + aName + " notification bar");
         let notifyWin = this._window.top;
 
@@ -175,7 +175,15 @@ LoginManagerPrompter.prototype = {
         Services.embedlite.addMessageListener("embedui:login", this);
         var winid = Services.embedlite.getIDByWindow(notifyWin);
         let uniqueid = this._getRandomId();
-        Services.embedlite.sendAsyncMessage(winid, "embed:login", JSON.stringify({name: aName, buttons: aButtons, options: logoptions, id: uniqueid}));
+        Services.embedlite.sendAsyncMessage(winid, "embed:login",
+                                            JSON.stringify(
+                                                {
+                                                    name: aName,
+                                                    buttons: aButtons,
+                                                    options: logoptions,
+                                                    id: uniqueid,
+                                                    formdata: aFormData
+                                                }));
         this._pendingRequests[uniqueid] = aButtons;
     },
 
@@ -191,9 +199,13 @@ LoginManagerPrompter.prototype = {
     _showSaveLoginNotification : function (aLogin) {
         var displayHost = this._getShortDisplayHost(aLogin.hostname);
         var notificationText;
+        var formData = {
+            "displayHost": displayHost
+        };
         if (aLogin.username) {
             var displayUser = this._sanitizeUsername(aLogin.username);
             notificationText  = this._getLocalizedString("savePassword", [displayUser, displayHost]);
+            formData["displayUser"] = displayUser;
         } else {
             notificationText  = this._getLocalizedString("savePasswordNoUser", [displayHost]);
         }
@@ -218,7 +230,7 @@ LoginManagerPrompter.prototype = {
             }
         ];
 
-        this._showLoginNotification("password-save", notificationText, buttons);
+        this._showLoginNotification("password-save", notificationText, buttons, formData);
     },
 
     /*
@@ -241,9 +253,11 @@ LoginManagerPrompter.prototype = {
      */
     _showChangeLoginNotification : function (aOldLogin, aNewPassword) {
         var notificationText;
+        var formData = {};
         if (aOldLogin.username) {
             let displayUser = this._sanitizeUsername(aOldLogin.username);
             notificationText  = this._getLocalizedString("updatePassword", [displayUser]);
+            formData["displayUser"] = displayUser;
         } else {
             notificationText  = this._getLocalizedString("updatePasswordNoUser");
         }
@@ -268,7 +282,7 @@ LoginManagerPrompter.prototype = {
             }
         ];
 
-        this._showLoginNotification("password-change", notificationText, buttons);
+        this._showLoginNotification("password-change", notificationText, buttons, formData);
     },
 
 
@@ -286,6 +300,13 @@ LoginManagerPrompter.prototype = {
      * Note; XPCOM stupidity: |count| is just |logins.length|.
      */
     promptToChangePasswordWithUsernames : function (logins, count, aNewLogin) {
+        // FIXME: embeded browser doesn't have UI for this promt Service currently
+        // (Ci.nsIPromptService2) hence we can't use this synchronous call at the moment.
+        // Also we don't want to rely on gecko's localization service for strings, but to
+        // use native l10n.
+        this.log("LoginManagerPrompter.promptToChangePasswordWithUsernames is disabled currently");
+        return;
+
         const buttonFlags = Ci.nsIPrompt.STD_YES_NO_BUTTONS;
 
         var usernames = logins.map(function (l) l.username);
