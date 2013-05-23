@@ -64,3 +64,7 @@ category app-startup EmbedLiteErrorPageHandler service,@mozilla.org/embedlite-er
 component {69d68654-b5a0-11e2-bb91-2b8ad5eb98ac} UserAgentOverrideHelper.js
 contract @mozilla.org/embedlite-uahelper-component;1 {69d68654-b5a0-11e2-bb91-2b8ad5eb98ac}
 category app-startup UserAgentOverrideHelper service,@mozilla.org/embedlite-uahelper-component;1
+
+# XPIDialogService.js
+component {ce2d8764-c366-11e2-8e71-1bb058e7ef52} XPIDialogService.js
+contract @mozilla.org/addons/web-install-prompt;1 {ce2d8764-c366-11e2-8e71-1bb058e7ef52}

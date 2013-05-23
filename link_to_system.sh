@@ -39,6 +39,7 @@ jscomps/EmbedLiteFaviconService.js
 jscomps/EmbedLiteSearchEngine.js
 jscomps/EmbedLiteErrorPageHandler.js
 jscomps/UserAgentOverrideHelper.js
+jscomps/XPIDialogService.js
 "
 
 for str in $FILES_LIST; do
