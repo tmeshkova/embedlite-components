@@ -16,6 +16,7 @@ jscomps_manifest_DATA = \
 	EmbedLiteErrorPageHandler.js \
 	UserAgentOverrideHelper.js \
 	XPIDialogService.js \
+	PromptService.js \
 	$(NULL)
 
 INCLUDES = $(DEPS_CFLAGS)
