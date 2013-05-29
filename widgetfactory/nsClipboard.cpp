@@ -108,17 +108,7 @@ NS_IMETHODIMP
 nsEmbedClipboard::HasDataMatchingFlavors(const char* *aFlavorList, uint32_t aLength, int32_t aWhichClipboard, bool* aHasText)
 {
   NS_ENSURE_ARG_POINTER(aHasText);
-  *aHasText = false;
-  if (aWhichClipboard != kGlobalClipboard)
-    return NS_ERROR_NOT_IMPLEMENTED;
-
-  nsresult rv;
-  nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  clipboard->HasDataMatchingFlavors(sClipboardTextFlavors, 1,
-                                    nsIClipboard::kGlobalClipboard, aHasText);
-
+  *aHasText = true;
   return NS_OK;
 }
 
