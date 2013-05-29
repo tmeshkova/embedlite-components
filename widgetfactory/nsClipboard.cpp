@@ -14,6 +14,9 @@
 #include "gfxImageSurface.h"
 #include "nsWidgetsCID.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIEmbedLiteJSON.h"
+#include "nsIObserverService.h"
+#include "nsIWritablePropertyBag2.h"
 
 using namespace mozilla;
 
@@ -52,8 +55,21 @@ nsEmbedClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* anO
 
   bool isPrivateData = false;
   aTransferable->GetIsPrivateData(&isPrivateData);
-  printf("nsEmbedClipboard::SetData: priv:%i, which:%i, buff:%s\n", isPrivateData, aWhichClipboard, NS_ConvertUTF16toUTF8(buffer).get());
-  // ContentChild::GetSingleton()->SendSetClipboardText(buffer, isPrivateData, aWhichClipboard);
+  nsString message;
+  // Just simple property bag support still
+  nsCOMPtr<nsIEmbedLiteJSON> json = do_GetService("@mozilla.org/embedlite-json;1");
+  nsCOMPtr<nsIWritablePropertyBag2> root;
+  json->CreateObject(getter_AddRefs(root));
+  root->SetPropertyAsAString(NS_LITERAL_STRING("data"), buffer);
+  root->SetPropertyAsBool(NS_LITERAL_STRING("private"), isPrivateData);
+
+  json->CreateJSON(root, message);
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  // Possible we can avoid json stuff for this case and send uri directly
+  if (observerService) {
+    observerService->NotifyObservers(nullptr, "clipboard:setdata", message.get());
+  }
 
   return NS_OK;
 }
