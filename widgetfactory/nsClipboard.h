@@ -6,9 +6,11 @@
 #define nsEmbedClipboard_h__
 
 #include "nsIClipboard.h"
+#include "nsITransferable.h"
 #include "nsIClipboardOwner.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsIEmbedAppService.h"
 
 /* Native Qt Clipboard wrapper */
 class nsEmbedClipboard : public nsIClipboard
@@ -22,6 +24,9 @@ public:
 
     // nsIClipboard
     NS_DECL_NSICLIPBOARD
+
+private:
+    nsCOMPtr<nsIEmbedAppService> mService;
 };
 
 #define NS_EMBED_CLIPBOARD_SERVICE_CID \
