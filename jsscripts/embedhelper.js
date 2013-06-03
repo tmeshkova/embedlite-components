@@ -188,13 +188,11 @@ EmbedHelper.prototype = {
         this._sendContextMenuEvent(element, x, y);
         break;
       }
-      case "embed:ContextMenuCreate": {
-        let [x, y] = [aMessage.json.x, aMessage.json.y];
-        let element = this._touchElement;
-        ContextMenuHandler._processPopupNode(element, x, y, Ci.nsIDOMMouseEvent.MOZ_SOURCE_UNKNOWN);
-        break;
-      }
       case "Gesture:SingleTap": {
+        if (SelectionHandler.isActive) {
+            SelectionHandler._onSelectionCopy({xPos: aMessage.json.x, yPos: aMessage.json.y});
+        }
+
         let element = this._touchElement;
         if (element) {
           try {
@@ -227,6 +225,8 @@ EmbedHelper.prototype = {
           if (linkHref || imageSrc) {
             sendAsyncMessage("context:info", {LinkHref: linkHref ? linkHref : "", ImageSrc: imageSrc ? imageSrc : ""});
           }
+          let [x, y] = [aMessage.json.x, aMessage.json.y];
+          ContextMenuHandler._processPopupNode(element, x, y, Ci.nsIDOMMouseEvent.MOZ_SOURCE_UNKNOWN);
         }
         this._touchElement = null;
         break;
