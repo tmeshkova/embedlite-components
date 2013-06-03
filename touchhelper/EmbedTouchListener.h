@@ -40,7 +40,7 @@ public:
     virtual void HandleSingleTap(const nsIntPoint&);
     virtual void HandleLongTap(const nsIntPoint&);
     virtual void SendAsyncScrollDOMEvent(const mozilla::gfx::Rect&, const mozilla::gfx::Size&);
-    virtual void ScrollUpdate(const mozilla::gfx::Point&, float);
+    virtual void ScrollUpdate(const mozilla::CSSPoint&, float);
     virtual void PostDelayedTask(Task*, int) {}
 
     nsCOMPtr<nsIDOMWindow> DOMWindow;

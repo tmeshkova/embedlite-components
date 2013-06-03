@@ -477,6 +477,6 @@ EmbedTouchListener::GetFocusedInput(nsIDOMElement* *aElement,
     return NS_ERROR_FAILURE;
 }
 
-void EmbedTouchListener::ScrollUpdate(const mozilla::gfx::Point&, float)
+void EmbedTouchListener::ScrollUpdate(const mozilla::CSSPoint&, float)
 {
 }
