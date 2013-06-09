@@ -98,6 +98,9 @@ EmbedHelper.prototype = {
   },
 
   performReflow: function performReflow() {
+    if (!this._viewportData) {
+      return;
+    }
     let reflowMobile = false;
     try {
       reflowMobile = Services.prefs.getBoolPref("browser.zoom.reflowMobilePages");
@@ -146,40 +149,6 @@ EmbedHelper.prototype = {
 
   _touchElement: null,
 
-  getLinkHrefForElement: function getLinkHrefForElement(target) {
-    let element = null;
-    while (target) {
-      if (target instanceof Ci.nsIDOMHTMLAnchorElement || 
-          target instanceof Ci.nsIDOMHTMLAreaElement ||
-          target instanceof Ci.nsIDOMHTMLLinkElement) {
-          if (target.hasAttribute("href"))
-            element = target;
-      }
-      target = target.parentNode;
-    }
-
-    if (element && element.hasAttribute("href"))
-      return element.href;
-    else
-      return null;
-  },
-
-  getImageSrcForElement: function getImageSrcForElement(target) {
-    let element = null;
-    while (target) {
-      if (target instanceof Ci.nsIDOMHTMLImageElement) {
-          if (target.hasAttribute("src"))
-            element = target;
-      }
-      target = target.parentNode;
-    }
-
-    if (element && element.hasAttribute("src"))
-      return element.src;
-    else
-      return null;
-  },
-
   receiveMessage: function receiveMessage(aMessage) {
     switch (aMessage.name) {
       case "Gesture:ContextMenuSynth": {
@@ -220,11 +189,6 @@ EmbedHelper.prototype = {
       case "Gesture:LongTap": {
         let element = this._touchElement;
         if (element) {
-          let linkHref = this.getLinkHrefForElement(element);
-          let imageSrc = this.getImageSrcForElement(element);
-          if (linkHref || imageSrc) {
-            sendAsyncMessage("context:info", {LinkHref: linkHref ? linkHref : "", ImageSrc: imageSrc ? imageSrc : ""});
-          }
           let [x, y] = [aMessage.json.x, aMessage.json.y];
           ContextMenuHandler._processPopupNode(element, x, y, Ci.nsIDOMMouseEvent.MOZ_SOURCE_UNKNOWN);
         }
@@ -233,19 +197,29 @@ EmbedHelper.prototype = {
       }
       case "embedui:find": {
         let searchText = aMessage.json.text;
-        this._fastFind = Cc["@mozilla.org/typeaheadfind;1"].createInstance(Ci.nsITypeAheadFind);
-        this._fastFind.init(docShell);
-        let result = this._fastFind.find(searchText, false);
-        if (aResult == Ci.nsITypeAheadFind.FIND_NOTFOUND)
-          dump("Page Find: " + searchText + " - not found");
-        else
-          dump("Page Find: " + searchText + " - found");
+        let searchAgain = aMessage.json.again;
+        let searchBackwards = aMessage.json.backwards;
+        let result = Ci.nsITypeAheadFind.FIND_NOTFOUND;
+        if (!this._fastFind) {
+          this._fastFind = Cc["@mozilla.org/typeaheadfind;1"].createInstance(Ci.nsITypeAheadFind);
+          this._fastFind.init(docShell);
+          result = this._fastFind.find(searchText, false);
+        }
+        else {
+          if (!searchAgain) {
+            result = this._fastFind.find(searchText, false);
+          }
+          else {
+            result = this._fastFind.findAgain(searchBackwards, false);
+          }
+        }
+        sendAsyncMessage("embed:find", { r: result });
         break;
       }
       case "Viewport:Change": {
         this._viewportData = aMessage.data;
-        if (this._viewportLastResolution == 0) {
-          this._viewportLastResolution = aMessage.data.resolution.width;
+        if (this._viewportLastResolution == 0 && this._viewportData != null) {
+          this._viewportLastResolution = this._viewportData.resolution.width;
         }
         this.performReflow();
         break;
