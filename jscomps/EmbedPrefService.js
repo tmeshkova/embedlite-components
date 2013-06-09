@@ -105,7 +105,7 @@ EmbedPrefService.prototype = {
         Services.obs.notifyObservers(null, "embed:allprefs", JSON.stringify(prefs));
         break;
       }
-      case "embedui:clearprefs" {
+      case "embedui:clearprefs": {
         let prefs = JSON.parse(aData).prefs;
         for (var i = 0; i < prefs.length; i++) {
           Services.prefs.clearUserPref(prefs[i]);
