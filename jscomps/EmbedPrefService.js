@@ -70,6 +70,7 @@ EmbedPrefService.prototype = {
         Services.obs.addObserver(this, "embedui:saveprefs", true);
         Services.obs.addObserver(this, "embedui:allprefs", true);
         Services.obs.addObserver(this, "embedui:setprefs", true);
+        Services.obs.addObserver(this, "embedui:clearprefs", true);
         break;
       }
       case "embedui:prefs": {
@@ -102,6 +103,12 @@ EmbedPrefService.prototype = {
       case "embedui:allprefs": {
         let prefs = this._getPrefs()
         Services.obs.notifyObservers(null, "embed:allprefs", JSON.stringify(prefs));
+      }
+      case "embedui:clearprefs" {
+        let prefs = JSON.parse(aData).prefs;
+        for (var i = 0; i < prefs.length; i++) {
+          Services.prefs.clearUserPref(prefs[i]);
+        }
       }
       case "embedui:setprefs": {
         let prefs = JSON.parse(aData).prefs;
