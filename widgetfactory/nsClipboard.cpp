@@ -15,7 +15,6 @@
 #include "nsWidgetsCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIEmbedLiteJSON.h"
-#include "nsIObserverService.h"
 #include "nsIWritablePropertyBag2.h"
 
 using namespace mozilla;
@@ -30,6 +29,10 @@ nsEmbedClipboard::nsEmbedClipboard() : nsIClipboard()
   if (!mService) {
     mService = do_GetService("@mozilla.org/embedlite-app-service;1");
   }
+  if (!mObserverService) {
+    mObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  }
+  mModalDepth = 0;
 }
 
 nsEmbedClipboard::~nsEmbedClipboard()
@@ -39,6 +42,7 @@ nsEmbedClipboard::~nsEmbedClipboard()
 NS_IMETHODIMP
 nsEmbedClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* anOwner, int32_t aWhichClipboard)
 {
+  printf("nsEmbedClipboard::SetData: clipID:%i\n", aWhichClipboard);
   if (aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
 
@@ -52,6 +56,7 @@ nsEmbedClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* anO
   NS_ENSURE_TRUE(supportsString, NS_ERROR_NOT_IMPLEMENTED);
   nsAutoString buffer;
   supportsString->GetData(buffer);
+  printf("nsEmbedClipboard::SetData: clipID:%i, buff:%s\n", aWhichClipboard, NS_ConvertUTF16toUTF8(buffer).get());
 
   bool isPrivateData = false;
   aTransferable->GetIsPrivateData(&isPrivateData);
@@ -64,12 +69,8 @@ nsEmbedClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* anO
   root->SetPropertyAsBool(NS_LITERAL_STRING("private"), isPrivateData);
 
   json->CreateJSON(root, message);
-  nsCOMPtr<nsIObserverService> observerService =
-    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
   // Possible we can avoid json stuff for this case and send uri directly
-  if (observerService) {
-    observerService->NotifyObservers(nullptr, "clipboard:setdata", message.get());
-  }
+  mObserverService->NotifyObservers(nullptr, "clipboard:setdata", message.get());
 
   return NS_OK;
 }
@@ -77,19 +78,35 @@ nsEmbedClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* anO
 NS_IMETHODIMP
 nsEmbedClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard)
 {
+  printf("nsEmbedClipboard::GetData: clipID:%i\n", aWhichClipboard);
   if (aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
 
-  nsAutoString buffer;
-  printf("nsEmbedClipboard::GetData: clipID:%i, buff:%s - heh we did not make request\n", aWhichClipboard, NS_ConvertUTF16toUTF8(buffer).get());
-//  ContentChild::GetSingleton()->SendGetClipboardText(aWhichClipboard, &buffer);
+  mObserverService->AddObserver(this, "embedui:clipboard", false);
+  nsString message;
+  mObserverService->NotifyObservers(nullptr, "clipboard:getdata", message.get());
 
   nsresult rv;
+  int origModalDepth = mModalDepth;
+  nsCOMPtr<nsIThread> thread;
+  NS_GetCurrentThread(getter_AddRefs(thread));
+  while (mModalDepth == origModalDepth && NS_SUCCEEDED(rv)) {
+    bool processedEvent;
+    rv = thread->ProcessNextEvent(true, &processedEvent);
+    if (NS_SUCCEEDED(rv) && !processedEvent) {
+      rv = NS_ERROR_UNEXPECTED;
+    }
+  }
+
+  mObserverService->RemoveObserver(this, "embedui:clipboard");
+
+  printf("nsEmbedClipboard::GetData: clipID:%i, buff:%s\n", aWhichClipboard, NS_ConvertUTF16toUTF8(mBuffer).get());
+
   nsCOMPtr<nsISupportsString> dataWrapper =
     do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = dataWrapper->SetData(buffer);
+  rv = dataWrapper->SetData(mBuffer);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If our data flavor has already been added, this will fail. But we don't care
@@ -98,10 +115,25 @@ nsEmbedClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboar
   nsCOMPtr<nsISupports> nsisupportsDataWrapper =
     do_QueryInterface(dataWrapper);
   rv = aTransferable->SetTransferData(kUnicodeMime, nsisupportsDataWrapper,
-                                      buffer.Length() * sizeof(PRUnichar));
+                                      mBuffer.Length() * sizeof(PRUnichar));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEmbedClipboard::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
+{
+    if (!strcmp(aTopic, "embedui:clipboard")) {
+      nsCOMPtr<nsIEmbedLiteJSON> json = do_GetService("@mozilla.org/embedlite-json;1");
+      nsCOMPtr<nsIPropertyBag2> root;
+      NS_ENSURE_SUCCESS(json->ParseJSON(nsDependentString(aData), getter_AddRefs(root)), NS_ERROR_FAILURE);
+      root->GetPropertyAsAString(NS_LITERAL_STRING("clipboard"), mBuffer);
+      // FIXME unicode text broken
+      printf("embedui:clipboard clipboard:%s\n", NS_ConvertUTF16toUTF8(mBuffer).get());
+      mModalDepth--;
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -115,6 +147,7 @@ nsEmbedClipboard::HasDataMatchingFlavors(const char* *aFlavorList, uint32_t aLen
 NS_IMETHODIMP
 nsEmbedClipboard::EmptyClipboard(int32_t aWhichClipboard)
 {
+  printf("nsEmbedClipboard::EmptyClipboard NOT IMPLEMENTED\n");
   if (aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
 

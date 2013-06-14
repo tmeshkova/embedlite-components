@@ -11,9 +11,11 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIEmbedAppService.h"
+#include "nsIObserverService.h"
+#include "nsIObserver.h"
 
 /* Native Qt Clipboard wrapper */
-class nsEmbedClipboard : public nsIClipboard
+class nsEmbedClipboard : public nsIClipboard, public nsIObserver
 {
 public:
     nsEmbedClipboard();
@@ -21,12 +23,16 @@ public:
 
     //nsISupports
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
 
     // nsIClipboard
     NS_DECL_NSICLIPBOARD
 
 private:
     nsCOMPtr<nsIEmbedAppService> mService;
+    nsCOMPtr<nsIObserverService> mObserverService;
+    nsString mBuffer;
+    int mModalDepth;
 };
 
 #define NS_EMBED_CLIPBOARD_SERVICE_CID \
