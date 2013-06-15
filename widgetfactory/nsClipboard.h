@@ -33,6 +33,7 @@ private:
     nsCOMPtr<nsIObserverService> mObserverService;
     nsString mBuffer;
     int mModalDepth;
+    bool mActive;
 };
 
 #define NS_EMBED_CLIPBOARD_SERVICE_CID \
