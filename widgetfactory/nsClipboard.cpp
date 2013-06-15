@@ -125,10 +125,7 @@ nsEmbedClipboard::Observe(nsISupports *aSubject, const char *aTopic, const PRUni
 {
     if (!strcmp(aTopic, "embedui:clipboard")) {
       mObserverService->RemoveObserver(this, "embedui:clipboard");
-      nsCOMPtr<nsIEmbedLiteJSON> json = do_GetService("@mozilla.org/embedlite-json;1");
-      nsCOMPtr<nsIPropertyBag2> root;
-      NS_ENSURE_SUCCESS(json->ParseJSON(nsDependentString(aData), getter_AddRefs(root)), NS_ERROR_FAILURE);
-      root->GetPropertyAsAString(NS_LITERAL_STRING("clipboard"), mBuffer);
+      mBuffer.Assign(aData);
       mModalDepth--;
     }
     else if (!strcmp(aTopic, "outer-window-destroyed")) {
