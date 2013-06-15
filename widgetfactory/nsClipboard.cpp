@@ -105,8 +105,6 @@ nsEmbedClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboar
     rv = dataWrapper->SetData(mBuffer);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mBuffer.Truncate();
-
     // If our data flavor has already been added, this will fail. But we don't care
     aTransferable->AddDataFlavor(kUnicodeMime);
 
@@ -115,6 +113,8 @@ nsEmbedClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboar
     rv = aTransferable->SetTransferData(kUnicodeMime, nsisupportsDataWrapper,
                                         mBuffer.Length() * sizeof(PRUnichar));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    mBuffer.Truncate();
   }
 
   return NS_OK;
