@@ -36,10 +36,10 @@ public:
     NS_DECL_NSIDOMEVENTLISTENER
 
     virtual void RequestContentRepaint(const mozilla::layers::FrameMetrics&);
-    virtual void HandleDoubleTap(const nsIntPoint&);
-    virtual void HandleSingleTap(const nsIntPoint&);
-    virtual void HandleLongTap(const nsIntPoint&);
-    virtual void SendAsyncScrollDOMEvent(const mozilla::gfx::Rect&, const mozilla::gfx::Size&);
+    virtual void HandleDoubleTap(const mozilla::CSSIntPoint&);
+    virtual void HandleSingleTap(const mozilla::CSSIntPoint&);
+    virtual void HandleLongTap(const mozilla::CSSIntPoint&);
+    virtual void SendAsyncScrollDOMEvent(const mozilla::CSSRect&, const mozilla::CSSSize&);
     virtual void ScrollUpdate(const mozilla::CSSPoint&, float);
     virtual void PostDelayedTask(Task*, int) {}
 
@@ -57,8 +57,8 @@ private:
     nsresult GetFocusedInput(nsIDOMElement* *aElement, bool aOnlyInputElements = false);
 
     nsCOMPtr<nsIEmbedAppService> mService;
-    mozilla::gfx::Rect mContentRect;
-    mozilla::gfx::Size mScrollSize;
+    mozilla::CSSRect mContentRect;
+    mozilla::CSSSize mScrollSize;
     bool mGotViewPortUpdate;
     mozilla::gfx::Rect mViewport;
     mozilla::gfx::Rect mCssCompositedRect;

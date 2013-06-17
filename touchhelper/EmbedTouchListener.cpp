@@ -60,18 +60,18 @@ EmbedTouchListener::~EmbedTouchListener()
 
 NS_IMPL_ISUPPORTS1(EmbedTouchListener, nsIDOMEventListener)
 
-void EmbedTouchListener::HandleSingleTap(const nsIntPoint& aPoint)
+void EmbedTouchListener::HandleSingleTap(const CSSIntPoint& aPoint)
 {
     LOGT("pt[%i,%i]", aPoint.x, aPoint.y);
 }
 
-void EmbedTouchListener::HandleLongTap(const nsIntPoint& aPoint)
+void EmbedTouchListener::HandleLongTap(const CSSIntPoint& aPoint)
 {
     LOGT("pt[%i,%i]", aPoint.x, aPoint.y);
 }
 
-void EmbedTouchListener::SendAsyncScrollDOMEvent(const mozilla::gfx::Rect& aRect,
-                                                 const mozilla::gfx::Size& aSize)
+void EmbedTouchListener::SendAsyncScrollDOMEvent(const mozilla::CSSRect& aRect,
+                                                 const mozilla::CSSSize& aSize)
 {
     // LOGT("r[%g,%g,%g,%g], size[%g,%g]", aRect.x, aRect.y, aRect.width, aRect.height, aSize.width, aSize.height);
     if (mContentRect.width != aRect.width || mContentRect.height != aRect.height)
@@ -125,7 +125,7 @@ void EmbedTouchListener::RequestContentRepaint(const mozilla::layers::FrameMetri
     mHadResizeSinceLastFrameUpdate = false;
 }
 
-void EmbedTouchListener::HandleDoubleTap(const nsIntPoint& aPoint)
+void EmbedTouchListener::HandleDoubleTap(const CSSIntPoint& aPoint)
 {
     LOGT("pt[%i,%i]", aPoint.x, aPoint.y);
     // We haven't received a metrics update yet; don't do anything.
