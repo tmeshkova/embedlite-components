@@ -1,5 +1,5 @@
-Name:       embedlite-components
-Summary:    EmbedLite components
+Name:       embedlite-components-qt5
+Summary:    EmbedLite components Qt5
 Version:    1.0.0
 Release:    1
 Group:      Applications/Internet
