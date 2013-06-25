@@ -10,9 +10,14 @@ jsscripts_manifest_DATA = \
 	yahoo.xml \
 	$(NULL)
 
+sync_engine_manifestdir=$(libdir)/mozembedlite/chrome/embedlite/content/sync
+sync_engine_manifest_DATA = \
+	sync/bookmarks.js \
+	$(NULL)
+
 manifestsscript_manifestdir=$(libdir)/mozembedlite/chrome
 manifestsscript_manifest_DATA = \
 	EmbedLiteJSScripts.manifest \
 	$(NULL)
 
-INCLUDES = $(DEPS_CFLAGS) 
+INCLUDES = $(DEPS_CFLAGS)
