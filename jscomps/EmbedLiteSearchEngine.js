@@ -30,7 +30,14 @@ EmbedLiteSearchEngine.prototype = {
       case "embedliteInitialized": {
         Services.obs.removeObserver(this, "embedliteInitialized");
         Services.search.init(function addEngine_cb(rv) {
-            Services.obs.notifyObservers(null, "embed:search", JSON.stringify({ msg: "init", defaultEngine: Services.search.defaultEngine ? Services.search.defaultEngine.name : null }));
+            let engines = Services.search.getEngines({});
+            let enginesAvailable = (engines && engines.length > 0);
+            var messg = {
+              msg: "init",
+              defaultEngine: enginesAvailable && Services.search.defaultEngine ?
+                Services.search.defaultEngine.name : null
+            }
+            Services.obs.notifyObservers(null, "embed:search", JSON.stringify(messg));
         });
         break;
       }

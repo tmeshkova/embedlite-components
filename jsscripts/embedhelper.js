@@ -71,7 +71,7 @@ EmbedHelper.prototype = {
         case "before-first-paint":
           // Is it on the top level?
           let contentDocument = aSubject;
-          if (contentDocument == content.contentDocument) {
+          if (content && contentDocument == content.contentDocument) {
             displayedDocumentChanged();
             this.contentDocumentIsDisplayed = true;
           }
