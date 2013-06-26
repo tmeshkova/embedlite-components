@@ -21,11 +21,12 @@ let HTMLInputElement = Ci.nsIDOMHTMLInputElement;
 XPCOMUtils.defineLazyServiceGetter(this, "DOMUtils",
   "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 
+XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
+                                  "resource://gre/modules/LoginManagerContent.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(Services, "embedlite",
                                     "@mozilla.org/embedlite-app-service;1",
                                     "nsIEmbedAppService");
-
-const kStateActive = 0x00000001; // :active pseudoclass for elements
 
 dump("###################################### embedhelper.js loaded\n");
 
@@ -52,6 +53,9 @@ EmbedHelper.prototype = {
     addEventListener("touchstart", this, false);
     addEventListener("touchmove", this, false);
     addEventListener("touchend", this, false);
+    addEventListener("DOMContentLoaded", this, true);
+    addEventListener("DOMAutoComplete", this, true);
+    addEventListener("blur", this, true);
     addMessageListener("AZPC:ScrollDOMEvent", this);
     addMessageListener("Viewport:Change", this);
     addMessageListener("Gesture:DoubleTap", this);
@@ -399,6 +403,15 @@ EmbedHelper.prototype = {
 
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
+      case "DOMContentLoaded": {
+        LoginManagerContent.onContentLoaded(aEvent);
+        break;
+      }
+      case "DOMAutoComplete":
+      case "blur": {
+        LoginManagerContent.onUsernameInput(aEvent);
+        break;
+      }
       case 'touchstart':
         this._handleTouchStart(aEvent);
         break;
