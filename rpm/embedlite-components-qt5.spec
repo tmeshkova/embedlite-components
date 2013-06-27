@@ -13,7 +13,6 @@ BuildRequires:  libtool
 BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  perl
-Requires:       xulrunner-qt5
 
 %description
 EmbedLite Components required for embeded browser UI
