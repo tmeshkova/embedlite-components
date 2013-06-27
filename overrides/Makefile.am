@@ -26,4 +26,4 @@ localebrowser_manifest_DATA = \
 	netError.dtd \
 	$(NULL)
 
-INCLUDES = $(DEPS_CFLAGS)
+AM_CPPFLAGS = $(DEPS_CFLAGS)

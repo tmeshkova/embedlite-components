@@ -20,4 +20,4 @@ manifestsscript_manifest_DATA = \
 	EmbedLiteJSScripts.manifest \
 	$(NULL)
 
-INCLUDES = $(DEPS_CFLAGS)
+AM_CPPFLAGS = $(DEPS_CFLAGS)

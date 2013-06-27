@@ -19,4 +19,4 @@ jscomps_manifest_DATA = \
 	PromptService.js \
 	$(NULL)
 
-INCLUDES = $(DEPS_CFLAGS)
+AM_CPPFLAGS = $(DEPS_CFLAGS)

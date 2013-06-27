@@ -80,6 +80,7 @@ CXXFLAGS="$CXXFLAGS -Wno-unused-parameter -Wpointer-arith -Woverloaded-virtual "
 CXXFLAGS="$CXXFLAGS -Werror=return-type -Wtype-limits -Wempty-body -Wno-ctor-dtor-privacy "
 CXXFLAGS="$CXXFLAGS -Wno-format -Wno-overlength-strings -Wno-invalid-offsetof "
 CXXFLAGS="$CXXFLAGS -Wno-variadic-macros -Wno-long-long  -Wno-psabi "
+CXXFLAGS="$CXXFLAGS -fno-exceotions "
 
 AC_SUBST(ENGINE_CFLAGS)
 AC_SUBST(ENGINE_LIBS)

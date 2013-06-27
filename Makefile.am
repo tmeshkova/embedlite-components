@@ -3,7 +3,7 @@ EXTRA_DIST = \
 
 SUBDIRS = history chromehelper prompt widgetfactory jscomps touchhelper jsscripts overrides
 
-INCLUDES = $(DEPS_CFLAGS) 
+AM_CPPFLAGS = $(DEPS_CFLAGS)
 
 manifests_manifestdir=$(libdir)/mozembedlite/components
 manifests_manifest_DATA = \
