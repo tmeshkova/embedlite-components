@@ -32,7 +32,7 @@ dump("###################################### embedhelper.js loaded\n");
 
 var globalObject = null;
 
-const kStateActive = 0x00000001; // :active pseudoclass for elements
+const kEmbedStateActive = 0x00000001; // :active pseudoclass for elements
 
 function fuzzyEquals(a, b) {
   return (Math.abs(a - b) < 1e-6);
@@ -540,7 +540,7 @@ EmbedHelper.prototype = {
   },
 
   _doTapHighlight: function _doTapHighlight(aElement) {
-    DOMUtils.setContentState(aElement, kStateActive);
+    DOMUtils.setContentState(aElement, kEmbedStateActive);
     this._highlightElement = aElement;
     this._touchElement = aElement;
   },
@@ -552,9 +552,9 @@ EmbedHelper.prototype = {
     // If the active element is in a sub-frame, we need to make that frame's document
     // active to remove the element's active state.
     if (this._highlightElement.ownerDocument != content.document)
-      DOMUtils.setContentState(this._highlightElement.ownerDocument.documentElement, kStateActive);
+      DOMUtils.setContentState(this._highlightElement.ownerDocument.documentElement, kEmbedStateActive);
 
-    DOMUtils.setContentState(content.document.documentElement, kStateActive);
+    DOMUtils.setContentState(content.document.documentElement, kEmbedStateActive);
     this._highlightElement = null;
   },
 };
