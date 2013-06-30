@@ -26,6 +26,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIEmbedLiteJSON.h"
 #include "nsIObserverService.h"
+#include "nsIWindowWatcher.h"
 
 // Prompt Factory Implementation
 
@@ -83,12 +84,23 @@ NS_IMPL_ISUPPORTS1(EmbedPromptFactory, nsIPromptFactory)
 NS_IMETHODIMP
 EmbedPromptFactory::GetPrompt(nsIDOMWindow* aParent, const nsIID& iid, void **result)
 {
+    nsCOMPtr<nsIDOMWindow> parent(aParent);
+    if (!parent) { // if no parent provided, consult the window watcher:
+        nsresult rv;
+        nsCOMPtr<nsIWindowWatcher> wwatcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        wwatcher->GetActiveWindow(getter_AddRefs(parent));
+        if (!parent) {
+            return NS_ERROR_FAILURE;
+        }
+    }
+
     if (iid.Equals(NS_GET_IID(nsIAuthPrompt)) ||
         iid.Equals(NS_GET_IID(nsIAuthPrompt2))) {
-        nsRefPtr<EmbedAuthPromptService> service = new EmbedAuthPromptService(aParent);
+        nsRefPtr<EmbedAuthPromptService> service = new EmbedAuthPromptService(parent);
         *result = service.forget().get();
     } else if (iid.Equals(NS_GET_IID(nsIPrompt))) {
-        nsRefPtr<EmbedPromptService> service = new EmbedPromptService(aParent);
+        nsRefPtr<EmbedPromptService> service = new EmbedPromptService(parent);
         *result = service.forget().get();
     }
 
