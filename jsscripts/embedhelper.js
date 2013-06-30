@@ -32,6 +32,8 @@ dump("###################################### embedhelper.js loaded\n");
 
 var globalObject = null;
 
+const kStateActive = 0x00000001; // :active pseudoclass for elements
+
 function fuzzyEquals(a, b) {
   return (Math.abs(a - b) < 1e-6);
 }
