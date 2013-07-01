@@ -66,7 +66,7 @@ EmbedHelper.prototype = {
     addMessageListener("embedui:find", this);
     addMessageListener("Gesture:ContextMenuSynth", this);
     addMessageListener("embed:ContextMenuCreate", this);
-    Services.obs.addObserver(this, "before-first-paint", true);
+    Services.obs.addObserver(this, "embedlite-before-first-paint", true);
     Services.prefs.addObserver("browser.zoom.reflowOnZoom", this, false);
   },
 
@@ -74,13 +74,9 @@ EmbedHelper.prototype = {
     // Ignore notifications not about our document.
     dump("observe topic:" + aTopic + "\n");
     switch (aTopic) {
-        case "before-first-paint":
+        case "embedlite-before-first-paint":
           // Is it on the top level?
-          let contentDocument = aSubject;
-          if (content && contentDocument == content.contentDocument) {
-            displayedDocumentChanged();
-            this.contentDocumentIsDisplayed = true;
-          }
+          this.contentDocumentIsDisplayed = true;
           break;
         case "nsPref:changed":
           if (data == "browser.zoom.reflowOnZoom") {
@@ -426,13 +422,8 @@ EmbedHelper.prototype = {
     }
   },
 
-  displayedDocumentChanged: function() {
-    content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).isFirstPaint = true;
-  },
-
   isBrowserContentDocumentDisplayed: function() {
     if (content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).isFirstPaint) {
-      dump("windowUtils Is FirstPaint\n");
       return false;
     }
     return this.contentDocumentIsDisplayed;
