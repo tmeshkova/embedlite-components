@@ -30,7 +30,7 @@ EmbedLite Components required for embeded browser UI
 # << build pre
 
 NO_CONFIGURE=yes ./autogen.sh
-%configure --with-system-nspr
+%configure --with-system-nspr --with-devel-suffix=-qt5
 
 make %{?jobs:-j%jobs}
 
