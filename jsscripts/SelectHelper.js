@@ -14,7 +14,7 @@ dump("###################################### SelectHelper.js loaded\n");
 var globalObject = null;
 
 let HTMLOptionElement = Ci.nsIDOMHTMLOptionElement;
-let useAsync = true;
+let useAsync = false;
 
 function debug(msg) {
 //  dump("SelectHelper.js - " + msg + "\n");
