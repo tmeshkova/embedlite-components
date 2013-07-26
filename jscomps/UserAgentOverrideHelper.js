@@ -47,12 +47,24 @@ var UserAgent = {
   GOOGLE_DOMAIN: /(^|\.)google\.com$/,
   YOUTUBE_DOMAIN: /(^|\.)youtube\.com$/,
   NOKIA_HERE_DOMAIN: /(^|\.)here\.com$/,
+  _customUA: null,
+
+  getCustomUserAgent: function() {
+    if (Services.prefs.prefHasUserValue("general.useragent.override")) {
+      let ua = Services.prefs.getCharPref("general.useragent.override");
+      return ua;
+    }
+    else {
+      return null;
+    }
+  },
 
   init: function ua_init() {
     Services.obs.addObserver(this, "DesktopMode:Change", false);
+    Services.prefs.addObserver("general.useragent.override", this, false);
+    this._customUA = this.getCustomUserAgent();
     UserAgentOverrides.init();
     UserAgentOverrides.addComplexOverride(this.onRequest.bind(this));
-
     // See https://developer.mozilla.org/en/Gecko_user_agent_string_reference
     this.DESKTOP_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
                         .getService(Ci.nsIHttpProtocolHandler).userAgent
@@ -86,11 +98,12 @@ var UserAgent = {
       }
     }
 
-    return defaultUA;
+    return this._customUA ? this._customUA : defaultUA;
   },
 
   uninit: function ua_uninit() {
     Services.obs.removeObserver(this, "DesktopMode:Change");
+    Services.prefs.removeObserver("general.useragent.override", this);
     UserAgentOverrides.uninit();
   },
 
@@ -132,9 +145,18 @@ var UserAgent = {
   },
 
   observe: function ua_observe(aSubject, aTopic, aData) {
-    if (aTopic === "DesktopMode:Change") {
-      let args = JSON.parse(aData);
-      dump("UserAgentOverrideHelper observe:" + aTopic + "\n");
+    switch (aTopic) {
+      case "DesktopMode:Change": {
+        //let args = JSON.parse(aData);
+        //dump("UserAgentOverrideHelper observe:" + aTopic + "\n");
+        break;
+      }
+      case "nsPref:changed": {
+        if (aData == "general.useragent.override") {
+          this._customUA = this.getCustomUserAgent();
+        }
+        break;
+      }
     }
   }
 };
