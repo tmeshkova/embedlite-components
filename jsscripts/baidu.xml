@@ -1,0 +1,11 @@
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/" xmlns:os="http://a9.com/-/spec/opensearch/1.1/">
+<os:ShortName>Baidu</os:ShortName>
+<os:Description>Baidu Search</os:Description>
+<os:InputEncoding>UTF-8</os:InputEncoding>
+<os:Image width="16" height="16">data:image/x-icon;base64,AAABAAEAEBAAAAAAAABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAADa2toA2traANra2gDZ2dkm2dnZatnZ2arZ2dm/2dnZv9nZ2b/Z2dm/2dnZqdnZ2W7Z2dkm2traANra2gDa2toA2traANra2gDa2tpF2dnZytnZ2fvZ2tr/2dra/9nZ2f/Z2dn/2dra/9na2v/Z2dn82dnZytra2kXa2toA2traANra2gDa2tpF2tra+drZ2f/a397/2uPj/9nf3//a5OP/2uTk/9nc3P/a4eD/2t/f/9rZ2f/a2tr52traRdra2gDc3Nwm29vbztvb2//b39//28TG/9tnbf/db3X/3ImN/9yJjf/dZGr/3GNp/9u+v//b4N//29vb/9vb287c3Nwl3Nzcb9zc3P7c3d3/3OLi/9tYXv/nTFP/86is//Kjp//0rbH/9rq+/+ElL//bYWf/3OXl/9zd3f/c3Nz+3NzcbN3d3and3d3/3d/e/93h4f/bT1f/8Zab/+6UmP/75eb/87Cz//Kqrv/lQUn/22pw/93m5v/d3t7/3d3d/93d3ane3t7A3t7e/97e3v/e5eT/3cDB/+Jjav/xmp7/+tze/+VYYP/lTFT/4GRq/93Exv/e5OT/3t7e/97e3v/e3t7A39/fv9/f3//f4OD/39/f/96vsv/cnaH/3UFJ/+ZOVv/aAg3/2z1E/9xVXP/cP0f/3r/B/9/k5P/f39//39/fv+Dg4L/g4OD/4Ofn/9+ztf/cEx3/3D9H/9+6vP/cPkb/3VNa/+DKy//cKzT/3AUQ/9+kp//g6un/4ODg/+Dg4L/h4eHA4eHh/+Hp6f/gq67/3AcS/9wsNf/guLr/4MrK/+DNzv/fm5//3l1j/91HTv/hy8z/4ebl/+Hh4f/h4eHA4uLiqeLi4v/i4+T/4t3e/9+Giv/fkpX/3Ccx/91JUf/eanD/2wAK/954ff/i6ej/4uXl/+Li4v/i4uL/4uLiqeLi4mzi4uL+4uLi/+Lk5P/j9PP/4srL/9wPGv/cLDX/33h9/9sACf/eZmz/4+zs/+Lj4//i4uL/4uLi/uLi4m/k5OQl5OTkzuTk5P/k4+P/5OXl/+Ph4f/fdHr/4JKX/+Pg4P/gj5T/4sjK/+To6P/k4+P/5OTk/+Tk5M7k5OQm5eXlAOXl5UXl5eX55eXl/+Xk5P/l5ub/5evr/+Xq6v/l5+f/5fHw/+Xp6f/l5OT/5eXl/+Xl5fnl5eVF5eXlAOXl5QDl5eUA5eXlRebm5srm5ub85ubm/+bm5v/m5ub/5ubm/+bm5v/m5ub/5ubm++bm5srl5eVF5eXlAOXl5QDl5eUA5eXlAOXl5QDm5uYm5ubmbubm5qnm5ua/5ubmv+bm5r/m5ua/5ubmqubm5mrm5uYm5eXlAOXl5QDl5eUA+B8AAOAHAADAAwAAgAEAAIABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAQAAgAEAAMADAADgBwAA+B8AAA==</os:Image>
+<SearchForm>http://www.baidu.com/s</SearchForm>
+<os:Url type="application/x-suggestions+json" method="GET" template="http://www.baidu.com/s?word={searchTerms}">
+</os:Url><os:Url type="text/html" method="GET" template="http://www.baidu.com/s">
+  <os:Param name="word" value="{searchTerms}"/>
+</os:Url>
+</SearchPlugin>

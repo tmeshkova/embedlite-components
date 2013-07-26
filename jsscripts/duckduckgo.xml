@@ -1,0 +1,20 @@
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/" xmlns:os="http://a9.com/-/spec/opensearch/1.1/">
+<os:ShortName>DuckDuckGo</os:ShortName>
+<os:Description>DuckDuckGo Search</os:Description>
+<os:InputEncoding>UTF-8</os:InputEncoding>
+<os:Image width="16" height="16">data:image/x-icon;base64,AAABAAEAEBAAAAAAAABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AA8ZZAAPGWQADxheAA0WWBUNFlZeDRVUeQwUU4EMFFOBDRVUfA0VVWYNFlgiDhhcAA8ZZAAPGWQA////AP///wAPGWQADxlkAA4YXlwOF1vtDhdb/w0UW/8KElr/CBJY/w4XXP8OF1v/Dhdb+Q8YXXkPGWQADxlkAP///wD///8AERtqABEbaFQQGmf/EBpn/wkTY/9AT4T/xM3W/8rH4P8sMX//DBZl/xAaZ/8QGmf/EBpohREbagD///8A////ABIdcycSHXLXEh1y/xIdcv8PFHH/YJWb/1fLSf990XP/UZZL/yEqef8QG3H/Eh1y/xIdcvcSHXMn////AP///wATIH1qEyB8/xMgfP8SH3v/GSKA/7rV0P/O9Mn/aX6c/0RjZv8dHXz/Ex16/xMgfP8TIHz/EyB9ZP///wD///8AFSKImBUiiP8VIoj/DxyF/0BKm/////v//////0JbsP8CVrv/Cmi+/xMtkv8VIIf/FSKI/xgliHz///8A////ABclkp8XJZL/FyWS/wsajv99grn//////9L4//8CtvL/AG7N/wxlw/8UMqD/GCKQ/xYkkf8dLZ2A////AP///wAYKJ2fGCid/xgonf8MHZn/qKvS//306v/3+vr/m+38/1XW9f8Eo+j/CnLP/xgonf8VJZz/NEKlgP///wD///8AGiuokBorqP8aK6j/DyGk/8TJ5P/fybn/+vj3///16v+7pLn/FSms/xc8s/8aLKn/GSmn/yo6r3j///8A////ABwus10cLrP+HC6z/xIlsP+YndX////3/////////vr/ZG/I/xMlsP8cLLL/HC6z/xwus/8bLbNa////AP///wAdMLwYHjG+xB4xvv8aLb3/OkvH/9rc8P/f4fX/f4rb/xcqvP8eMb7/HjG+/x4xvv8eMb7qHTC8GP///wD///8AHzLGAB8zxy4gM8n3HjHJ/zBBzf9ZZ9b/JjjK/xQoxf8gM8n/IDPJ/yAzyf8gM8n/HzPHWR8yxgD///8A////ACAzyQAgM8kAITXQMyE21LIfNNP5GC7S/x0y1f8hNtT/HjPW/yE21PwhNtTHITXRSCAzygAgM8kA////AP///wAgM8kAIDPJACA10AAiN9YAIjfaGSI92z4sSNFKIjnYSjJQz0MeNtshIjfWACE20gAgM8kAIDPJAP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A//8AAP5/AADwDwAA4AMAAMADAADAAwAAgAMAAIABAACAAQAAgAMAAMADAADAAwAA4AcAAPAPAAD//wAA//8AAA==</os:Image>
+<SearchForm>https://duckduckgo.com/</SearchForm>
+<os:Url type="application/x-suggestions+json" method="GET" template="https://duckduckgo.com/?q={searchTerms}">
+</os:Url><os:Url type="text/html" method="GET" template="https://duckduckgo.com/">
+  <os:Param name="q" value="{searchTerms}"/>
+  <os:Param name="ie" value="utf-8"/>
+  <os:Param name="oe" value="utf-8"/>
+  <os:Param name="aq" value="t"/>
+  <os:Param name="rls" value="{moz:distributionID}:{moz:locale}:{moz:official}"/>
+  <os:Param name="client" value="firefox"/>
+  <os:Param name="channel" value="rcs"/>
+  <os:Param name="channel" value="fflb"/>
+  <os:Param name="channel" value="np"/>
+  <os:Param name="source" value="hp"/>
+</os:Url>
+</SearchPlugin>
