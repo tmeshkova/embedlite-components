@@ -8,6 +8,9 @@ jsscripts_manifest_DATA = \
 	bing.xml \
 	google.xml \
 	yahoo.xml \
+	yandex.xml \
+	baidu.xml \
+	duckduckgo.xml \
 	$(NULL)
 
 sync_engine_manifestdir=$(libdir)/mozembedlite/chrome/embedlite/content/sync
