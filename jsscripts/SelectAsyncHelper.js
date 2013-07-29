@@ -14,7 +14,7 @@ dump("###################################### SelectAsyncHelper.js loaded\n");
 var globalObject = null;
 
 function debug(msg) {
-  dump("SelectHelperRozhkov.js - " + msg + "\n");
+  // dump("SelectAsyncHelper.js - " + msg + "\n");
 }
 
 function isMenu(aElement) {
