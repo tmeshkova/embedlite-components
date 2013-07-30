@@ -136,6 +136,12 @@ SelectHelper.prototype = {
           that._nodeMap[index] = aNode;
           return index++;
       });
+
+      if (index === 0) {
+        // don't open dialog for empty option lists
+        return;
+      }
+
       this._dialog = new Dialog(target.multiple, optionList);
 
       this._dialog.onDone = function (result) {
