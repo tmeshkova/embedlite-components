@@ -32,25 +32,25 @@ PrivateDataManager.prototype = {
   },
 
   clearPrivateData: function (aData) {
-      switch (aData) {
-        case "passwords": {
-          this.loginManager.removeAllLogins();
-          debug("Passwords removed");
-          break;
-        }
-        case "cookies": {
-          this.cookieManager.removeAll();
-          debug("Cookies removed");
-          break;
-        }
-        case "cache": {
-          try {
-            this.cacheService.evictEntries(Ci.nsICache.STORE_ANYWHERE);
-          } catch (ex) {debug(ex)}
-          debug("Cache cleaned");
-          break;
-        }
+    switch (aData) {
+      case "passwords": {
+        this.loginManager.removeAllLogins();
+        debug("Passwords removed");
+        break;
       }
+      case "cookies": {
+        this.cookieManager.removeAll();
+        debug("Cookies removed");
+        break;
+      }
+      case "cache": {
+        try {
+          this.cacheService.evictEntries(Ci.nsICache.STORE_ANYWHERE);
+        } catch (ex) {debug(ex)}
+        debug("Cache cleaned");
+        break;
+      }
+    }
   },
 
   observe: function (aSubject, aTopic, aData) {
