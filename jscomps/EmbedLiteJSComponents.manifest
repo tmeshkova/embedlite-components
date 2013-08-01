@@ -79,3 +79,8 @@ category app-startup EmbedLiteWebAppInstall service,@mozilla.org/embedlite-webap
 # contract @mozilla.org/prompter;1 {44df5fae-c5a1-11e2-8e91-1ff32ee4f840}
 # contract @mozilla.org/embedcomp/prompt-service;1 {44df5fae-c5a1-11e2-8e91-1ff32ee4f840}
 # category wakeup-request PromptService @mozilla.org/embedcomp/prompt-service;1,nsIPromptService,getService,Prompt:Call
+
+# PrivateDataManager.js
+component {6a7dd2ef-b7c8-4ab5-8c35-c0e5d7557ccf} PrivateDataManager.js
+contract @mozilla.org/embedlite/private-data-manager;1 {6a7dd2ef-b7c8-4ab5-8c35-c0e5d7557ccf}
+category app-startup PrivateDataManager service,@mozilla.org/embedlite/private-data-manager;1
