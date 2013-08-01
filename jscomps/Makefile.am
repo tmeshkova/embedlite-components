@@ -17,6 +17,7 @@ jscomps_manifest_DATA = \
 	UserAgentOverrideHelper.js \
 	XPIDialogService.js \
 	PromptService.js \
+	PrivateDataManager.js \
 	$(NULL)
 
 AM_CPPFLAGS = $(DEPS_CFLAGS)

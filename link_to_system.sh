@@ -42,6 +42,7 @@ jscomps/UserAgentOverrideHelper.js
 jscomps/XPIDialogService.js
 jscomps/EmbedLiteWebAppInstall.js
 jscomps/PromptService.js
+jscomps/PrivateDataManager.js
 "
 
 for str in $FILES_LIST; do
