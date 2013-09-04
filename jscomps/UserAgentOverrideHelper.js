@@ -46,6 +46,7 @@ var UserAgent = {
   DESKTOP_UA: null,
   GOOGLE_DOMAIN: /(^|\.)google\.com$/,
   YOUTUBE_DOMAIN: /(^|\.)youtube\.com$/,
+  FACEBOOK_DOMAIN: /(^|\.)facebook\.com$/,
   NOKIA_HERE_DOMAIN: /(^|\.)here\.com$/,
   _customUA: null,
 
@@ -82,18 +83,18 @@ var UserAgent = {
       if (this.GOOGLE_DOMAIN.test(aUri.host)) {
         // Send the phone UA to google
         if (!defaultUA.contains("Mobile")) {
-          return defaultUA.replace("X11", "Android").replace("Linux", "Mobile");
+          return defaultUA.replace("X11", "Android").replace("Unix", "Android").replace("Linux", "Mobile");
         }
-      } else if (this.YOUTUBE_DOMAIN.test(aUri.host)) {
+      } else if (this.YOUTUBE_DOMAIN.test(aUri.host) || this.FACEBOOK_DOMAIN.test(aUri.host)) {
         // Send the phone UA to google
         if (!defaultUA.contains("Safari/535.19")) {
           // Nexus 7 Android chrome has best capabilities
-          return defaultUA.replace("X11", "Android 4.4.1").concat(" Safari/535.19");
+          return defaultUA.replace("X11", "Android 4.4.1").replace("Unix", "Android 4.4.1").concat(" Safari/535.19");
         }
       } else if (this.NOKIA_HERE_DOMAIN.test(aUri.host)) {
         // Send the phone UA to here
         if (!defaultUA.contains("Mobile")) {
-          return defaultUA.replace("X11", "Android").replace("Linux", "Mobile");
+          return defaultUA.replace("X11", "Android").replace("Unix", "Android").replace("Linux", "Mobile");
         }
       }
     }
