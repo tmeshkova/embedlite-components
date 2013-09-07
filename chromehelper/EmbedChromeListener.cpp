@@ -15,6 +15,8 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMEvent.h"
+#include "nsIURI.h"
+#include "nsIDOMDocument.h"
 #include "nsPIDOMWindow.h"
 #include "nsIEmbedLiteJSON.h"
 #include "nsComponentManagerUtils.h"

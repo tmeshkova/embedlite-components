@@ -11,7 +11,9 @@
 #include "nsStringGlue.h"
 #include "nsIAuthPrompt.h"
 #include "nsISupportsImpl.h"
+#include "nsThreadUtils.h"
 #include "nsIDOMWindowUtils.h"
+#include "nsIThread.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIURI.h"
@@ -234,8 +236,7 @@ EmbedPromptService::AlertCheck(const PRUnichar* aDialogTitle,
     nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(mWin);
     NS_ENSURE_TRUE(utils, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIDOMWindow> modalStateWin;
-    rv = utils->EnterModalStateWithWindow(getter_AddRefs(modalStateWin));
+    rv = utils->EnterModalState();
 
     mModalDepth++;
     int origModalDepth = mModalDepth;
@@ -265,7 +266,7 @@ EmbedPromptService::AlertCheck(const PRUnichar* aDialogTitle,
 
     mResponseMap.erase(it);
 
-    rv = utils->LeaveModalStateWithWindow(modalStateWin);
+    rv = utils->LeaveModalState();
 
     mService->LeaveSecureJSContext();
 
@@ -320,8 +321,7 @@ EmbedPromptService::ConfirmCheck(const PRUnichar* aDialogTitle,
     nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(mWin);
     NS_ENSURE_TRUE(utils, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIDOMWindow> modalStateWin;
-    rv = utils->EnterModalStateWithWindow(getter_AddRefs(modalStateWin));
+    rv = utils->EnterModalState();
 
     mModalDepth++;
     int origModalDepth = mModalDepth;
@@ -355,7 +355,7 @@ EmbedPromptService::ConfirmCheck(const PRUnichar* aDialogTitle,
 
     mResponseMap.erase(it);
 
-    rv = utils->LeaveModalStateWithWindow(modalStateWin);
+    rv = utils->LeaveModalState();
 
     mService->LeaveSecureJSContext();
 
@@ -417,8 +417,7 @@ EmbedPromptService::Prompt(const PRUnichar* aDialogTitle,
     nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(mWin);
     NS_ENSURE_TRUE(utils, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIDOMWindow> modalStateWin;
-    rv = utils->EnterModalStateWithWindow(getter_AddRefs(modalStateWin));
+    rv = utils->EnterModalState();
 
     mModalDepth++;
     int origModalDepth = mModalDepth;
@@ -458,7 +457,7 @@ EmbedPromptService::Prompt(const PRUnichar* aDialogTitle,
 
     mResponseMap.erase(it);
 
-    rv = utils->LeaveModalStateWithWindow(modalStateWin);
+    rv = utils->LeaveModalState();
 
     mService->LeaveSecureJSContext();
 

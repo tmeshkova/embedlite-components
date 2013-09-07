@@ -18,16 +18,14 @@
 
 using namespace mozilla;
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsEmbedAlertsService, nsIAlertsService, nsIAlertsProgressListener)
+NS_IMPL_ISUPPORTS2(nsEmbedAlertsService, nsIAlertsService, nsIAlertsProgressListener)
 
 nsEmbedAlertsService::nsEmbedAlertsService()
 {
-  printf(">>>>>>Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
 }
 
 nsEmbedAlertsService::~nsEmbedAlertsService()
 {
-  printf(">>>>>>Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
 }
 
 bool nsEmbedAlertsService::ShouldShowAlert()

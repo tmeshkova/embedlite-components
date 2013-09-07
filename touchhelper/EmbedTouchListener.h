@@ -39,7 +39,7 @@ public:
     virtual void HandleDoubleTap(const mozilla::CSSIntPoint&);
     virtual void HandleSingleTap(const mozilla::CSSIntPoint&);
     virtual void HandleLongTap(const mozilla::CSSIntPoint&);
-    virtual void SendAsyncScrollDOMEvent(const mozilla::CSSRect&, const mozilla::CSSSize&);
+    virtual void SendAsyncScrollDOMEvent(mozilla::layers::FrameMetrics::ViewID, const mozilla::CSSRect&, const mozilla::CSSSize&);
     virtual void ScrollUpdate(const mozilla::CSSPoint&, float);
     virtual void PostDelayedTask(Task*, int) {}
 

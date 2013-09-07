@@ -30,7 +30,6 @@ EmbedHistoryListener::GetSingleton()
 
 EmbedHistoryListener::EmbedHistoryListener()
 {
-  mListeners.Init();
   nsresult rv;
   nsCOMPtr<nsIObserverService> observerService =
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID);

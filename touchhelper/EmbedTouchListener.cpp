@@ -13,6 +13,10 @@
 #include "nsStringGlue.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIDocument.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMEvent.h"
 #include "nsPIDOMWindow.h"
@@ -70,7 +74,8 @@ void EmbedTouchListener::HandleLongTap(const CSSIntPoint& aPoint)
     LOGT("pt[%i,%i]", aPoint.x, aPoint.y);
 }
 
-void EmbedTouchListener::SendAsyncScrollDOMEvent(const mozilla::CSSRect& aRect,
+void EmbedTouchListener::SendAsyncScrollDOMEvent(mozilla::layers::FrameMetrics::ViewID,
+                                                 const mozilla::CSSRect& aRect,
                                                  const mozilla::CSSSize& aSize)
 {
     // LOGT("r[%g,%g,%g,%g], size[%g,%g]", aRect.x, aRect.y, aRect.width, aRect.height, aSize.width, aSize.height);
@@ -436,7 +441,8 @@ EmbedTouchListener::GetFocusedInput(nsIDOMElement* *aElement,
     if (input) {
         bool isText = false;
         if (NS_SUCCEEDED(input->MozIsTextField(false, &isText)) && isText) {
-            NS_ADDREF(*aElement = input);
+            nsCOMPtr<nsIDOMElement> inputel = do_QueryInterface(input);
+            *aElement = inputel.forget().get();
             return NS_OK;
         }
     }

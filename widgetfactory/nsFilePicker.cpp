@@ -11,6 +11,8 @@
 #include "nsIEmbedLiteJSON.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
+#include "nsIThread.h"
+#include "nsThreadUtils.h"
 #include "nsIVariant.h"
 #include "nsArrayEnumerator.h"
 #include "nsIDOMFile.h"
@@ -166,6 +168,12 @@ NS_IMETHODIMP nsEmbedFilePicker::SetAddToRecentDocs(bool aAddToRecentDocs)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsEmbedFilePicker::GetMode(int16_t *aMode)
+{
+  *aMode = mMode;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsEmbedFilePicker::Show(int16_t* _retval)
 {
   DoSendPrompt();
@@ -177,8 +185,7 @@ NS_IMETHODIMP nsEmbedFilePicker::Show(int16_t* _retval)
   nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(mWin);
   NS_ENSURE_TRUE(utils, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMWindow> modalStateWin;
-  rv = utils->EnterModalStateWithWindow(getter_AddRefs(modalStateWin));
+  rv = utils->EnterModalState();
 
   mModalDepth++;
   int origModalDepth = mModalDepth;
@@ -201,7 +208,7 @@ NS_IMETHODIMP nsEmbedFilePicker::Show(int16_t* _retval)
     return NS_ERROR_UNEXPECTED;
   }
 
-  rv = utils->LeaveModalStateWithWindow(modalStateWin);
+  rv = utils->LeaveModalState();
   mService->LeaveSecureJSContext();
 
   return rv;
