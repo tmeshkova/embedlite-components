@@ -75,7 +75,7 @@ var UserAgent = {
 
   getUserAgentForUriAndTab: function ua_getUserAgentForUriAndTab(aUri, defaultUA) {
     // Send desktop UA if "Request Desktop Site" is enabled.
-//    if (this._desktopMode)
+    if (this._desktopMode)
       return this.DESKTOP_UA;
 
     // Not all schemes have a host member.
@@ -87,10 +87,10 @@ var UserAgent = {
         }
       } else if (this.YOUTUBE_DOMAIN.test(aUri.host) || this.FACEBOOK_DOMAIN.test(aUri.host)) {
         // Send the phone UA to google
-//        if (!defaultUA.contains("Safari/535.19")) {
+        if (!defaultUA.contains("Safari/535.19")) {
           // Nexus 7 Android chrome has best capabilities
-//          return defaultUA.replace("X11", "Android 4.4.1").replace("Unix", "Android 4.4.1").concat(" Safari/535.19");
-//        }
+          return defaultUA.replace("X11", "Android 4.4.1").replace("Unix", "Android 4.4.1").concat(" Safari/535.19");
+        }
       } else if (this.NOKIA_HERE_DOMAIN.test(aUri.host)) {
         // Send the phone UA to here
         if (!defaultUA.contains("Mobile")) {
