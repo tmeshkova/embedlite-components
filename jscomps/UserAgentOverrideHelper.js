@@ -78,28 +78,39 @@ var UserAgent = {
     if (this._desktopMode)
       return this.DESKTOP_UA;
 
+    let ua = this._customUA ? this._customUA : defaultUA;
+
     // Not all schemes have a host member.
     if (aUri.schemeIs("http") || aUri.schemeIs("https")) {
       if (this.GOOGLE_DOMAIN.test(aUri.host)) {
         // Send the phone UA to google
-        if (!defaultUA.contains("Mobile")) {
-          return defaultUA.replace("X11", "Android").replace("Unix", "Android").replace("Linux", "Mobile");
+        if (!ua.contains("Mobile")) {
+          return ua.replace("X11", "Android").replace("Unix", "Android").replace("Linux", "Mobile");
         }
-      } else if (this.YOUTUBE_DOMAIN.test(aUri.host) || this.FACEBOOK_DOMAIN.test(aUri.host)) {
+      } else if (this.YOUTUBE_DOMAIN.test(aUri.host)) {
         // Send the phone UA to google
-        if (!defaultUA.contains("Safari/535.19")) {
+        if (!ua.contains("Android")) {
           // Nexus 7 Android chrome has best capabilities
-          return defaultUA.replace("X11", "Android 4.4.1").replace("Unix", "Android 4.4.1").concat(" Safari/535.19");
+          if (ua.contains("Mobile")) {
+            return ua.replace("Linux", "Android 4.4.1").replace("Unix", "Android 4.4.1").replace("Mobile", "");
+          } else {
+            return ua.replace("Linux", "Android 4.4.1").replace("Unix", "Android 4.4.1");
+          }
+        }
+      } else if (this.FACEBOOK_DOMAIN.test(aUri.host)) {
+        if (!ua.contains("Safari/535.19")) {
+          // Nexus 7 Android chrome has best capabilities
+          return ua.replace("Linux", "Android 4.4.1").replace("Unix", "Android 4.4.1").concat(" Safari/535.19");
         }
       } else if (this.NOKIA_HERE_DOMAIN.test(aUri.host)) {
         // Send the phone UA to here
-        if (!defaultUA.contains("Mobile")) {
-          return defaultUA.replace("X11", "Android").replace("Unix", "Android").replace("Linux", "Mobile");
+        if (!ua.contains("Mobile")) {
+          return ua.replace("X11", "Android").replace("Unix", "Android").replace("Linux", "Mobile");
         }
       }
     }
 
-    return this._customUA ? this._customUA : defaultUA;
+    return ua;
   },
 
   uninit: function ua_uninit() {
