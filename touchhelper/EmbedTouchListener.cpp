@@ -50,7 +50,6 @@ using namespace mozilla;
 EmbedTouchListener::EmbedTouchListener(nsIDOMWindow* aWin)
   : DOMWindow(aWin)
   , mGotViewPortUpdate(false)
-  , mHadResizeSinceLastFrameUpdate(false)
 {
     if (!mService) {
         mService = do_GetService("@mozilla.org/embedlite-app-service;1");
@@ -66,7 +65,7 @@ NS_IMPL_ISUPPORTS1(EmbedTouchListener, nsIDOMEventListener)
 
 void EmbedTouchListener::HandleSingleTap(const CSSIntPoint& aPoint)
 {
-    LOGT("pt[%i,%i]", aPoint.x, aPoint.y);
+    // SingleTap handler of JavaScript (embedhelper.js) is taken care of input zooming.
 }
 
 void EmbedTouchListener::HandleLongTap(const CSSIntPoint& aPoint)
@@ -79,10 +78,6 @@ void EmbedTouchListener::SendAsyncScrollDOMEvent(mozilla::layers::FrameMetrics::
                                                  const mozilla::CSSSize& aSize)
 {
     // LOGT("r[%g,%g,%g,%g], size[%g,%g]", aRect.x, aRect.y, aRect.width, aRect.height, aSize.width, aSize.height);
-    if (mContentRect.width != aRect.width || mContentRect.height != aRect.height)
-        mHadResizeSinceLastFrameUpdate = true;
-    mContentRect = aRect;
-    mScrollSize = aSize;
 }
 
 NS_IMETHODIMP
@@ -115,19 +110,9 @@ void EmbedTouchListener::RequestContentRepaint(const mozilla::layers::FrameMetri
     mCssPageRect = gfx::Rect(aMetrics.mScrollableRect.x, aMetrics.mScrollableRect.y,
                              aMetrics.mScrollableRect.width, aMetrics.mScrollableRect.height);
 
-    nsCOMPtr<nsIBaseWindow> parentWindow;
-    nsCOMPtr<nsIWebBrowser> br;
-    mService->GetBrowserByID(mTopWinid, getter_AddRefs(br));
-    parentWindow = do_QueryInterface(br);
-    nsCOMPtr<nsIWidget> widget;
-    if (parentWindow)
-        parentWindow->GetMainWidget(getter_AddRefs(widget));
-
-    const widget::InputContext& ctx = widget->GetInputContext();
-    if (ctx.mIMEState.mEnabled && mHadResizeSinceLastFrameUpdate) {
-        ScrollToFocusedInput(false);
-    }
-    mHadResizeSinceLastFrameUpdate = false;
+//    LOGT("EmbedTouchListener::RequestContentRepaint mCssPageRect %g %g %g %g", mCssPageRect.x, mCssPageRect.y, mCssPageRect.width, mCssPageRect.height);
+//    LOGT("EmbedTouchListener::RequestContentRepaint Viewport %g %g %g %g", mViewport.x, mViewport.y, mViewport.width, mViewport.height);
+//    LOGT("EmbedTouchListener::RequestContentRepaint mCssCompositedRect %g %g %g %g", mCssCompositedRect.x, mCssCompositedRect.y, mCssCompositedRect.width, mCssCompositedRect.height);
 }
 
 void EmbedTouchListener::HandleDoubleTap(const CSSIntPoint& aPoint)
@@ -239,7 +224,6 @@ EmbedTouchListener::ShouldZoomToElement(nsIDOMElement* aElement)
 void
 EmbedTouchListener::ZoomToElement(nsIDOMElement* aElement, int aClickY, bool aCanZoomOut, bool aCanZoomIn)
 {
-    LOGT();
     const int margin = 15;
     gfx::Rect clrect = GetBoundingContentRect(aElement);
     float elementAspectRatio = clrect.width / clrect.height;
@@ -401,86 +385,6 @@ EmbedTouchListener::IsRectZoomedIn(gfx::Rect aRect, gfx::Rect aViewport)
     float ratioH = (aRect.height / vRect.height);
 
     return (showing > 0.9 && (ratioW > 0.9 || ratioH > 0.9)); 
-}
-
-void EmbedTouchListener::ScrollToFocusedInput(bool aAllowZoom)
-{
-    nsCOMPtr<nsIDOMElement> focused;
-    GetFocusedInput(getter_AddRefs(focused));
-    if (focused) {
-        // _zoomToElement will handle not sending any message if this input is already mostly filling the screen
-        ZoomToElement(focused, -1, false, aAllowZoom);
-    }
-}
-
-nsresult
-EmbedTouchListener::GetFocusedInput(nsIDOMElement* *aElement,
-                                    bool aOnlyInputElements)
-{
-    nsresult rv;
-    nsCOMPtr<nsIDOMDocument> doc;
-    rv = DOMWindow->GetDocument(getter_AddRefs(doc));
-    NS_ENSURE_TRUE(doc, rv);
-
-    nsCOMPtr<nsIDOMElement> focused;
-    doc->GetActiveElement(getter_AddRefs(focused));
-
-    nsCOMPtr<nsIDOMHTMLIFrameElement> elAsIFrame = do_QueryInterface(focused);
-    nsCOMPtr<nsIDOMHTMLFrameElement> elAsFrame = do_QueryInterface(focused);
-    while (elAsIFrame || elAsFrame) {
-        if (!elAsIFrame || NS_FAILED(elAsIFrame->GetContentDocument(getter_AddRefs(doc)))) {
-            if (!elAsFrame || NS_FAILED(elAsFrame->GetContentDocument(getter_AddRefs(doc)))) {
-                NS_ERROR("This should not happen");
-            }
-        }
-        doc->GetActiveElement(getter_AddRefs(focused));
-        elAsIFrame = do_QueryInterface(focused);
-        elAsFrame = do_QueryInterface(focused);
-    }
-    nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(focused);
-    if (input) {
-        bool isText = false;
-        if (NS_SUCCEEDED(input->MozIsTextField(false, &isText)) && isText) {
-            nsCOMPtr<nsIDOMElement> inputel = do_QueryInterface(input);
-            *aElement = inputel.forget().get();
-            return NS_OK;
-        }
-    }
-
-    if (aOnlyInputElements) {
-        return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIDOMHTMLTextAreaElement> textarea = do_QueryInterface(focused);
-    bool IsContentEditable = false;
-    if (!textarea) {
-        nsCOMPtr<nsIDOMHTMLElement> editDiv = do_QueryInterface(focused);
-        if (editDiv) {
-            editDiv->GetIsContentEditable(&IsContentEditable);
-        }
-    }
-    if (textarea || IsContentEditable) {
-        nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(focused);
-        if (body) {
-            // we are putting focus into a contentEditable frame. scroll the frame into
-            // view instead of the contentEditable document contained within, because that
-            // results in a better user experience
-            nsCOMPtr<nsIDOMNode> node = do_QueryInterface(focused);
-            if (node) {
-                node->GetOwnerDocument(getter_AddRefs(doc));
-                if (doc) {
-                    nsCOMPtr<nsIDOMWindow> newWin;
-                    doc->GetDefaultView(getter_AddRefs(newWin));
-                    if (newWin) {
-                        newWin->GetFrameElement(getter_AddRefs(focused));
-                    }
-                }
-            }
-        }
-        NS_ADDREF(*aElement = focused);
-        return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
 }
 
 void EmbedTouchListener::ScrollUpdate(const mozilla::CSSPoint&, float)

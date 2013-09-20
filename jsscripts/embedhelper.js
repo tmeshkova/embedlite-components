@@ -41,6 +41,11 @@ function fuzzyEquals(a, b) {
 function EmbedHelper() {
   this.lastTouchedAt = Date.now();
   this.contentDocumentIsDisplayed = true;
+  this.reflowPref = false;
+  // Reasonable default. Will be read from preferences.
+  this.inputItemSize = 38;
+  this.zoomMargin = 14;
+  this.previousInputY = -1;
   this._init();
 }
 
@@ -68,6 +73,57 @@ EmbedHelper.prototype = {
     addMessageListener("embed:ContextMenuCreate", this);
     Services.obs.addObserver(this, "embedlite-before-first-paint", true);
     Services.prefs.addObserver("browser.zoom.reflowOnZoom", this, false);
+    Services.prefs.addObserver("embedlite.inputItemSize", this, false);
+    Services.prefs.addObserver("embedlite.zoomMargin", this, false);
+    this.updateReflowPref();
+    this.updateInputItemSizePref();
+    this.updateZoomMarginPref();
+  },
+
+  getFocusedInput: function(aBrowser, aOnlyInputElements = false) {
+    if (!aBrowser)
+      return null;
+
+    let doc = aBrowser.document;
+
+    if (!doc)
+      return null;
+
+    let focused = doc.activeElement;
+
+    while (focused instanceof HTMLFrameElement || focused instanceof HTMLIFrameElement) {
+      doc = focused.contentDocument;
+      focused = doc.activeElement;
+    }
+
+    if (focused instanceof HTMLInputElement && focused.mozIsTextField(false))
+      return { inputElement: focused, isTextField: true };
+
+    if (aOnlyInputElements)
+      return null;
+
+    if (focused && (focused instanceof HTMLTextAreaElement || focused.isContentEditable)) {
+      return { inputElement: focused, isTextField: false };
+    }
+    return { inputElement: null, isTextField: false };
+  },
+
+//  // observe this
+//  case "ScrollTo:FocusedInput":
+//  // these messages come from a change in the viewable area and not user interaction
+//  // we allow scrolling to the selected input, but not zooming the page
+//  this.scrollToFocusedInput(browser, false);
+
+
+  scrollToFocusedInput: function(aBrowser, aAllowZoom = true) {
+    let { inputElement: inputElement, isTextField: isTextField } = this.getFocusedInput(aBrowser);
+    if (inputElement) {
+      // _zoomToInput will handle not sending any message if this input is already mostly filling the screen
+      this._zoomToInput(inputElement, aAllowZoom, isTextField);
+      this.previousInputY = inputElement.y;
+    } else {
+      this.previousInputY = -1;
+    }
   },
 
   observe: function(aSubject, aTopic, data) {
@@ -80,8 +136,13 @@ EmbedHelper.prototype = {
           break;
         case "nsPref:changed":
           if (data == "browser.zoom.reflowOnZoom") {
-            this.performReflow();
+            this.updateReflowPref();
+          } else if (data == "embedlite.inputItemSize") {
+            this.updateInputItemSizePref();
+          } else if (data == "embedlite.zoomMargin") {
+            this.updateZoomMarginPref();
           }
+
           break;
     }
   },
@@ -97,6 +158,28 @@ EmbedHelper.prototype = {
     let docShell = webNav.QueryInterface(Ci.nsIDocShell);
     let docViewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
     docViewer.changeMaxLineBoxWidth(0);
+  },
+
+  updateReflowPref: function() {
+    this.reflowPref = Services.prefs.getBoolPref("browser.zoom.reflowOnZoom");
+  },
+
+  updateInputItemSizePref: function() {
+    try {
+      let tmpSize = Services.prefs.getIntPref("embedlite.inputItemSize");
+      if (tmpSize) {
+        this.inputItemSize = tmpSize;
+      }
+    } catch (e) {} /*pref is missing*/
+  },
+
+  updateZoomMarginPref: function() {
+    try {
+      let tmpMargin = Services.prefs.getIntPref("embedlite.zoomMargin");
+      if (tmpMargin) {
+        this.zoomMargin = tmpMargin;
+      }
+    } catch (e) {} /*pref is missing*/
   },
 
   performReflow: function performReflow() {
@@ -176,11 +259,20 @@ EmbedHelper.prototype = {
             this._sendMouseEvent("mousedown", element, x, y);
             this._sendMouseEvent("mouseup",   element, x, y);
 
+            // scrollToFocusedInput does its own checks to find out if an element should be zoomed into
+            let { targetWindow: targetWindow,
+                  offsetX: offsetX,
+                  offsetY: offsetY } = Util.translateToTopLevelWindow(element);
+
+            this.scrollToFocusedInput(targetWindow);
           } catch(e) {
             Cu.reportError(e);
           }
           this._touchElement = null;
+        } else {
+          this.previousInputY = -1;
         }
+
         break;
       }
       case "Gesture:DoubleTap": {
@@ -340,6 +432,78 @@ EmbedHelper.prototype = {
       if ((bRect.height > rect.h) && (cssTapY > rect.y + (rect.h * 1.2))) {
         rect.y = cssTapY - (rect.h / 2);
       }
+    }
+
+    if (rect.w > this._viewportData.compositionBounds.width || rect.h > this._viewportData.compositionBounds.height) {
+      this.resetMaxLineBoxWidth();
+    }
+
+    var winid = Services.embedlite.getIDByWindow(content);
+    Services.embedlite.zoomToRect(winid, rect.x, rect.y, rect.w, rect.h);
+  },
+
+  _zoomToInput: function(aElement, aAllowZoom = true, aIsTextField = true) {
+    // For possible error cases
+    if (!this._viewportData)
+      return;
+    // Combination of browser.js _zoomToElement and special zoom logic
+    let rect = ElementTouchHelper.getBoundingContentRect(aElement);
+
+    // TODO / Missing: handle maximum zoom level and respect viewport meta tag
+
+    let scaleFactor = aIsTextField ? this.inputItemSize / rect.h : 1.0;
+    let margin = this.zoomMargin / scaleFactor;
+    let allowZoom = aAllowZoom && rect.height != this.inputItemSize;
+
+    // Width and height scaled to css coordinates
+    let cssViewPort = new Rect(this._viewportData.x,
+                         this._viewportData.y,
+                         this._viewportData.compositionBounds.width / this._viewportData.resolution.scale,
+                         this._viewportData.compositionBounds.height / this._viewportData.resolution.scale);
+    let bRect = new Rect(Util.clamp(rect.x - margin, 0, this._viewportData.cssPageRect.width - rect.w),
+                        Util.clamp(rect.y - margin, 0, this._viewportData.cssPageRect.height - rect.h),
+                        allowZoom ? rect.w + 2 * margin : this._viewportData.viewport.width,
+                        rect.h);
+
+    // constrict the rect to the screen's right edge
+    bRect.width = Math.min(bRect.width, (this._viewportData.cssPageRect.x + cssViewPort.x + this._viewportData.cssPageRect.width) - bRect.x);
+
+    let dxLeft = rect.x - cssViewPort.x;
+    let dxRight = cssViewPort.x + cssViewPort.width - (rect.x + rect.w);
+    let dxTop = rect.y - cssViewPort.y;
+    let dxBottom = cssViewPort.y + cssViewPort.height - (rect.y + rect.h);
+
+    let scrollToRight = Math.abs(dxLeft) > Math.abs(dxRight);
+    let scrollToBottom = Math.abs(dxTop) > Math.abs(dxBottom);
+
+    // TODO: Allow staying on y-axis and x-axis so that actual zoom in / zoom out path would be as short as possible
+
+    const originalInputWidth = rect.w;
+    const originalInputHeight = rect.h;
+
+    rect.w = bRect.width * scaleFactor;
+    rect.h = Math.min(bRect.width * this._viewportData.viewport.height / this._viewportData.viewport.width, bRect.height);
+    // rect.w is now of composition rectangle width
+
+    let aspectRatio = this._viewportData.compositionBounds.width / this._viewportData.compositionBounds.height
+    const compositionWidth = rect.w;
+    // First focus needs rough compositionHeight as virtual keyboard is not yet raised.
+    // Let's see do we need to handle portrait / landscape differently.
+    const compositionHeight = this.previousInputY == -1 ? compositionWidth - 3 * margin : compositionWidth / aspectRatio;
+
+    // Adjust position based on new composition area size.
+    if (scrollToRight && aIsTextField && originalInputWidth < compositionWidth - 2 * margin) {
+      rect.x = rect.x - (compositionWidth - originalInputWidth - margin);
+      rect.x = Util.clamp(rect.x, 0, this._viewportData.cssPageRect.width - originalInputWidth);
+    } else {
+      rect.x = bRect.x;
+    }
+
+    if (scrollToBottom && aIsTextField && originalInputHeight < compositionHeight - 2 * margin) {
+      rect.y = rect.y - (compositionHeight - originalInputHeight - margin);
+      rect.y = Util.clamp(rect.y, 0, this._viewportData.cssPageRect.height - originalInputHeight)
+    } else {
+      rect.y = bRect.y;
     }
 
     if (rect.w > this._viewportData.compositionBounds.width || rect.h > this._viewportData.compositionBounds.height) {
