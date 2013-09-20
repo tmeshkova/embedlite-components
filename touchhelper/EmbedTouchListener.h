@@ -53,18 +53,13 @@ private:
                        bool aCanZoomIn = true);
     mozilla::gfx::Rect GetBoundingContentRect(nsIDOMElement* aElement);
     bool IsRectZoomedIn(mozilla::gfx::Rect aRect, mozilla::gfx::Rect aViewport);
-    void ScrollToFocusedInput(bool aAllowZoom);
-    nsresult GetFocusedInput(nsIDOMElement* *aElement, bool aOnlyInputElements = false);
 
     nsCOMPtr<nsIEmbedAppService> mService;
-    mozilla::CSSRect mContentRect;
-    mozilla::CSSSize mScrollSize;
     bool mGotViewPortUpdate;
     mozilla::gfx::Rect mViewport;
     mozilla::gfx::Rect mCssCompositedRect;
     mozilla::gfx::Rect mCssPageRect;
     uint32_t mTopWinid;
-    bool mHadResizeSinceLastFrameUpdate;
 };
 
 #endif /*EmbedTouchListener_H_*/
