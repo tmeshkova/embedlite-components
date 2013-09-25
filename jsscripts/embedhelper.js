@@ -594,6 +594,7 @@ EmbedHelper.prototype = {
   },
 
   _handleTouchMove: function(aEvent) {
+    this._cancelTapHighlight();
   },
 
   _handleTouchEnd: function(aEvent) {
