@@ -35,7 +35,7 @@ var globalObject = null;
 const kEmbedStateActive = 0x00000001; // :active pseudoclass for elements
 
 function fuzzyEquals(a, b) {
-  return (Math.abs(a - b) < 1e-6);
+  return (Math.abs(a - b) < 0.01);
 }
 
 function EmbedHelper() {
@@ -372,14 +372,12 @@ EmbedHelper.prototype = {
     const maxDifference = 20;
     const maxZoomAllowed = 4; // keep this in sync with mobile/android/base/ui/PanZoomController.MAX_ZOOM
 
-    let vRect = new Rect((this._viewportData.compositionBounds.x + this._viewportData.x),
-                         (this._viewportData.compositionBounds.y + this._viewportData.y),
-                         this._viewportData.compositionBounds.width / this._viewportData.resolution.width,
-                         this._viewportData.compositionBounds.height / this._viewportData.resolution.width);
-    let overlap = vRect.intersect(aRect);
-    let overlapArea = overlap.width * overlap.height;
-    let availHeight = Math.min(aRect.width * vRect.height / vRect.width, aRect.height);
-    let showing = overlapArea / (aRect.width * availHeight);
+    let { vRect: vRect,
+            overlap: overlap,
+            overlapArea: overlapArea,
+            availHeight: availHeight,
+            showing: showing } = this._rectVisibility(aRect);
+
     let dw = (aRect.width - vRect.width);
     let dx = (aRect.x - vRect.x);
 
@@ -392,6 +390,18 @@ EmbedHelper.prototype = {
     return (showing > 0.9 &&
             dx > minDifference && dx < maxDifference &&
             dw > minDifference && dw < maxDifference);
+  },
+
+  _rectVisibility: function(aSourceRect, aViewportRect) {
+    let vRect = aViewportRect ? aViewportRect : new Rect(this._viewportData.compositionBounds.x + this._viewportData.x,
+                                                         this._viewportData.compositionBounds.y + this._viewportData.y,
+                                                         this._viewportData.compositionBounds.width / this._viewportData.resolution.width,
+                                                         this._viewportData.compositionBounds.height / this._viewportData.resolution.width);
+    let overlap = vRect.intersect(aSourceRect);
+    let overlapArea = overlap.width * overlap.height;
+    let availHeight = Math.min(aSourceRect.width * vRect.height / vRect.width, aSourceRect.height);
+    let showing = overlapArea / (aSourceRect.width * availHeight);
+    return { vRect: vRect, overlap: overlap, overlapArea: overlapArea, availHeight: availHeight, showing: showing }
   },
 
 
@@ -490,6 +500,17 @@ EmbedHelper.prototype = {
     // First focus needs rough compositionHeight as virtual keyboard is not yet raised.
     // Let's see do we need to handle portrait / landscape differently.
     const compositionHeight = this.previousInputY == -1 ? compositionWidth - 3 * margin : compositionWidth / aspectRatio;
+
+    let fixedCurrentViewport = this.previousInputY != -1 ? cssViewPort : new Rect(cssViewPort.x, cssViewPort.y, cssViewPort.width, compositionHeight);
+
+    // We want to scale input so that it will be readable. In case we move from one input field to another or refocus
+    // the same field we don't want to move input if it's already visible and of correct size.
+    let halfMargin = margin / 2;
+    let inputRect = new Rect(rect.x - halfMargin, rect.y - halfMargin, originalInputWidth + halfMargin, originalInputHeight + halfMargin);
+    let { showing: showing } = this._rectVisibility(inputRect, fixedCurrentViewport);
+    if (fuzzyEquals(rect.w, cssViewPort.width) && showing > 0.99) {
+      return;
+    }
 
     // Adjust position based on new composition area size.
     if (scrollToRight && aIsTextField && originalInputWidth < compositionWidth - 2 * margin) {
