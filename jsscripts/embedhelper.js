@@ -35,7 +35,7 @@ var globalObject = null;
 const kEmbedStateActive = 0x00000001; // :active pseudoclass for elements
 
 function fuzzyEquals(a, b) {
-  return (Math.abs(a - b) < 1e-6);
+  return (Math.abs(a - b) < 0.01);
 }
 
 function EmbedHelper() {
@@ -277,7 +277,6 @@ EmbedHelper.prototype = {
       }
       case "Gesture:DoubleTap": {
         this._cancelTapHighlight();
-        // this.onDoubleTap(aMessage.json);
         break;
       }
       case "Gesture:LongTap": {
@@ -325,121 +324,16 @@ EmbedHelper.prototype = {
     }
   },
 
-  _shouldZoomToElement: function(aElement) {
-    let win = aElement.ownerDocument.defaultView;
-    if (win.getComputedStyle(aElement, null).display == "inline")
-      return false;
-    if (aElement instanceof Ci.nsIDOMHTMLLIElement)
-      return false;
-    if (aElement instanceof Ci.nsIDOMHTMLQuoteElement)
-      return false;
-    return true;
-  },
-
-  onDoubleTap: function(aData) {
-    let data = aData;
-
-    let element = ElementTouchHelper.anyElementFromPoint(data.x, data.y);
-    if (!element) {
-      this._zoomOut();
-      return;
-    }
-
-    while (element && !this._shouldZoomToElement(element))
-      element = element.parentNode;
-
-    if (!element) {
-      this._zoomOut();
-    } else {
-      this._zoomToElement(element, data.y);
-    }
-  },
-
-  _zoomOut: function() {
-    this.resetMaxLineBoxWidth();
-    var winid = Services.embedlite.getIDByWindow(content);
-    Services.embedlite.zoomToRect(winid, 0, this._viewportData.y, this._viewportData.cssPageRect.width, this._viewportData.cssPageRect.height);
-  },
-
-  _isRectZoomedIn: function(aRect) {
-    // This function checks to see if the area of the rect visible in the
-    // viewport (i.e. the "overlapArea" variable below) is approximately
-    // the max area of the rect we can show. It also checks that the rect
-    // is actually on-screen by testing the left and right edges of the rect.
-    // In effect, this tells us whether or not zooming in to this rect
-    // will significantly change what the user is seeing.
-    const minDifference = -20;
-    const maxDifference = 20;
-    const maxZoomAllowed = 4; // keep this in sync with mobile/android/base/ui/PanZoomController.MAX_ZOOM
-
-    let vRect = new Rect((this._viewportData.compositionBounds.x + this._viewportData.x),
-                         (this._viewportData.compositionBounds.y + this._viewportData.y),
-                         this._viewportData.compositionBounds.width / this._viewportData.resolution.width,
-                         this._viewportData.compositionBounds.height / this._viewportData.resolution.width);
-    let overlap = vRect.intersect(aRect);
+  _rectVisibility: function(aSourceRect, aViewportRect) {
+    let vRect = aViewportRect ? aViewportRect : new Rect(this._viewportData.compositionBounds.x + this._viewportData.x,
+                                                         this._viewportData.compositionBounds.y + this._viewportData.y,
+                                                         this._viewportData.compositionBounds.width / this._viewportData.resolution.width,
+                                                         this._viewportData.compositionBounds.height / this._viewportData.resolution.width);
+    let overlap = vRect.intersect(aSourceRect);
     let overlapArea = overlap.width * overlap.height;
-    let availHeight = Math.min(aRect.width * vRect.height / vRect.width, aRect.height);
-    let showing = overlapArea / (aRect.width * availHeight);
-    let dw = (aRect.width - vRect.width);
-    let dx = (aRect.x - vRect.x);
-
-    if (fuzzyEquals(this._viewportData.resolution.width, maxZoomAllowed) && overlap.width / aRect.width > 0.9) {
-      // we're already at the max zoom and the block is not spilling off the side of the screen so that even
-      // if the block isn't taking up most of the viewport we can't pan/zoom in any more. return true so that we zoom out
-      return true;
-    }
-
-    return (showing > 0.9 &&
-            dx > minDifference && dx < maxDifference &&
-            dw > minDifference && dw < maxDifference);
-  },
-
-
-  /* Zoom to an element, optionally keeping a particular part of it
-   * in view if it is really tall.
-   */
-  _zoomToElement: function(aElement, aClickY = -1, aCanZoomOut = true, aCanScrollHorizontally = true) {
-    const margin = 15;
-    let rect = ElementTouchHelper.getBoundingContentRect(aElement);
-
-    dump("_zoomToElement: rect[" + rect.x + "," + rect.y + "," + rect.w + "," + rect.h + "]\n");
-    let bRect = new Rect(aCanScrollHorizontally ? Math.max(this._viewportData.cssPageRect.x + this._viewportData.x, rect.x - margin) : content.scrollX || 0,
-                         rect.y,
-                         aCanScrollHorizontally ? rect.w + 2 * margin : this._viewportData.compositionBounds.width,
-                         rect.h);
-    // constrict the rect to the screen's right edge
-    bRect.width = Math.min(bRect.width, (this._viewportData.cssPageRect.x + this._viewportData.x + this._viewportData.cssPageRect.width) - bRect.x);
-
-    // if the rect is already taking up most of the visible area and is stretching the
-    // width of the page, then we want to zoom out instead.
-    if (this._isRectZoomedIn(bRect)) {
-      if (aCanZoomOut)
-        this._zoomOut();
-      return;
-    }
-
-    rect.x = bRect.x;
-    rect.y = bRect.y;
-    rect.w = bRect.width;
-    rect.h = Math.min(bRect.width * this._viewportData.compositionBounds.height / this._viewportData.compositionBounds.width, bRect.height);
-
-    if (aClickY >= 0) {
-      // if the block we're zooming to is really tall, and we want to keep a particular
-      // part of it in view, then adjust the y-coordinate of the target rect accordingly.
-      // the 1.2 multiplier is just a little fuzz to compensate for bRect including horizontal
-      // margins but not vertical ones.
-      let cssTapY = this._viewportData.compositionBounds.y + aClickY;
-      if ((bRect.height > rect.h) && (cssTapY > rect.y + (rect.h * 1.2))) {
-        rect.y = cssTapY - (rect.h / 2);
-      }
-    }
-
-    if (rect.w > this._viewportData.compositionBounds.width || rect.h > this._viewportData.compositionBounds.height) {
-      this.resetMaxLineBoxWidth();
-    }
-
-    var winid = Services.embedlite.getIDByWindow(content);
-    Services.embedlite.zoomToRect(winid, rect.x, rect.y, rect.w, rect.h);
+    let availHeight = Math.min(aSourceRect.width * vRect.height / vRect.width, aSourceRect.height);
+    let showing = overlapArea / (aSourceRect.width * availHeight);
+    return { vRect: vRect, overlap: overlap, overlapArea: overlapArea, availHeight: availHeight, showing: showing }
   },
 
   _zoomToInput: function(aElement, aAllowZoom = true, aIsTextField = true) {
@@ -490,6 +384,17 @@ EmbedHelper.prototype = {
     // First focus needs rough compositionHeight as virtual keyboard is not yet raised.
     // Let's see do we need to handle portrait / landscape differently.
     const compositionHeight = this.previousInputY == -1 ? compositionWidth - 3 * margin : compositionWidth / aspectRatio;
+
+    let fixedCurrentViewport = this.previousInputY != -1 ? cssViewPort : new Rect(cssViewPort.x, cssViewPort.y, cssViewPort.width, compositionHeight);
+
+    // We want to scale input so that it will be readable. In case we move from one input field to another or refocus
+    // the same field we don't want to move input if it's already visible and of correct size.
+    let halfMargin = margin / 2;
+    let inputRect = new Rect(rect.x - halfMargin, rect.y - halfMargin, originalInputWidth + halfMargin, originalInputHeight + halfMargin);
+    let { showing: showing } = this._rectVisibility(inputRect, fixedCurrentViewport);
+    if (fuzzyEquals(rect.w, cssViewPort.width) && showing > 0.99) {
+      return;
+    }
 
     // Adjust position based on new composition area size.
     if (scrollToRight && aIsTextField && originalInputWidth < compositionWidth - 2 * margin) {
