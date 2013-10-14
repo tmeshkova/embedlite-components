@@ -201,9 +201,10 @@ var ContextMenuHandler = {
         // Retrieve the type of image from the cache since the url can fail to
         // provide valuable informations
         try {
-          let imageCache = Cc["@mozilla.org/image/cache;1"].getService(Ci.imgICache);
-          let props = imageCache.findEntryProperties(popupNode.currentURI,
-                                                     content.document.characterSet);
+          let tools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
+          let imageCache = tools.getImgCacheForDocument(content.document);
+          let props = imageCache.findEntryProperties(popupNode.currentURI);
+
           if (props) {
             state.contentType = String(props.get("type", Ci.nsISupportsCString));
             state.contentDisposition = String(props.get("content-disposition",
