@@ -105,12 +105,14 @@ let DownloadUIListener = {
           case "addDownload": {
             let ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
             const nsIWBP = Ci.nsIWebBrowserPersist;
-            var persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist);
+            let mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+            let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist);
             persist.persistFlags = nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
                                   nsIWBP.PERSIST_FLAGS_BYPASS_CACHE |
                                   nsIWBP.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
-            var dl = Services.downloads.addDownload(0, ios.newURI(data.from, null, null), ios.newURI(data.to, null, null), 
-                                          null, null, Math.round(Date.now() * 1000), null, persist, false);
+            let mimeinfo = mimeSvc.getFromTypeAndExtension(data.contentType ? data.contentType : 'application/octet-stream', '');
+            let dl = Services.downloads.addDownload(0, ios.newURI(data.from, null, null), ios.newURI(data.to, null, null),
+                                          null, mimeinfo, Math.round(Date.now() * 1000), null, persist, false);
             persist.progressListener = dl.QueryInterface(Ci.nsIWebProgressListener);
             persist.saveURI(dl.source, null, null, null, null, dl.targetFile, null);
             break;
