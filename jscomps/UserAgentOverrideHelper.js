@@ -46,7 +46,6 @@ var UserAgent = {
   DESKTOP_UA: null,
   GOOGLE_DOMAIN: /(^|\.)google\.com$/,
   YOUTUBE_DOMAIN: /(^|\.)youtube\.com$/,
-  FACEBOOK_DOMAIN: /(^|\.)facebook\.com$/,
   NOKIA_HERE_DOMAIN: /(^|\.)here\.com$/,
   _customUA: null,
 
@@ -96,11 +95,6 @@ var UserAgent = {
           } else {
             return ua.replace("Linux", "Android 4.4.1").replace("Unix", "Android 4.4.1");
           }
-        }
-      } else if (this.FACEBOOK_DOMAIN.test(aUri.host)) {
-        if (!ua.contains("Safari/535.19")) {
-          // Nexus 7 Android chrome has best capabilities
-          return ua.replace("Linux", "Android 4.4.1").replace("Unix", "Android 4.4.1").concat(" Safari/535.19");
         }
       } else if (this.NOKIA_HERE_DOMAIN.test(aUri.host)) {
         // Send the phone UA to here
