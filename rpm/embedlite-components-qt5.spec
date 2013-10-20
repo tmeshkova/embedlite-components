@@ -49,6 +49,7 @@ rm -rf %{buildroot}
 %post
 # >> post
 /sbin/ldconfig
+touch /var/lib/_MOZEMBED_CACHE_CLEAN_
 # << post
 
 %postun
