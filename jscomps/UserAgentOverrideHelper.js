@@ -91,7 +91,7 @@ var UserAgent = {
         if (!ua.contains("Android")) {
           // Nexus 7 Android chrome has best capabilities
           if (ua.contains("Mobile")) {
-            return ua.replace("Linux", "Android 4.4.1").replace("Unix", "Android 4.4.1").replace("Mobile", "");
+            return ua.replace("Linux", "Android 4.4.1").replace("Unix", "Android 4.4.1").replace("Mobile", "").replace("Maemo", "");
           } else {
             return ua.replace("Linux", "Android 4.4.1").replace("Unix", "Android 4.4.1");
           }
