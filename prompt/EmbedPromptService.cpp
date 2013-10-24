@@ -675,14 +675,6 @@ EmbedAuthPromptService::AsyncPromptAuth(nsIChannel* aChannel,
         return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIInterfaceRequestor> notificationCallbacks;
-    rv = aChannel->GetNotificationCallbacks(getter_AddRefs(notificationCallbacks));
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(notificationCallbacks);
-    nsCOMPtr<nsIDOMWindow> topWindow;
-    rv = loadContext->GetTopWindow(getter_AddRefs(topWindow));
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsCOMPtr<nsAuthCancelableConsumer> consumer = new nsAuthCancelableConsumer(aCallback, aContext);
 
     nsCString hostname, httpRealm;
