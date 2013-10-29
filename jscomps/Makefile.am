@@ -18,6 +18,10 @@ jscomps_manifest_DATA = \
 	XPIDialogService.js \
 	PromptService.js \
 	PrivateDataManager.js \
+	TelProtocolHandler.js \
+	SmsProtocolHandler.js \
+	MailtoProtocolHandler.js \
+	GeoProtocolHandler.js \
 	$(NULL)
 
 AM_CPPFLAGS = $(DEPS_CFLAGS)

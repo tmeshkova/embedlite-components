@@ -84,3 +84,19 @@ category app-startup EmbedLiteWebAppInstall service,@mozilla.org/embedlite-webap
 component {6a7dd2ef-b7c8-4ab5-8c35-c0e5d7557ccf} PrivateDataManager.js
 contract @mozilla.org/embedlite/private-data-manager;1 {6a7dd2ef-b7c8-4ab5-8c35-c0e5d7557ccf}
 category app-startup PrivateDataManager service,@mozilla.org/embedlite/private-data-manager;1
+
+# TelProtocolHandler.js
+component {7157f5ac-7436-48be-8939-2425579b6d40} TelProtocolHandler.js
+contract @mozilla.org/network/protocol;1?name=tel {7157f5ac-7436-48be-8939-2425579b6d40}
+
+# SmsProtocolHandler.js
+component {06827058-5807-4a23-a9fe-b21b9775702e} SmsProtocolHandler.js
+contract @mozilla.org/network/protocol;1?name=sms {06827058-5807-4a23-a9fe-b21b9775702e}
+
+# MailtoProtocolHandler.js
+component {25cbc673-c16b-4bec-affd-8d57398af512} MailtoProtocolHandler.js
+contract @mozilla.org/network/protocol;1?name=mailto {25cbc673-c16b-4bec-affd-8d57398af512}
+
+# GeoProtocolHandler.js
+component {0b452f2d-c6b3-4aee-9a73-dec5a812d2e3} GeoProtocolHandler.js
+contract @mozilla.org/network/protocol;1?name=geo {0b452f2d-c6b3-4aee-9a73-dec5a812d2e3}
