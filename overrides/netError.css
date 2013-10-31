@@ -12,16 +12,16 @@
 
 body {
   margin: 0;
-  padding: 0 8px 8px;
-  font-family: "Nokia Sans", Tahoma, sans-serif !important;
+  padding: 0 12px 12px;
+  font-family: "Source Sans Pro Light" !important;
 }
 
 h1 {
-  font-size: 22px;
+  font-size: 32px;
 }
 
 h2 {
-  font-size: 16px;
+  font-size: 24px;
 }
 
 ul {
@@ -35,15 +35,15 @@ li {
 }
 
 #errorPage {
-  background-color: #CEE6F4;
+  background-color: #ffffff;
 }
 
 #errorPage.certerror {
-  background-color: #EFD400;
+  background-color: #ffffff;
 }
 
 #errorPage.blockedsite {
-  background-color: #BF0000;
+  background-color: #ffffff;
 }
 
 #errorTitle {
@@ -79,7 +79,7 @@ li {
   border: 1px solid #999999;
   border-radius: 6px;
   padding: 6px 20px 20px;
-  font-size: 14px;
+  font-size: 20px;
   max-width: 500px;
   margin-left: auto;
   margin-right: auto;
