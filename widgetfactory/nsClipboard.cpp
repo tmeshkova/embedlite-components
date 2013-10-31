@@ -9,6 +9,7 @@
 #include "nsIInputStream.h"
 #include "nsStringStream.h"
 #include "nsComponentManagerUtils.h"
+#include "nsThreadUtils.h"
 
 #include "imgIContainer.h"
 #include "gfxImageSurface.h"
