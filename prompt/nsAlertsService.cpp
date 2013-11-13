@@ -35,19 +35,18 @@ bool nsEmbedAlertsService::ShouldShowAlert()
   return result;
 }
 
-NS_IMETHODIMP nsEmbedAlertsService::ShowAlertNotification(const nsAString & aImageUrl, const nsAString & aAlertTitle, 
-                                                     const nsAString & aAlertText, bool aAlertTextClickable,
-                                                     const nsAString & aAlertCookie,
-                                                     nsIObserver * aAlertListener,
-                                                     const nsAString & aAlertName, const nsAString & dir, const nsAString & lang)
+NS_IMETHODIMP nsEmbedAlertsService::ShowAlertNotification(const nsAString& aImageUrl, const nsAString& aAlertTitle,
+                                                          const nsAString& aAlertText, bool aAlertTextClickable,
+                                                          const nsAString& aAlertCookie, nsIObserver* aAlertListener,
+                                                          const nsAString& aAlertName, const nsAString& aBidi,
+                                                          const nsAString& aLang, nsIPrincipal *principal)
 {
-  printf(">>>>>>Func:%s::%d image:%s, title:%s, text:%s, clickable:%i, cookie:%s, listener:%p, name:%s\n", __PRETTY_FUNCTION__, __LINE__,
+  printf(">>>>>>Func:%s::%d image:%s, title:%s, text:%s, clickable:%i, cookie:%s, name:%s\n", __PRETTY_FUNCTION__, __LINE__,
          NS_ConvertUTF16toUTF8(aImageUrl).get(),
          NS_ConvertUTF16toUTF8(aAlertTitle).get(),
          NS_ConvertUTF16toUTF8(aAlertText).get(),
          aAlertTextClickable,
          NS_ConvertUTF16toUTF8(aAlertCookie).get(),
-         aAlertListener,
          NS_ConvertUTF16toUTF8(aAlertName).get()
         );
 
@@ -58,7 +57,7 @@ NS_IMETHODIMP nsEmbedAlertsService::ShowAlertNotification(const nsAString & aIma
   return NS_OK;
 }
 
-NS_IMETHODIMP nsEmbedAlertsService::CloseAlert(const nsAString & name)
+NS_IMETHODIMP nsEmbedAlertsService::CloseAlert(const nsAString & name, nsIPrincipal*)
 {
   printf("nsEmbedAlertsService::CloseAlert: name:%s", NS_ConvertUTF16toUTF8(name).get());
   return NS_OK;
