@@ -61,7 +61,6 @@ clean:
 	-rm -f build-$(DEB_HOST_ARCH)-stamp
 	-rm -f configure-$(DEB_HOST_ARCH)-stamp
 	-rm -rf $(DEST_OBJ_DIR)
-	rm -rf objdir-armel
 #	$(MAKE) distclean
 	dh_clean
 
