@@ -73,7 +73,7 @@ void EmbedTouchListener::HandleLongTap(const CSSIntPoint& aPoint)
     LOGT("pt[%i,%i]", aPoint.x, aPoint.y);
 }
 
-void EmbedTouchListener::SendAsyncScrollDOMEvent(mozilla::layers::FrameMetrics::ViewID,
+void EmbedTouchListener::SendAsyncScrollDOMEvent(bool aIsRoot,
                                                  const mozilla::CSSRect& aRect,
                                                  const mozilla::CSSSize& aSize)
 {
