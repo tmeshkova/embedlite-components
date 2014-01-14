@@ -103,6 +103,9 @@ let DownloadUIListener = {
             break;
           }
           case "addDownload": {
+            let window = null;
+            let loadContext = null;
+
             let ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
             const nsIWBP = Ci.nsIWebBrowserPersist;
             let mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
@@ -114,7 +117,17 @@ let DownloadUIListener = {
             let dl = Services.downloads.addDownload(0, ios.newURI(data.from, null, null), ios.newURI(data.to, null, null),
                                           null, mimeinfo, Math.round(Date.now() * 1000), null, persist, false);
             persist.progressListener = dl.QueryInterface(Ci.nsIWebProgressListener);
-            persist.saveURI(dl.source, null, null, null, null, dl.targetFile, null);
+
+            // Provide window context to Download if view ID is known.
+            if (data.viewId) {
+              let embedliteSrv = Cc["@mozilla.org/embedlite-app-service;1"].getService(Ci.nsIEmbedAppService);
+              window = embedliteSrv.getContentWindowByID(data.viewId);
+              loadContext = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsILoadContext);
+            }
+
+            persist.saveURI(dl.source, null,
+                            window ? ios.newURI(window.document.location.href, null, null) : null,
+                            null, null, dl.targetFile, loadContext);
             break;
           }
         }
