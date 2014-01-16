@@ -263,7 +263,7 @@ nsEmbedFilePicker::DoSendPrompt()
 }
 
 NS_IMETHODIMP
-nsEmbedFilePicker::OnMessageReceived(const char* messageName, const PRUnichar* message)
+nsEmbedFilePicker::OnMessageReceived(const char* messageName, const char16_t* message)
 {
   nsCOMPtr<nsIEmbedLiteJSON> json = do_GetService("@mozilla.org/embedlite-json;1");
   nsCOMPtr<nsIPropertyBag2> root;

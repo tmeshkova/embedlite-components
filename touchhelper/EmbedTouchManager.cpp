@@ -73,7 +73,7 @@ EmbedTouchManager::Init()
 NS_IMETHODIMP
 EmbedTouchManager::Observe(nsISupports *aSubject,
                              const char *aTopic,
-                             const PRUnichar *aData)
+                             const char16_t *aData)
 {
     nsresult rv;
     if (!strcmp(aTopic, "embedliteviewcreated")) {

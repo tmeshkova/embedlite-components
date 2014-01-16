@@ -97,7 +97,7 @@ EmbedPromptRegister::Init()
 NS_IMETHODIMP
 EmbedPromptRegister::Observe(nsISupports *aSubject,
                             const char *aTopic,
-                            const PRUnichar *aData)
+                            const char16_t *aData)
 {
     return NS_OK;
 }

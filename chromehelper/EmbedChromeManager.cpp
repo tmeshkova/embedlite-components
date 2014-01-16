@@ -69,7 +69,7 @@ EmbedChromeManager::Init()
 NS_IMETHODIMP
 EmbedChromeManager::Observe(nsISupports *aSubject,
                              const char *aTopic,
-                             const PRUnichar *aData)
+                             const char16_t *aData)
 {
     nsresult rv;
     if (!strcmp(aTopic, "domwindowopened")) {

@@ -174,7 +174,7 @@ EmbedHistoryListener::SetURITitle(nsIURI *aURI, const nsAString& aTitle)
 NS_IMETHODIMP
 EmbedHistoryListener::Observe(nsISupports *aSubject,
                               const char *aTopic,
-                              const PRUnichar *aData)
+                              const char16_t *aData)
 {
   if (!strcmp(aTopic, "history:notifyVisited")) {
     sHistory->mPendingURIs.Push(NS_ConvertUTF16toUTF8(aData));

@@ -61,7 +61,7 @@ NS_IMPL_ISUPPORTS2(EmbedPromptOuterObserver, nsIObserver, nsSupportsWeakReferenc
 NS_IMETHODIMP
 EmbedPromptOuterObserver::Observe(nsISupports *aSubject,
                                   const char *aTopic,
-                                  const PRUnichar *aData)
+                                  const char16_t *aData)
 {
     if (!strcmp(aTopic, "outer-window-destroyed")) {
         OnDestroy();
@@ -135,8 +135,8 @@ EmbedPromptService::~EmbedPromptService()
 NS_IMPL_ISUPPORTS2(EmbedPromptService, nsIPrompt, nsIEmbedMessageListener)
 
 NS_IMETHODIMP
-EmbedPromptService::Alert(const PRUnichar* aDialogTitle, 
-                          const PRUnichar* aDialogText)
+EmbedPromptService::Alert(const char16_t* aDialogTitle, 
+                          const char16_t* aDialogText)
 {
     AlertCheck(aDialogTitle, aDialogText, nullptr, nullptr);
     return NS_OK;
@@ -152,7 +152,7 @@ EmbedPromptService::CancelResponse()
 }
 
 NS_IMETHODIMP
-EmbedPromptService::OnMessageReceived(const char* messageName, const PRUnichar* message)
+EmbedPromptService::OnMessageReceived(const char* messageName, const char16_t* message)
 {
     nsCOMPtr<nsIEmbedLiteJSON> json = do_GetService("@mozilla.org/embedlite-json;1");
     nsCOMPtr<nsIPropertyBag2> root;
@@ -203,9 +203,9 @@ EmbedAuthPromptService::CheckWinID()
 
 
 NS_IMETHODIMP
-EmbedPromptService::AlertCheck(const PRUnichar* aDialogTitle,
-                               const PRUnichar* aDialogText,
-                               const PRUnichar* aCheckMsg, bool* aCheckValue)
+EmbedPromptService::AlertCheck(const char16_t* aDialogTitle,
+                               const char16_t* aDialogText,
+                               const char16_t* aCheckMsg, bool* aCheckValue)
 {
     uint32_t winid;
     mService->GetIDByWindow(mWin, &winid);
@@ -274,8 +274,8 @@ EmbedPromptService::AlertCheck(const PRUnichar* aDialogTitle,
 }
 
 NS_IMETHODIMP
-EmbedPromptService::Confirm(const PRUnichar* aDialogTitle,
-                            const PRUnichar* aDialogText, bool* aConfirm)
+EmbedPromptService::Confirm(const char16_t* aDialogTitle,
+                            const char16_t* aDialogText, bool* aConfirm)
 {
     ConfirmCheck(aDialogTitle,
                  aDialogText, nullptr, nullptr, aConfirm);
@@ -283,9 +283,9 @@ EmbedPromptService::Confirm(const PRUnichar* aDialogTitle,
 }
 
 NS_IMETHODIMP
-EmbedPromptService::ConfirmCheck(const PRUnichar* aDialogTitle,
-                                 const PRUnichar* aDialogText,
-                                 const PRUnichar* aCheckMsg,
+EmbedPromptService::ConfirmCheck(const char16_t* aDialogTitle,
+                                 const char16_t* aDialogText,
+                                 const char16_t* aCheckMsg,
                                  bool* aCheckValue, bool* aConfirm)
 {
     uint32_t winid;
@@ -363,13 +363,13 @@ EmbedPromptService::ConfirmCheck(const PRUnichar* aDialogTitle,
 }
 
 NS_IMETHODIMP
-EmbedPromptService::ConfirmEx(const PRUnichar* aDialogTitle,
-                              const PRUnichar* aDialogText,
+EmbedPromptService::ConfirmEx(const char16_t* aDialogTitle,
+                              const char16_t* aDialogText,
                               PRUint32 aButtonFlags,
-                              const PRUnichar* aButton0Title,
-                              const PRUnichar* aButton1Title,
-                              const PRUnichar* aButton2Title,
-                              const PRUnichar* aCheckMsg, bool* aCheckValue,
+                              const char16_t* aButton0Title,
+                              const char16_t* aButton1Title,
+                              const char16_t* aButton2Title,
+                              const char16_t* aCheckMsg, bool* aCheckValue,
                               PRInt32* aRetVal)
 {
 //    LOGNI();
@@ -377,9 +377,9 @@ EmbedPromptService::ConfirmEx(const PRUnichar* aDialogTitle,
 }
 
 NS_IMETHODIMP
-EmbedPromptService::Prompt(const PRUnichar* aDialogTitle,
-                           const PRUnichar* aDialogText, PRUnichar** aValue,
-                           const PRUnichar* aCheckMsg, bool* aCheckValue,
+EmbedPromptService::Prompt(const char16_t* aDialogTitle,
+                           const char16_t* aDialogText, char16_t** aValue,
+                           const char16_t* aCheckMsg, bool* aCheckValue,
                            bool* aConfirm)
 {
     uint32_t winid;
@@ -465,11 +465,11 @@ EmbedPromptService::Prompt(const PRUnichar* aDialogTitle,
 }
 
 NS_IMETHODIMP
-EmbedPromptService::PromptUsernameAndPassword(const PRUnichar* aDialogTitle,
-                                              const PRUnichar* aDialogText,
-                                              PRUnichar** aUsername,
-                                              PRUnichar** aPassword,
-                                              const PRUnichar* aCheckMsg,
+EmbedPromptService::PromptUsernameAndPassword(const char16_t* aDialogTitle,
+                                              const char16_t* aDialogText,
+                                              char16_t** aUsername,
+                                              char16_t** aPassword,
+                                              const char16_t* aCheckMsg,
                                               bool* aCheckValue,
                                               bool* aConfirm)
 {
@@ -478,10 +478,10 @@ EmbedPromptService::PromptUsernameAndPassword(const PRUnichar* aDialogTitle,
 }
 
 NS_IMETHODIMP
-EmbedPromptService::PromptPassword(const PRUnichar* aDialogTitle,
-                                   const PRUnichar* aDialogText,
-                                   PRUnichar** aPassword,
-                                   const PRUnichar* aCheckMsg,
+EmbedPromptService::PromptPassword(const char16_t* aDialogTitle,
+                                   const char16_t* aDialogText,
+                                   char16_t** aPassword,
+                                   const char16_t* aCheckMsg,
                                    bool* aCheckValue, bool* aConfirm)
 {
 //    LOGNI();
@@ -489,9 +489,9 @@ EmbedPromptService::PromptPassword(const PRUnichar* aDialogTitle,
 }
 
 NS_IMETHODIMP
-EmbedPromptService::Select(const PRUnichar* aDialogTitle,
-                           const PRUnichar* aDialogText, PRUint32 aCount,
-                           const PRUnichar** aSelectList, PRInt32* outSelection,
+EmbedPromptService::Select(const char16_t* aDialogTitle,
+                           const char16_t* aDialogText, PRUint32 aCount,
+                           const char16_t** aSelectList, PRInt32* outSelection,
                            bool* aConfirm)
 {
 //    LOGNI();
@@ -770,7 +770,7 @@ EmbedAuthPromptService::DoSendAsyncPrompt(EmbedAsyncAuthPrompt* mPrompt)
 }
 
 NS_IMETHODIMP
-EmbedAuthPromptService::OnMessageReceived(const char* messageName, const PRUnichar* message)
+EmbedAuthPromptService::OnMessageReceived(const char* messageName, const char16_t* message)
 {
     nsCOMPtr<nsIEmbedLiteJSON> json = do_GetService("@mozilla.org/embedlite-json;1");
     nsCOMPtr<nsIPropertyBag2> root;

@@ -110,7 +110,7 @@ nsEmbedClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboar
     nsCOMPtr<nsISupports> nsisupportsDataWrapper =
       do_QueryInterface(dataWrapper);
     rv = aTransferable->SetTransferData(kUnicodeMime, nsisupportsDataWrapper,
-                                        mBuffer.Length() * sizeof(PRUnichar));
+                                        mBuffer.Length() * sizeof(char16_t));
     NS_ENSURE_SUCCESS(rv, rv);
 
     mBuffer.Truncate();
@@ -120,7 +120,7 @@ nsEmbedClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboar
 }
 
 NS_IMETHODIMP
-nsEmbedClipboard::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
+nsEmbedClipboard::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData)
 {
     if (!strcmp(aTopic, "embedui:clipboard")) {
       mObserverService->RemoveObserver(this, "embedui:clipboard");
