@@ -62,6 +62,7 @@ EmbedHelper.prototype = {
     addEventListener("touchmove", this, false);
     addEventListener("touchend", this, false);
     addEventListener("DOMContentLoaded", this, true);
+    addEventListener("DOMFormHasPassword", this, true);
     addEventListener("DOMAutoComplete", this, true);
     addEventListener("blur", this, true);
     addMessageListener("AZPC:ScrollDOMEvent", this);
@@ -485,7 +486,15 @@ EmbedHelper.prototype = {
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "DOMContentLoaded": {
-        LoginManagerContent.onContentLoaded(aEvent);
+        if (LoginManagerContent.onContentLoaded) {
+          LoginManagerContent.onContentLoaded(aEvent);
+        }
+        break;
+      }
+      case "DOMFormHasPassword": {
+        if (LoginManagerContent.onFormPassword) {
+          LoginManagerContent.onFormPassword(aEvent);
+        }
         break;
       }
       case "DOMAutoComplete":
