@@ -198,7 +198,7 @@ NS_IMETHODIMP nsEmbedFilePicker::Show(int16_t* _retval)
       rv = NS_ERROR_UNEXPECTED;
     }
   }
-  mService->RemoveMessageListener("promptresponse", this);
+  mService->RemoveMessageListener("filepickerresponse", this);
 
   uint32_t winid;
   mService->GetIDByWindow(mWin, &winid);
@@ -312,7 +312,7 @@ nsEmbedFilePicker::OnMessageReceived(const char* messageName, const char16_t* me
   if (mCallback) {
     mCallback->Done(nsIFilePicker::returnOK);
     mCallback = nullptr;
-    mService->RemoveMessageListener("promptresponse", this);
+    mService->RemoveMessageListener("filepickerresponse", this);
   }
   else {
     mModalDepth--;
