@@ -231,6 +231,10 @@ EmbedTouchListener::ZoomToElement(nsIDOMElement* aElement, int aClickY, bool aCa
 {
     const int margin = 15;
     gfx::Rect clrect = GetBoundingContentRect(aElement);
+    clrect.x = std::max(float(0.0), clrect.x - margin);
+    clrect.y = std::max(float(0.0), clrect.y - margin);
+    clrect.width = std::min(clrect.width + 2*margin, mCssCompositedRect.width);
+    clrect.height = std::min(clrect.height + 2*margin, mCssCompositedRect.height);
     float elementAspectRatio = clrect.width / clrect.height;
     float viewportAspectRatio = mCssCompositedRect.width / mCssCompositedRect.height;
     bool zoomed = false;
