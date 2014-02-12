@@ -63,17 +63,17 @@ EmbedTouchListener::~EmbedTouchListener()
 
 NS_IMPL_ISUPPORTS1(EmbedTouchListener, nsIDOMEventListener)
 
-void EmbedTouchListener::HandleSingleTap(const CSSIntPoint& aPoint, int32_t)
+void EmbedTouchListener::HandleSingleTap(const CSSIntPoint& aPoint, int32_t, const mozilla::layers::ScrollableLayerGuid&)
 {
     // SingleTap handler of JavaScript (embedhelper.js) is taken care of input zooming.
 }
 
-void EmbedTouchListener::HandleLongTap(const CSSIntPoint& aPoint, int32_t)
+void EmbedTouchListener::HandleLongTap(const CSSIntPoint& aPoint, int32_t, const mozilla::layers::ScrollableLayerGuid&)
 {
     LOGT("pt[%i,%i]", aPoint.x, aPoint.y);
 }
 
-void EmbedTouchListener::HandleLongTapUp(const CSSIntPoint& aPoint, int32_t)
+void EmbedTouchListener::HandleLongTapUp(const CSSIntPoint& aPoint, int32_t, const mozilla::layers::ScrollableLayerGuid&)
 {
     LOGT("pt[%i,%i]", aPoint.x, aPoint.y);
 }
@@ -120,7 +120,7 @@ void EmbedTouchListener::RequestContentRepaint(const mozilla::layers::FrameMetri
 //    LOGT("EmbedTouchListener::RequestContentRepaint mCssCompositedRect %g %g %g %g", mCssCompositedRect.x, mCssCompositedRect.y, mCssCompositedRect.width, mCssCompositedRect.height);
 }
 
-void EmbedTouchListener::HandleDoubleTap(const CSSIntPoint& aPoint, int32_t)
+void EmbedTouchListener::HandleDoubleTap(const CSSIntPoint& aPoint, int32_t, const mozilla::layers::ScrollableLayerGuid&)
 {
     LOGT("pt[%i,%i]", aPoint.x, aPoint.y);
     // We haven't received a metrics update yet; don't do anything.
