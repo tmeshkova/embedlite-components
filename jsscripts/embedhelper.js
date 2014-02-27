@@ -692,9 +692,16 @@ const ElementTouchHelper = {
   },
 
   /* Returns the touch radius in content px. */
-  getTouchRadius: function getTouchRadius() {
-    let dpiRatio = 1.0;
-    let zoom = 1.0;// BrowserApp.selectedTab._zoom;
+  getTouchRadius: function getTouchRadius(aWindowUtils) {
+    let dpiRatio = 1.0; // TODO: check if it's needed as "resX = zoom.scale/dpiRatio" already
+    let zoom = 1.0;
+    let resX = {value: 1};
+    let resY = {value: 1};
+    aWindowUtils.getResolution(resX, resY);
+    if (resX.value) {
+      zoom = resX.value;
+    }
+
     return {
       top: this.radius.top * dpiRatio / zoom,
       right: this.radius.right * dpiRatio / zoom,
@@ -733,7 +740,7 @@ const ElementTouchHelper = {
       return target;
 
     target = null;
-    let radius = this.getTouchRadius();
+    let radius = this.getTouchRadius(aWindowUtils);
     let nodes = aWindowUtils.nodesFromRect(aX, aY, radius.top, radius.right, radius.bottom, radius.left, true, false);
 
     let threshold = Number.POSITIVE_INFINITY;
