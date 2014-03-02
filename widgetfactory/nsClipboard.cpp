@@ -163,3 +163,10 @@ nsEmbedClipboard::SupportsSelectionClipboard(bool* _retval)
   *_retval = false;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsEmbedClipboard::SupportsFindClipboard(bool* _retval)
+{
+  *_retval = false;
+  return NS_OK;
+}
