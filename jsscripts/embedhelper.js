@@ -71,6 +71,7 @@ EmbedHelper.prototype = {
     addMessageListener("Gesture:SingleTap", this);
     addMessageListener("Gesture:LongTap", this);
     addMessageListener("embedui:find", this);
+    addMessageListener("embedui:zoomToRect", this);
     addMessageListener("Gesture:ContextMenuSynth", this);
     addMessageListener("embed:ContextMenuCreate", this);
     Services.obs.addObserver(this, "embedlite-before-first-paint", true);
@@ -330,6 +331,21 @@ EmbedHelper.prototype = {
         }
 
         this.performReflow();
+        break;
+      }
+      case "embedui:zoomToRect": {
+        if (aMessage.data) {
+          let winid = Services.embedlite.getIDByWindow(content);
+          // This is a hackish way as zoomToRect does not work if x-value has not changed or viewport has not been scaled (zoom animation).
+          // Thus, we're missing animation when viewport has not been scaled.
+          let scroll = this._viewportData && this._viewportData.cssCompositedRect.width === aMessage.data.width;
+
+          if (scroll) {
+            content.scrollTo(aMessage.data.x, aMessage.data.y);
+          } else {
+            Services.embedlite.zoomToRect(winid, aMessage.data.x, aMessage.data.y, aMessage.data.width, aMessage.data.height);
+          }
+        }
         break;
       }
       default: {
