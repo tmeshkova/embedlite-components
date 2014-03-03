@@ -641,6 +641,24 @@ EmbedHelper.prototype = {
     DOMUtils.setContentState(content.document.documentElement, kEmbedStateActive);
     this._highlightElement = null;
   },
+
+  _dumpViewport: function() {
+    if (this._viewportData != null) {
+      dump("--------------- Viewport data ----------------------- \n")
+      for (var i in this._viewportData) {
+        if (typeof(this._viewportData[i]) == "object") {
+          for (var j in this._viewportData[i]) {
+            dump("   " + i + " " + j + ": " + this._viewportData[i][j] + "\n")
+          }
+        } else {
+          dump("viewport data object: " + i + ": " + this._viewportData[i] + "\n")
+        }
+      }
+      dump("--------------- Viewport data dumpped --------------- \n")
+    } else {
+      dump("Nothing to dump\n")
+    }
+  },
 };
 
 const kReferenceDpi = 240; // standard "pixel" size used in some preferences
