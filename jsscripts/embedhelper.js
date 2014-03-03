@@ -71,6 +71,7 @@ EmbedHelper.prototype = {
     addMessageListener("Gesture:SingleTap", this);
     addMessageListener("Gesture:LongTap", this);
     addMessageListener("embedui:find", this);
+    addMessageListener("embedui:zoomToRect", this);
     addMessageListener("Gesture:ContextMenuSynth", this);
     addMessageListener("embed:ContextMenuCreate", this);
     Services.obs.addObserver(this, "embedlite-before-first-paint", true);
@@ -330,6 +331,21 @@ EmbedHelper.prototype = {
         }
 
         this.performReflow();
+        break;
+      }
+      case "embedui:zoomToRect": {
+        if (aMessage.data) {
+          let winid = Services.embedlite.getIDByWindow(content);
+          // This is a hackish way as zoomToRect does not work if x-value has not changed or viewport has not been scaled (zoom animation).
+          // Thus, we're missing animation when viewport has not been scaled.
+          let scroll = this._viewportData && this._viewportData.cssCompositedRect.width === aMessage.data.width;
+
+          if (scroll) {
+            content.scrollTo(aMessage.data.x, aMessage.data.y);
+          } else {
+            Services.embedlite.zoomToRect(winid, aMessage.data.x, aMessage.data.y, aMessage.data.width, aMessage.data.height);
+          }
+        }
         break;
       }
       default: {
@@ -640,6 +656,24 @@ EmbedHelper.prototype = {
 
     DOMUtils.setContentState(content.document.documentElement, kEmbedStateActive);
     this._highlightElement = null;
+  },
+
+  _dumpViewport: function() {
+    if (this._viewportData != null) {
+      dump("--------------- Viewport data ----------------------- \n")
+      for (var i in this._viewportData) {
+        if (typeof(this._viewportData[i]) == "object") {
+          for (var j in this._viewportData[i]) {
+            dump("   " + i + " " + j + ": " + this._viewportData[i][j] + "\n")
+          }
+        } else {
+          dump("viewport data object: " + i + ": " + this._viewportData[i] + "\n")
+        }
+      }
+      dump("--------------- Viewport data dumpped --------------- \n")
+    } else {
+      dump("Nothing to dump\n")
+    }
   },
 };
 
