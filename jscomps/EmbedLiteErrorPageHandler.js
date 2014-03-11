@@ -93,12 +93,16 @@ EmbedLiteErrorPageHandler.prototype = {
   onWindowOpen: function ss_onWindowOpen(aWindow) {
     // Return if window has already been initialized
     this._linkListeners[aWindow] = new EventLinkListener(aWindow);
-    Services.embedlite.chromeEventHandler(aWindow).addEventListener("DOMContentLoaded", this._linkListeners[aWindow], false);
+    try {
+      Services.embedlite.chromeEventHandler(aWindow).addEventListener("DOMContentLoaded", this._linkListeners[aWindow], false);
+    } catch (e) {}
   },
 
   onWindowClose: function ss_onWindowClose(aWindow) {
     // Ignore windows not tracked by SessionStore
-    Services.embedlite.chromeEventHandler(aWindow).removeEventListener("DOMContentLoaded", this._linkListeners[aWindow], false);
+    try {
+      Services.embedlite.chromeEventHandler(aWindow).removeEventListener("DOMContentLoaded", this._linkListeners[aWindow], false);
+    } catch (e) {}
     delete this._linkListeners[aWindow];
   },
 
