@@ -63,17 +63,17 @@ EmbedTouchListener::~EmbedTouchListener()
 
 NS_IMPL_ISUPPORTS1(EmbedTouchListener, nsIDOMEventListener)
 
-void EmbedTouchListener::HandleSingleTap(const CSSIntPoint& aPoint, int32_t, const mozilla::layers::ScrollableLayerGuid&)
+void EmbedTouchListener::HandleSingleTap(const CSSPoint& aPoint, int32_t, const mozilla::layers::ScrollableLayerGuid&)
 {
     // SingleTap handler of JavaScript (embedhelper.js) is taken care of input zooming.
 }
 
-void EmbedTouchListener::HandleLongTap(const CSSIntPoint& aPoint, int32_t, const mozilla::layers::ScrollableLayerGuid&)
+void EmbedTouchListener::HandleLongTap(const CSSPoint& aPoint, int32_t, const mozilla::layers::ScrollableLayerGuid&)
 {
     LOGT("pt[%i,%i]", aPoint.x, aPoint.y);
 }
 
-void EmbedTouchListener::HandleLongTapUp(const CSSIntPoint& aPoint, int32_t, const mozilla::layers::ScrollableLayerGuid&)
+void EmbedTouchListener::HandleLongTapUp(const CSSPoint& aPoint, int32_t, const mozilla::layers::ScrollableLayerGuid&)
 {
     LOGT("pt[%i,%i]", aPoint.x, aPoint.y);
 }
@@ -105,9 +105,9 @@ void EmbedTouchListener::RequestContentRepaint(const mozilla::layers::FrameMetri
 //         aMetrics.mScrollableRect.x, aMetrics.mScrollableRect.y, aMetrics.mScrollableRect.width, aMetrics.mScrollableRect.height,
 //         aMetrics.mResolution.width, aMetrics.mResolution.height);
     mGotViewPortUpdate = true;
-    mViewport = gfx::Rect(aMetrics.mScrollOffset.x, aMetrics.mScrollOffset.y,
+    mViewport = gfx::Rect(aMetrics.GetScrollOffset().x, aMetrics.GetScrollOffset().y,
                           aMetrics.mViewport.width, aMetrics.mViewport.height);
-    mCssCompositedRect = gfx::Rect(aMetrics.mScrollOffset.x, aMetrics.mScrollOffset.y,
+    mCssCompositedRect = gfx::Rect(aMetrics.GetScrollOffset().x, aMetrics.GetScrollOffset().y,
                                    0, 0);
     float x, y;
     mService->GetCompositedRectInCSS(aMetrics, &x, &y, &mCssCompositedRect.width, &mCssCompositedRect.height);
@@ -120,7 +120,7 @@ void EmbedTouchListener::RequestContentRepaint(const mozilla::layers::FrameMetri
 //    LOGT("EmbedTouchListener::RequestContentRepaint mCssCompositedRect %g %g %g %g", mCssCompositedRect.x, mCssCompositedRect.y, mCssCompositedRect.width, mCssCompositedRect.height);
 }
 
-void EmbedTouchListener::HandleDoubleTap(const CSSIntPoint& aPoint, int32_t, const mozilla::layers::ScrollableLayerGuid&)
+void EmbedTouchListener::HandleDoubleTap(const CSSPoint& aPoint, int32_t, const mozilla::layers::ScrollableLayerGuid&)
 {
     LOGT("pt[%i,%i]", aPoint.x, aPoint.y);
     // We haven't received a metrics update yet; don't do anything.
