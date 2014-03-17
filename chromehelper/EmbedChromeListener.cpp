@@ -54,7 +54,7 @@ GetDOMWindowByNode(nsIDOMNode *aNode, nsIDOMWindow **aDOMWindow)
     nsCOMPtr<nsIDOMWindow> targetWin;
     rv = ctDoc->GetDefaultView(getter_AddRefs(targetWin));
     NS_ENSURE_SUCCESS(rv , rv);
-    *aDOMWindow = targetWin.forget().get();
+    *aDOMWindow = targetWin.forget().take();
     return rv;
 }
 
@@ -70,7 +70,7 @@ GetTopWindow(nsIDOMWindow* aWin, nsIDOMWindow **aDOMWindow)
     nsCOMPtr<nsIDOMWindow> rootWin(do_GetInterface(rootItem));
     NS_ENSURE_TRUE(rootWin, NS_ERROR_FAILURE);
     rootWin->GetTop(getter_AddRefs(window));
-    *aDOMWindow = window.forget().get();
+    *aDOMWindow = window.forget().take();
     return NS_OK;
 }
 

@@ -278,7 +278,7 @@ static bool HasFrameElement(nsIDOMDocument* aDocument, nsIDOMElement* *aFrameEle
         return false;
     }
     if (aFrameElement) {
-        *aFrameElement = frameElement.forget().get();
+        *aFrameElement = frameElement.forget().take();
     }
     return true;
 }
@@ -311,7 +311,7 @@ static void GetParentFrame(nsIDOMWindow* aWindow, nsIDOMWindow** outWindow)
     nsCOMPtr<nsIDOMWindow> newWin;
     if (aWindow) {
       aWindow->GetParent(getter_AddRefs(newWin));
-      *outWindow = newWin.forget().get();
+      *outWindow = newWin.forget().take();
     }
 }
 

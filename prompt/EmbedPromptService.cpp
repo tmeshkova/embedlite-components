@@ -100,10 +100,10 @@ EmbedPromptFactory::GetPrompt(nsIDOMWindow* aParent, const nsIID& iid, void **re
     if (iid.Equals(NS_GET_IID(nsIAuthPrompt)) ||
         iid.Equals(NS_GET_IID(nsIAuthPrompt2))) {
         nsRefPtr<EmbedAuthPromptService> service = new EmbedAuthPromptService(parent);
-        *result = service.forget().get();
+        *result = service.forget().take();
     } else if (iid.Equals(NS_GET_IID(nsIPrompt))) {
         nsRefPtr<EmbedPromptService> service = new EmbedPromptService(parent);
-        *result = service.forget().get();
+        *result = service.forget().take();
     }
 
     return NS_OK;
@@ -691,7 +691,7 @@ EmbedAuthPromptService::AsyncPromptAuth(nsIChannel* aChannel,
     EmbedAsyncAuthPrompt* asyncPrompt = asyncPrompts[hashKey.get()];
     if (asyncPrompt) {
         asyncPrompt->consumers.AppendElement(consumer);
-        *_retval = consumer.forget().get();
+        *_retval = consumer.forget().take();
         return NS_OK;
     }
     asyncPrompt = new EmbedAsyncAuthPrompt(consumer, aChannel, authInfo, level, false);
