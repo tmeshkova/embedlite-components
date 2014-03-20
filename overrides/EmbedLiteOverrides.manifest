@@ -8,3 +8,4 @@ locale browser en-US en-US/locale/en-US/browser/
 locale branding en-US en-US/locale/branding/
 override chrome://global/locale/netError.dtd chrome://browser/locale/netError.dtd
 locale browser en-US en-US/locale/en-US/browser/
+override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css

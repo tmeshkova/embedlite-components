@@ -79,9 +79,20 @@ ln -s $(pwd)/overrides/EmbedLiteOverrides.manifest $TARGET_DIR/chrome/EmbedLiteO
 rm -rf $TARGET_DIR/chrome/chrome;
 mkdir -p $TARGET_DIR/chrome/chrome/content;
 mkdir -p $TARGET_DIR/chrome/chrome/skin;
+mkdir -p $TARGET_DIR/chrome/chrome/skin/images;
 ln -s $(pwd)/overrides/aboutCertError.xhtml $TARGET_DIR/chrome/chrome/content/
 ln -s $(pwd)/overrides/netError.xhtml $TARGET_DIR/chrome/chrome/content/
 ln -s $(pwd)/overrides/netError.css $TARGET_DIR/chrome/chrome/skin/
+ln -s $(pwd)/overrides/touchcontrols.css $TARGET_DIR/chrome/chrome/skin/
+ln -s $(pwd)/overrides/images/mute-hdpi.png $TARGET_DIR/chrome/chrome/skin/images/
+ln -s $(pwd)/overrides/images/pause-hdpi.png $TARGET_DIR/chrome/chrome/skin/images/
+ln -s $(pwd)/overrides/images/play-hdpi.png $TARGET_DIR/chrome/chrome/skin/images/
+ln -s $(pwd)/overrides/images/unmute-hdpi.png $TARGET_DIR/chrome/chrome/skin/images/
+ln -s $(pwd)/overrides/images/error.png $TARGET_DIR/chrome/chrome/skin/images/
+ln -s $(pwd)/overrides/images/exitfullscreen-hdpi.png $TARGET_DIR/chrome/chrome/skin/images/
+ln -s $(pwd)/overrides/images/fullscreen-hdpi.png $TARGET_DIR/chrome/chrome/skin/images/
+ln -s $(pwd)/overrides/images/throbber.png $TARGET_DIR/chrome/chrome/skin/images/
+ln -s $(pwd)/overrides/images/scrubber-hdpi.png $TARGET_DIR/chrome/chrome/skin/images/
 
 rm -rf $TARGET_DIR/chrome/en-US/locale/branding;
 rm -rf $TARGET_DIR/chrome/en-US/locale/en-US/browser;
