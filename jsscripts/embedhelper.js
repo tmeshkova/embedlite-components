@@ -65,6 +65,7 @@ EmbedHelper.prototype = {
     addEventListener("DOMFormHasPassword", this, true);
     addEventListener("DOMAutoComplete", this, true);
     addEventListener("blur", this, true);
+    addEventListener("mozfullscreenchange", this, false);
     addMessageListener("AZPC:ScrollDOMEvent", this);
     addMessageListener("Viewport:Change", this);
     addMessageListener("Gesture:DoubleTap", this);
@@ -527,6 +528,9 @@ EmbedHelper.prototype = {
       case 'touchend':
         this._handleTouchEnd(aEvent);
         break;
+      case "mozfullscreenchange":
+        this._handleFullScreenChanged(aEvent);
+        break;
     }
   },
 
@@ -535,6 +539,15 @@ EmbedHelper.prototype = {
       return false;
     }
     return this.contentDocumentIsDisplayed;
+  },
+
+  _handleFullScreenChanged: function(aEvent) {
+        let window = aEvent.target.defaultView;
+        let winid = Services.embedlite.getIDByWindow(window);
+        Services.embedlite.sendAsyncMessage(winid, "embed:fullscreenchanged",
+                                            JSON.stringify({
+                                                    "fullscreen": aEvent.target.mozFullScreen
+                                            }));
   },
 
   _handleTouchMove: function(aEvent) {
