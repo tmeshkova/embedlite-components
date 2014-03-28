@@ -506,6 +506,7 @@ EmbedHelper.prototype = {
         if (LoginManagerContent.onContentLoaded) {
           LoginManagerContent.onContentLoaded(aEvent);
         }
+        this._handleDomContentLoaded(aEvent);
         break;
       }
       case "DOMFormHasPassword": {
@@ -539,6 +540,14 @@ EmbedHelper.prototype = {
       return false;
     }
     return this.contentDocumentIsDisplayed;
+  },
+
+  _handleDomContentLoaded: function(aEvent) {
+    let window = aEvent.target.defaultView;
+    if (window) {
+      let winid = Services.embedlite.getIDByWindow(window);
+      Services.embedlite.sendAsyncMessage(winid, "embed:domcontentloaded", JSON.stringify({ "rootFrame": window.parent === window }));
+    }
   },
 
   _handleFullScreenChanged: function(aEvent) {
