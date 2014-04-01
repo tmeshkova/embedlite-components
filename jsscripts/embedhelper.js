@@ -45,7 +45,7 @@ function EmbedHelper() {
   // Reasonable default. Will be read from preferences.
   this.inputItemSize = 38;
   this.zoomMargin = 14;
-  this.previousInputY = -1;
+  this.vkbOpenCompositionMetrics = null;
   this.returnToBoundsRequested = false;
   this._init();
 }
@@ -73,6 +73,8 @@ EmbedHelper.prototype = {
     addMessageListener("Gesture:LongTap", this);
     addMessageListener("embedui:find", this);
     addMessageListener("embedui:zoomToRect", this);
+    // Metrics used when virtual keyboard is open/opening.
+    addMessageListener("embedui:vkbOpenCompositionMetrics", this);
     addMessageListener("Gesture:ContextMenuSynth", this);
     addMessageListener("embed:ContextMenuCreate", this);
     Services.obs.addObserver(this, "embedlite-before-first-paint", true);
@@ -100,7 +102,7 @@ EmbedHelper.prototype = {
       focused = doc.activeElement;
     }
 
-    if (focused instanceof HTMLInputElement && focused.mozIsTextField(false))
+    if (focused instanceof HTMLInputElement && (focused.mozIsTextField && focused.mozIsTextField(false) || focused.type === "number"))
       return { inputElement: focused, isTextField: true };
 
     if (aOnlyInputElements)
@@ -124,9 +126,6 @@ EmbedHelper.prototype = {
     if (inputElement) {
       // _zoomToInput will handle not sending any message if this input is already mostly filling the screen
       this._zoomToInput(inputElement, aAllowZoom, isTextField);
-      this.previousInputY = inputElement.y;
-    } else {
-      this.previousInputY = -1;
     }
   },
 
@@ -273,10 +272,7 @@ EmbedHelper.prototype = {
             Cu.reportError(e);
           }
           this._touchElement = null;
-        } else {
-          this.previousInputY = -1;
         }
-
         break;
       }
       case "Gesture:DoubleTap": {
@@ -349,6 +345,13 @@ EmbedHelper.prototype = {
         }
         break;
       }
+      case "embedui:vkbOpenCompositionMetrics": {
+        if (aMessage.data) {
+          this.vkbOpenCompositionMetrics = aMessage.data;
+        }
+        break;
+      }
+
       default: {
         dump("Child Script: Message: name:" + aMessage.name + ", json:" + JSON.stringify(aMessage.json) + "\n");
         break;
@@ -375,80 +378,137 @@ EmbedHelper.prototype = {
     // Combination of browser.js _zoomToElement and special zoom logic
     let rect = ElementTouchHelper.getBoundingContentRect(aElement);
 
-    // TODO / Missing: handle maximum zoom level and respect viewport meta tag
+    // Rough cssCompositionHeight as virtual keyboard is not yet raised (upper half).
+    let cssCompositionHeight = this._viewportData.compositionBounds.height / 2;
+    let maxCssCompositionWidth = this._viewportData.compositionBounds.width;
+    let maxCssCompositionHeight = cssCompositionHeight;
 
-    let scaleFactor = aIsTextField ? this.inputItemSize / rect.h : 1.0;
+    if (this.vkbOpenCompositionMetrics) {
+        maxCssCompositionWidth = this.vkbOpenCompositionMetrics.maxCssCompositionWidth;
+        maxCssCompositionHeight = this.vkbOpenCompositionMetrics.maxCssCompositionHeight;
+        let currentCssCompositedHeight = this._viewportData.cssCompositedRect.height
+        // Are equal if vkb is already open and content is not pinched after vkb opening. It does not
+        // matter if currentCssCompositedHeight happens to match target before vkb has been opened.
+        if (maxCssCompositionHeight != currentCssCompositedHeight) {
+          cssCompositionHeight = this.vkbOpenCompositionMetrics.compositionHeight / this._viewportData.resolution.scale;
+        } else {
+          cssCompositionHeight = currentCssCompositedHeight;
+        }
+    }
+
+    // TODO / Missing: handle maximum zoom level and respect viewport meta tag
+    let scaleFactor = aIsTextField ? (this.inputItemSize / this.vkbOpenCompositionMetrics.compositionHeight) / (rect.h / cssCompositionHeight) : 1.0;
+
     let margin = this.zoomMargin / scaleFactor;
     let allowZoom = aAllowZoom && rect.height != this.inputItemSize;
 
-    // Width and height scaled to css coordinates
-    let cssViewPort = new Rect(this._viewportData.x,
-                         this._viewportData.y,
-                         this._viewportData.compositionBounds.width / this._viewportData.resolution.scale,
-                         this._viewportData.compositionBounds.height / this._viewportData.resolution.scale);
+    // Calculate new css composition bounds that will be the bounds after zooming. Top-left corner is not yet moved.
+    let cssCompositedRect = new Rect(this._viewportData.x,
+                                    this._viewportData.y,
+                                    this._viewportData.compositionBounds.width / this._viewportData.resolution.scale,
+                                    cssCompositionHeight);
     let bRect = new Rect(Util.clamp(rect.x - margin, 0, this._viewportData.cssPageRect.width - rect.w),
                         Util.clamp(rect.y - margin, 0, this._viewportData.cssPageRect.height - rect.h),
                         allowZoom ? rect.w + 2 * margin : this._viewportData.viewport.width,
                         rect.h);
 
     // constrict the rect to the screen's right edge
-    bRect.width = Math.min(bRect.width, (this._viewportData.cssPageRect.x + cssViewPort.x + this._viewportData.cssPageRect.width) - bRect.x);
+    bRect.width = Math.min(bRect.width, (this._viewportData.cssPageRect.x + cssCompositedRect.x + this._viewportData.cssPageRect.width) - bRect.x);
 
-    let dxLeft = rect.x - cssViewPort.x;
-    let dxRight = cssViewPort.x + cssViewPort.width - (rect.x + rect.w);
-    let dxTop = rect.y - cssViewPort.y;
-    let dxBottom = cssViewPort.y + cssViewPort.height - (rect.y + rect.h);
+    let dxLeft = rect.x - cssCompositedRect.x;
+    let dxRight = cssCompositedRect.x + cssCompositedRect.width - (rect.x + rect.w);
+    let dxTop = rect.y - cssCompositedRect.y;
+    let dxBottom = cssCompositedRect.y + cssCompositedRect.height - (rect.y + rect.h);
 
     let scrollToRight = Math.abs(dxLeft) > Math.abs(dxRight);
     let scrollToBottom = Math.abs(dxTop) > Math.abs(dxBottom);
 
-    // TODO: Allow staying on y-axis and x-axis so that actual zoom in / zoom out path would be as short as possible
-
-    const originalInputWidth = rect.w;
-    const originalInputHeight = rect.h;
-
-    rect.w = bRect.width * scaleFactor;
-    rect.h = Math.min(bRect.width * this._viewportData.viewport.height / this._viewportData.viewport.width, bRect.height);
-    // rect.w is now of composition rectangle width
-
-    let aspectRatio = this._viewportData.compositionBounds.width / this._viewportData.compositionBounds.height
-    const compositionWidth = rect.w;
-    // First focus needs rough compositionHeight as virtual keyboard is not yet raised.
-    // Let's see do we need to handle portrait / landscape differently.
-    const compositionHeight = this.previousInputY == -1 ? compositionWidth - 3 * margin : compositionWidth / aspectRatio;
-
-    let fixedCurrentViewport = this.previousInputY != -1 ? cssViewPort : new Rect(cssViewPort.x, cssViewPort.y, cssViewPort.width, compositionHeight);
+    let fixedCurrentViewport = new Rect(cssCompositedRect.x,
+                                        cssCompositedRect.y,
+                                        Util.clamp(cssCompositedRect.width / scaleFactor, 0, maxCssCompositionWidth),
+                                        Util.clamp(cssCompositedRect.height / scaleFactor, 0, maxCssCompositionHeight));
 
     // We want to scale input so that it will be readable. In case we move from one input field to another or refocus
     // the same field we don't want to move input if it's already visible and of correct size.
     let halfMargin = margin / 2;
-    let inputRect = new Rect(rect.x - halfMargin, rect.y - halfMargin, originalInputWidth + halfMargin, originalInputHeight + halfMargin);
+    let inputRect = new Rect(Math.abs(rect.x - halfMargin) > halfMargin ? rect.x - halfMargin : rect.x,
+                             rect.y - halfMargin,
+                             rect.w + halfMargin,
+                             rect.h + halfMargin);
+
     let { showing: showing } = this._rectVisibility(inputRect, fixedCurrentViewport);
-    if (fuzzyEquals(rect.w, cssViewPort.width) && showing > 0.99) {
-      return;
-    }
 
     // Adjust position based on new composition area size.
-    if (scrollToRight && aIsTextField && originalInputWidth < compositionWidth - 2 * margin) {
-      rect.x = rect.x - (compositionWidth - originalInputWidth - margin);
-      rect.x = Util.clamp(rect.x, 0, this._viewportData.cssPageRect.width - originalInputWidth);
-    } else {
-      rect.x = bRect.x;
+    let needXAxisMoving = this._testXMovement(inputRect, fixedCurrentViewport);
+    let needYAxisMoving = this._testYMovement(inputRect, fixedCurrentViewport);
+
+    let xUpdated = false
+
+    // More content will be visible
+    if (scaleFactor < 1.0) {
+      let moveToZero = new Rect(0, fixedCurrentViewport.y, fixedCurrentViewport.width, fixedCurrentViewport.height);
+      let zeroNeedsMoving = this._testXMovement(inputRect, moveToZero);
+      if (!zeroNeedsMoving) {
+        if (cssCompositedRect.x === 0) {
+          rect.x = 1;
+        } else {
+          rect.x = 0;
+        }
+        xUpdated = true;
+        needXAxisMoving = false;
+      }
     }
 
-    if (scrollToBottom && aIsTextField && originalInputHeight < compositionHeight - 2 * margin) {
-      rect.y = rect.y - (compositionHeight - originalInputHeight - margin);
-      rect.y = Util.clamp(rect.y, 0, this._viewportData.cssPageRect.height - originalInputHeight)
-    } else {
-      rect.y = bRect.y;
+    if (needXAxisMoving && aIsTextField) {
+      if (scrollToRight) {
+        rect.x = inputRect.x + inputRect.width - fixedCurrentViewport.width;
+      } else {
+        let tmpX = bRect.x;
+        if (rect.x > 0) {
+          let moveToZero = new Rect(0, cssCompositedRect.y, cssCompositedRect.width, cssCompositedRect.height);
+          needXAxisMoving = this._testXMovement(inputRect, moveToZero);
+          if (!needXAxisMoving) {
+            tmpX = 0;
+          }
+        }
+        rect.x = tmpX;
+      }
+    } else if (!xUpdated) {
+      // Visible css viewport is properly scaled
+      rect.x = cssCompositedRect.x;
     }
 
-    if (rect.w > this._viewportData.compositionBounds.width || rect.h > this._viewportData.compositionBounds.height) {
-      this.resetMaxLineBoxWidth();
+    if (needYAxisMoving && aIsTextField) {
+      if (scrollToBottom) {
+        rect.y = inputRect.y + inputRect.height - fixedCurrentViewport.height + margin;
+      }
+      else {
+        rect.y = bRect.y;
+      }
+    } else {
+      // Visible css viewport is properly scaled
+      rect.y = cssCompositedRect.y;
     }
+
+    rect.w = fixedCurrentViewport.width;
+    rect.h = fixedCurrentViewport.height;
 
     var winid = Services.embedlite.getIDByWindow(content);
     Services.embedlite.zoomToRect(winid, rect.x, rect.y, rect.w, rect.h);
+  },
+
+  // Move y-axis to viewport area and test if element is visible.
+  _testXMovement: function(aElement, aViewport) {
+    let tmpRect = new Rect(aElement.x, aViewport.y, aElement.width, aElement.height);
+    let { showing: showing } = this._rectVisibility(tmpRect, aViewport);
+    return showing < 0.99;
+  },
+
+  // Move x-axis to viewport area and test if element is visible.
+  _testYMovement: function(aElement, aViewport) {
+    let tmpRect = new Rect(aViewport.x, aElement.y, aElement.width, aElement.height);
+    let { showing: showing } = this._rectVisibility(tmpRect, aViewport);
+    return showing < 0.99;
   },
 
   _moveClickPoint: function(aElement, aX, aY) {
