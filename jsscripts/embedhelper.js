@@ -102,7 +102,7 @@ EmbedHelper.prototype = {
       focused = doc.activeElement;
     }
 
-    if (focused instanceof HTMLInputElement && focused.mozIsTextField(false))
+    if (focused instanceof HTMLInputElement && (focused.mozIsTextField && focused.mozIsTextField(false) || focused.type === "number"))
       return { inputElement: focused, isTextField: true };
 
     if (aOnlyInputElements)
