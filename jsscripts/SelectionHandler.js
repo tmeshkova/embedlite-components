@@ -512,6 +512,7 @@ var SelectionHandler = {
       this._updateUIMarkerRects(selection);
     } catch (ex) {
       Util.dumpLn("_updateUIMarkerRects:", ex.message);
+      this._onFail("Can't update marker rects");
       return;
     }
 
