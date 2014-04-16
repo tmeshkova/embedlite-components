@@ -58,9 +58,9 @@ EmbedHelper.prototype = {
   _init: function()
   {
     dump("Init Called:" + this + "\n");
-    addEventListener("touchstart", this, false);
-    addEventListener("touchmove", this, false);
-    addEventListener("touchend", this, false);
+    addEventListener("touchstart", this, true);
+    addEventListener("touchmove", this, true);
+    addEventListener("touchend", this, true);
     addEventListener("DOMContentLoaded", this, true);
     addEventListener("DOMFormHasPassword", this, true);
     addEventListener("DOMAutoComplete", this, true);
