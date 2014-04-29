@@ -11,7 +11,7 @@
 using namespace mozilla;
 using mozilla::dom::Link;
 
-NS_IMPL_ISUPPORTS2(EmbedHistoryListener, IHistory, nsIRunnable)
+NS_IMPL_ISUPPORTS(EmbedHistoryListener, IHistory, nsIRunnable)
 
 EmbedHistoryListener* EmbedHistoryListener::sHistory = NULL;
 

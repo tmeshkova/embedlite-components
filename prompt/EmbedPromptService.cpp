@@ -56,7 +56,7 @@ EmbedPromptOuterObserver::~EmbedPromptOuterObserver()
     OnDestroy();
 }
 
-NS_IMPL_ISUPPORTS2(EmbedPromptOuterObserver, nsIObserver, nsSupportsWeakReference)
+NS_IMPL_ISUPPORTS(EmbedPromptOuterObserver, nsIObserver, nsSupportsWeakReference)
 
 NS_IMETHODIMP
 EmbedPromptOuterObserver::Observe(nsISupports *aSubject,
@@ -80,7 +80,7 @@ EmbedPromptFactory::~EmbedPromptFactory()
 {
 }
 
-NS_IMPL_ISUPPORTS1(EmbedPromptFactory, nsIPromptFactory)
+NS_IMPL_ISUPPORTS(EmbedPromptFactory, nsIPromptFactory)
 
 
 NS_IMETHODIMP
@@ -132,7 +132,7 @@ EmbedPromptService::~EmbedPromptService()
     }
 }
 
-NS_IMPL_ISUPPORTS2(EmbedPromptService, nsIPrompt, nsIEmbedMessageListener)
+NS_IMPL_ISUPPORTS(EmbedPromptService, nsIPrompt, nsIEmbedMessageListener)
 
 NS_IMETHODIMP
 EmbedPromptService::Alert(const char16_t* aDialogTitle, 
@@ -530,7 +530,7 @@ EmbedAuthPromptService::OnDestroyNotification()
     CancelResponse();
 }
 
-NS_IMPL_ISUPPORTS2(EmbedAuthPromptService, nsIAuthPrompt2, nsIEmbedMessageListener)
+NS_IMPL_ISUPPORTS(EmbedAuthPromptService, nsIAuthPrompt2, nsIEmbedMessageListener)
 
 NS_IMETHODIMP
 EmbedAuthPromptService::PromptAuth(nsIChannel* aChannel,
@@ -576,7 +576,7 @@ public:
     nsCOMPtr<nsISupports> mContext;
 };
 
-NS_IMPL_ISUPPORTS1(nsAuthCancelableConsumer, nsICancelable);
+NS_IMPL_ISUPPORTS(nsAuthCancelableConsumer, nsICancelable);
 
 static nsCString getFormattedHostname(nsIURI* uri)
 {
@@ -646,7 +646,7 @@ public:
     EmbedAsyncAuthPrompt* mPrompt;
 };
 
-NS_IMPL_ISUPPORTS1(EmbedAuthRunnable, nsIRunnable)
+NS_IMPL_ISUPPORTS(EmbedAuthRunnable, nsIRunnable)
 
 NS_IMETHODIMP
 EmbedAuthRunnable::Run()

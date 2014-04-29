@@ -36,7 +36,7 @@ EmbedWidgetFactoryRegister::~EmbedWidgetFactoryRegister()
 {
 }
 
-NS_IMPL_ISUPPORTS1(EmbedWidgetFactoryRegister, nsSupportsWeakReference)
+NS_IMPL_ISUPPORTS(EmbedWidgetFactoryRegister, nsSupportsWeakReference)
 
 nsresult
 EmbedWidgetFactoryRegister::Init()

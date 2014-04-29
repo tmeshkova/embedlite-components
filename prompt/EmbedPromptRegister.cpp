@@ -33,7 +33,7 @@ EmbedPromptRegister::~EmbedPromptRegister()
 {
 }
 
-NS_IMPL_ISUPPORTS2(EmbedPromptRegister, nsIObserver, nsSupportsWeakReference)
+NS_IMPL_ISUPPORTS(EmbedPromptRegister, nsIObserver, nsSupportsWeakReference)
 
 nsresult
 EmbedPromptRegister::Init()

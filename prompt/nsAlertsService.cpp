@@ -18,7 +18,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS2(nsEmbedAlertsService, nsIAlertsService, nsIAlertsProgressListener)
+NS_IMPL_ISUPPORTS(nsEmbedAlertsService, nsIAlertsService, nsIAlertsProgressListener)
 
 nsEmbedAlertsService::nsEmbedAlertsService()
 {

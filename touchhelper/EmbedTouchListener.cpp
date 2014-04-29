@@ -61,7 +61,7 @@ EmbedTouchListener::~EmbedTouchListener()
 {
 }
 
-NS_IMPL_ISUPPORTS1(EmbedTouchListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(EmbedTouchListener, nsIDOMEventListener)
 
 void EmbedTouchListener::HandleSingleTap(const CSSPoint& aPoint, int32_t, const mozilla::layers::ScrollableLayerGuid&)
 {

@@ -8,7 +8,7 @@
 namespace mozilla {
 namespace embedlite {
 
-NS_IMPL_ISUPPORTS1(GenericFactory, nsIFactory)
+NS_IMPL_ISUPPORTS(GenericFactory, nsIFactory)
 
 NS_IMETHODIMP
 GenericFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,

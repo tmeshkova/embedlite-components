@@ -43,7 +43,7 @@ EmbedChromeListener::~EmbedChromeListener()
 {
 }
 
-NS_IMPL_ISUPPORTS1(EmbedChromeListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(EmbedChromeListener, nsIDOMEventListener)
 
 nsresult
 GetDOMWindowByNode(nsIDOMNode *aNode, nsIDOMWindow **aDOMWindow)

@@ -22,7 +22,7 @@
 
 /* Implementation file */
 
-NS_IMPL_ISUPPORTS2(nsEmbedFilePicker, nsIFilePicker, nsIEmbedMessageListener)
+NS_IMPL_ISUPPORTS(nsEmbedFilePicker, nsIFilePicker, nsIEmbedMessageListener)
 
 nsEmbedFilePicker::nsEmbedFilePicker()
 {
@@ -387,7 +387,7 @@ private:
   nsCOMPtr<nsIDOMWindowUtils> utils;
 };
 
-NS_IMPL_ISUPPORTS1(nsBaseFilePickerEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(nsBaseFilePickerEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsEmbedFilePicker::GetDomfiles(nsISimpleEnumerator * *aDomfiles)

@@ -21,7 +21,7 @@ using namespace mozilla;
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 static const char* sClipboardTextFlavors[] = { kUnicodeMime };
 
-NS_IMPL_ISUPPORTS1(nsEmbedClipboard, nsIClipboard)
+NS_IMPL_ISUPPORTS(nsEmbedClipboard, nsIClipboard)
 
 nsEmbedClipboard::nsEmbedClipboard() : nsIClipboard()
 {
