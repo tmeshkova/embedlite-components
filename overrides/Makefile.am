@@ -7,6 +7,20 @@ chromecontent_manifest_DATA = \
 chromeskin_manifestdir=$(libdir)/mozembedlite/chrome/chrome/skin
 chromeskin_manifest_DATA = \
 	netError.css \
+	touchcontrols.css \
+	$(NULL)
+
+chromeskinimages_manifestdir=$(libdir)/mozembedlite/chrome/chrome/skin/images
+chromeskinimages_manifest_DATA = \
+	images/error.png \
+	images/exitfullscreen-hdpi.png \
+	images/fullscreen-hdpi.png \
+	images/mute-hdpi.png \
+	images/pause-hdpi.png \
+	images/play-hdpi.png \
+	images/scrubber-hdpi.png \
+	images/throbber.png \
+	images/unmute-hdpi.png \
 	$(NULL)
 
 manifestsscript_manifestdir=$(libdir)/mozembedlite/chrome
