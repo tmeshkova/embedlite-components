@@ -1275,6 +1275,10 @@ var SelectionHandler = {
         }
       }
 
+      // Store end heights
+      seldata.start.height = rects[0].bottom - rects[0].top;
+      seldata.end.height = rects[rects.length-1].bottom - rects[rects.length-1].top;
+
       // Store the client rect of selection
       let r = aRange.getBoundingClientRect();
       seldata.selection.left = r.left + this._contentOffset.x;
