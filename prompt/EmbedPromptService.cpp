@@ -56,7 +56,7 @@ EmbedPromptOuterObserver::~EmbedPromptOuterObserver()
     OnDestroy();
 }
 
-NS_IMPL_ISUPPORTS(EmbedPromptOuterObserver, nsIObserver, nsSupportsWeakReference)
+NS_IMPL_ISUPPORTS(EmbedPromptOuterObserver, nsIObserver, nsISupportsWeakReference)
 
 NS_IMETHODIMP
 EmbedPromptOuterObserver::Observe(nsISupports *aSubject,
@@ -869,8 +869,7 @@ EmbedAuthPromptService::DoResponseAsyncPrompt(EmbedAsyncAuthPrompt* prompt,
     }
 
     for (unsigned int i = 0; i < prompt->consumers.Length(); i++) {
-        nsCOMPtr<nsICancelable> consumerI = prompt->consumers[i];
-        nsCOMPtr<nsAuthCancelableConsumer> consumer = do_QueryInterface(consumerI);
+        nsRefPtr<nsAuthCancelableConsumer> consumer = static_cast<nsAuthCancelableConsumer*>(prompt->consumers[i].get());
         if (!consumer->mCallback) {
             // Not having a callback means that consumer didn't provide it
             // or canceled the notification.

@@ -40,7 +40,7 @@ EmbedChromeManager::~EmbedChromeManager()
 {
 }
 
-NS_IMPL_ISUPPORTS(EmbedChromeManager, nsIObserver, nsSupportsWeakReference)
+NS_IMPL_ISUPPORTS(EmbedChromeManager, nsIObserver, nsISupportsWeakReference)
 
 nsresult
 EmbedChromeManager::Init()

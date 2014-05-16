@@ -40,7 +40,7 @@ EmbedTouchManager::~EmbedTouchManager()
 {
 }
 
-NS_IMPL_ISUPPORTS(EmbedTouchManager, nsIObserver, nsSupportsWeakReference)
+NS_IMPL_ISUPPORTS(EmbedTouchManager, nsIObserver, nsISupportsWeakReference)
 
 nsresult
 EmbedTouchManager::Init()

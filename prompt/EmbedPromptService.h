@@ -104,7 +104,7 @@ public:
     }
 
     virtual ~EmbedAsyncAuthPrompt() {}
-    nsTArray<nsCOMPtr<nsICancelable>> consumers;
+    nsTArray<nsRefPtr<nsICancelable>> consumers;
     nsIDOMWindow* mWin;
     nsCOMPtr<nsIChannel> mChannel;
     nsCOMPtr<nsIAuthInformation> mAuthInfo;
