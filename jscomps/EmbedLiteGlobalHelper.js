@@ -61,7 +61,7 @@ EmbedLiteGlobalHelper.prototype = {
         // Init LoginManager, not important for gecko > 32
         try {
           Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-        } catch () {
+        } catch (e) {
           dump("E login manager\n");
         }
         break;
