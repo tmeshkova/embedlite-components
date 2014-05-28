@@ -29,6 +29,10 @@
 #include "nsIEmbedLiteJSON.h"
 #include "nsIObserverService.h"
 #include "nsIWindowWatcher.h"
+#include "nsILoginManager.h"
+#include "nsILoginInfo.h"
+#include "nsComponentManagerUtils.h"
+#include "nsMemory.h"
 
 // Prompt Factory Implementation
 
@@ -712,12 +716,25 @@ EmbedAuthPromptService::DoSendAsyncPrompt(EmbedAsyncAuthPrompt* mPrompt)
     nsCString hostname, httpRealm;
     NS_ENSURE_SUCCESS(getAuthTarget(mPrompt->mChannel, mPrompt->mAuthInfo, hostname, httpRealm), NS_ERROR_FAILURE);
     nsString username;
+    nsString password;
     nsresult rv;
     uint32_t authInfoFlags;
     rv = mPrompt->mAuthInfo->GetFlags(&authInfoFlags);
     NS_ENSURE_SUCCESS(rv, rv);
     bool isOnlyPassword = !!(authInfoFlags & nsIAuthInformation::ONLY_PASSWORD);
     mPrompt->mAuthInfo->GetUsername(username);
+
+    nsCOMPtr<nsILoginManager> loginMgr = do_GetService("@mozilla.org/login-manager;1");
+    uint32_t loginCount;
+    nsILoginInfo **logins;
+    loginMgr->FindLogins(&loginCount, NS_ConvertUTF8toUTF16(hostname),
+                         nsString(), NS_ConvertUTF8toUTF16(httpRealm), &logins);
+    for (uint32_t loginIndex = 0; loginIndex < loginCount; ++loginIndex) {
+        logins[loginIndex]->GetUsername(username);
+        logins[loginIndex]->GetPassword(password);
+        NS_RELEASE(logins[loginIndex]);
+    }
+    nsMemory::Free(logins);
 
     uint32_t winid;
     mService->GetIDByWindow(mPrompt->mWin, &winid);
@@ -732,6 +749,8 @@ EmbedAuthPromptService::DoSendAsyncPrompt(EmbedAsyncAuthPrompt* mPrompt)
     root->SetPropertyAsUint32(NS_LITERAL_STRING("winid"), winid);
     root->SetPropertyAsBool(NS_LITERAL_STRING("passwordOnly"), isOnlyPassword);
     root->SetPropertyAsAString(NS_LITERAL_STRING("defaultValue"), username);
+    root->SetPropertyAsAString(NS_LITERAL_STRING("storedUsername"), username);
+    root->SetPropertyAsAString(NS_LITERAL_STRING("storedPassword"), password);
 
     json->CreateJSON(root, sendString);
 
@@ -760,6 +779,26 @@ EmbedAuthPromptService::DoSendAsyncPrompt(EmbedAsyncAuthPrompt* mPrompt)
 
     if (!it->second.accepted) {
         NS_WARNING("Alert not accepted");
+    } else if (!(username.Equals(it->second.username) && password.Equals(it->second.password)) &&
+               !it->second.dontsave) {
+        // remove old credentials
+        loginMgr->FindLogins(&loginCount, NS_ConvertUTF8toUTF16(hostname),
+                             nsString(), NS_ConvertUTF8toUTF16(httpRealm), &logins);
+        for (uint32_t loginIndex = 0; loginIndex < loginCount; ++loginIndex) {
+            loginMgr->RemoveLogin(logins[loginIndex]);
+            NS_RELEASE(logins[loginIndex]);
+        }
+        nsMemory::Free(logins);
+        // store credentials to DB
+        nsCOMPtr<nsILoginInfo> loginInfo = do_CreateInstance("@mozilla.org/login-manager/loginInfo;1" , &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        loginInfo->SetHostname(NS_ConvertUTF8toUTF16(hostname));
+        loginInfo->SetHttpRealm(NS_ConvertUTF8toUTF16(httpRealm));
+        loginInfo->SetUsername(it->second.username);
+        loginInfo->SetPassword(it->second.password);
+        loginInfo->SetUsernameField(nsString());
+        loginInfo->SetPasswordField(nsString());
+        loginMgr->AddLogin(loginInfo);
     }
 
     DoResponseAsyncPrompt(mPrompt, it->second.accepted, it->second.username, it->second.password);
@@ -787,7 +826,7 @@ EmbedAuthPromptService::OnMessageReceived(const char* messageName, const char16_
 
     nsString promptValue;
     root->GetPropertyAsBool(NS_LITERAL_STRING("accepted"), &response.accepted);
-    root->GetPropertyAsBool(NS_LITERAL_STRING("checkvalue"), &response.checkvalue);
+    root->GetPropertyAsBool(NS_LITERAL_STRING("dontsave"), &response.dontsave);
     root->GetPropertyAsAString(NS_LITERAL_STRING("username"), response.username);
     root->GetPropertyAsAString(NS_LITERAL_STRING("password"), response.password);
 

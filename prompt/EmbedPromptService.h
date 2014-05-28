@@ -32,12 +32,15 @@ class EmbedPromptResponse
 {
 public:
     EmbedPromptResponse()
-      : accepted(false), checkvalue(false)
+      : accepted(false),
+        checkvalue(false),
+        dontsave(false)
     {}
     virtual ~EmbedPromptResponse() {}
 
     bool accepted;
     bool checkvalue;
+    bool dontsave;
     nsString promptvalue;
     nsString username;
     nsString password;
