@@ -14,6 +14,7 @@
 #include "nsCOMPtr.h"
 #include <map>
 #include <string>
+#include <vector>
 
 class EmbedFilePickerResponse
 {
@@ -42,12 +43,14 @@ private:
     EmbedFilePickerResponse GetResponse();
     int mModalDepth;
     int mMode;
+    int mFilterIndex;
     nsCOMPtr<nsIEmbedAppService> mService;
     nsCOMPtr<nsIDOMWindow> mWin;
     nsString mTitle;
     nsString mDefaultName;
     nsCOMPtr<nsIFilePickerShownCallback> mCallback;
     std::map<uint32_t, EmbedFilePickerResponse> mResponseMap;
+    std::vector<uint32_t> mFilters;
 };
 
 #define NS_EMBED_FILEPICKER_SERVICE_CID \
