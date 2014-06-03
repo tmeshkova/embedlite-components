@@ -41,12 +41,14 @@ NS_IMETHODIMP nsEmbedFilePicker::Init(nsIDOMWindow* parent, const nsAString& tit
   mDefaultName.Truncate();
   mMode = mode;
   mCallback = nullptr;
+  mFilterIndex = 0;
+  mFilters.clear();
   return NS_OK;
 }
 
 NS_IMETHODIMP nsEmbedFilePicker::AppendFilters(int32_t filterMask)
 {
-  printf("nsEmbedFilePicker::AppendFilters NOT USED: filterMask:%i\n", filterMask);
+  mFilters.push_back(filterMask);
   return NS_OK;
 }
 
@@ -88,7 +90,7 @@ NS_IMETHODIMP nsEmbedFilePicker::GetFilterIndex(int32_t* aFilterIndex)
 
 NS_IMETHODIMP nsEmbedFilePicker::SetFilterIndex(int32_t aFilterIndex)
 {
-  printf("nsEmbedFilePicker::SetFilterIndex NOT USED: aFilterIndex:%i\n", aFilterIndex);
+  mFilterIndex = aFilterIndex;
   return NS_OK;
 }
 
@@ -251,6 +253,9 @@ nsEmbedFilePicker::DoSendPrompt()
   root->SetPropertyAsUint32(NS_LITERAL_STRING("winid"), winid);
   root->SetPropertyAsUint32(NS_LITERAL_STRING("mode"), mMode);
   root->SetPropertyAsAString(NS_LITERAL_STRING("title"), mTitle);
+  if (mFilters.size() > 0 && mFilterIndex > -1 && (unsigned)mFilterIndex < mFilters.size()) {
+    root->SetPropertyAsUint32(NS_LITERAL_STRING("filter"), mFilters.at(mFilterIndex));
+  }
   root->SetPropertyAsAString(NS_LITERAL_STRING("name"), mDefaultName);
   json->CreateJSON(root, sendString);
 
