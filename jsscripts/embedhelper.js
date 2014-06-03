@@ -75,6 +75,7 @@ EmbedHelper.prototype = {
     addMessageListener("embedui:zoomToRect", this);
     // Metrics used when virtual keyboard is open/opening.
     addMessageListener("embedui:vkbOpenCompositionMetrics", this);
+    addMessageListener("Memory:Dump", this);
     addMessageListener("Gesture:ContextMenuSynth", this);
     addMessageListener("embed:ContextMenuCreate", this);
     Services.obs.addObserver(this, "embedlite-before-first-paint", true);
@@ -351,7 +352,13 @@ EmbedHelper.prototype = {
         }
         break;
       }
-
+      case "Memory:Dump": {
+        if (aMessage.data && aMessage.data.fileName) {
+            let memDumper = Cc["@mozilla.org/memory-info-dumper;1"].getService(Ci.nsIMemoryInfoDumper);
+            memDumper.dumpMemoryReportsToNamedFile(aMessage.data.fileName, null, null);
+        }
+        break;
+      }
       default: {
         dump("Child Script: Message: name:" + aMessage.name + ", json:" + JSON.stringify(aMessage.json) + "\n");
         break;
