@@ -183,7 +183,6 @@ NS_IMETHODIMP nsEmbedFilePicker::Show(int16_t* _retval)
   nsresult rv;
 
   mService->EnterSecureJSContext();
-
   nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(mWin);
   NS_ENSURE_TRUE(utils, NS_ERROR_FAILURE);
 
@@ -338,10 +337,13 @@ nsEmbedFilePicker::GetDomfile(nsIDOMFile * *aDomfile)
     return NS_OK;
   }
 
+  mService->EnterSecureJSContext();
   nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(mWin);
   nsCOMPtr<nsIDOMFile> file;
   utils->WrapDOMFile(localFile, getter_AddRefs(file));
   file.forget(aDomfile);
+  mService->LeaveSecureJSContext();
+
   return NS_OK;
 }
 

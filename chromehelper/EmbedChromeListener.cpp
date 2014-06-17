@@ -101,6 +101,7 @@ EmbedChromeListener::HandleEvent(nsIDOMEvent* aEvent)
     uint32_t winid;
     mService->GetIDByWindow(window, &winid);
     NS_ENSURE_TRUE(winid , NS_ERROR_FAILURE);
+    mService->EnterSecureJSContext();
     nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
 
     if (type.EqualsLiteral(MOZ_DOMMetaAdded)) {
@@ -123,6 +124,7 @@ EmbedChromeListener::HandleEvent(nsIDOMEvent* aEvent)
         bool disabled = true;
         disabledIface->GetMozDisabled(&disabled);
         if (!disabledIface || disabled) {
+            mService->LeaveSecureJSContext();
             return NS_OK;
         }
         disabledIface->GetHref(href);
@@ -132,8 +134,10 @@ EmbedChromeListener::HandleEvent(nsIDOMEvent* aEvent)
         nsCOMPtr<nsIDOMDocument> ownDoc;
         nsCOMPtr<nsIDOMNode> node = do_QueryInterface(origTarget);
         node->GetOwnerDocument(getter_AddRefs(ownDoc));
-        if (ownDoc != ctDoc)
+        if (ownDoc != ctDoc) {
+          mService->LeaveSecureJSContext();
           return NS_OK;
+        }
 
         nsString charset, title, rel, type;
         ctDoc->GetCharacterSet(charset);
@@ -184,6 +188,7 @@ EmbedChromeListener::HandleEvent(nsIDOMEvent* aEvent)
         nsCOMPtr<nsIDOMWindow> targetWin;
         ctDoc->GetDefaultView(getter_AddRefs(targetWin));
         if (targetWin != docWin) {
+            mService->LeaveSecureJSContext();
             return NS_OK;
         }
         nsCOMPtr<nsIDOMWindowUtils> tutils = do_GetInterface(targetWin);
@@ -200,12 +205,14 @@ EmbedChromeListener::HandleEvent(nsIDOMEvent* aEvent)
         messageName.Append(type);
         root->SetPropertyAsBool(NS_LITERAL_STRING("persisted"), persisted);
     } else {
+        mService->LeaveSecureJSContext();
         return NS_OK;
     }
 
     nsString outStr;
     json->CreateJSON(root, message);
     mService->SendAsyncMessage(winid, messageName.get(), message.get());
+    mService->LeaveSecureJSContext();
 
     return NS_OK;
 }
