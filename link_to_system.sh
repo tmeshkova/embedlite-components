@@ -47,6 +47,7 @@ jscomps/TelProtocolHandler.js
 jscomps/SmsProtocolHandler.js
 jscomps/MailtoProtocolHandler.js
 jscomps/GeoProtocolHandler.js
+jscomps/RtspProtocolHandler.js
 "
 
 for str in $FILES_LIST; do

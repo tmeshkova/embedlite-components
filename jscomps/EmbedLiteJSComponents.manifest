@@ -100,3 +100,7 @@ contract @mozilla.org/network/protocol;1?name=mailto {25cbc673-c16b-4bec-affd-8d
 # GeoProtocolHandler.js
 component {0b452f2d-c6b3-4aee-9a73-dec5a812d2e3} GeoProtocolHandler.js
 contract @mozilla.org/network/protocol;1?name=geo {0b452f2d-c6b3-4aee-9a73-dec5a812d2e3}
+
+# RtspProtocolHandler.js
+component {d43dab24-fab1-11e3-b977-3c970e7aaa3d} RtspProtocolHandler.js
+contract @mozilla.org/network/protocol;1?name=rtsp {d43dab24-fab1-11e3-b977-3c970e7aaa3d}

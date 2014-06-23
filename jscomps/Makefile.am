@@ -22,6 +22,7 @@ jscomps_manifest_DATA = \
 	SmsProtocolHandler.js \
 	MailtoProtocolHandler.js \
 	GeoProtocolHandler.js \
+	RtspProtocolHandler.js \
 	$(NULL)
 
 AM_CPPFLAGS = $(DEPS_CFLAGS)
