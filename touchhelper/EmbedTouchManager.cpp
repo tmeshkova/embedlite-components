@@ -25,8 +25,6 @@
 #include "nsHashPropertyBag.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDOMHTMLLinkElement.h"
-#include "nsIDOMPopupBlockedEvent.h"
-#include "nsIDOMPageTransitionEvent.h"
 #include "nsIFocusManager.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"

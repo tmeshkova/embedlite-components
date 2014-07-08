@@ -25,8 +25,6 @@
 #include "nsHashPropertyBag.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDOMHTMLLinkElement.h"
-#include "nsIDOMPopupBlockedEvent.h"
-#include "nsIDOMPageTransitionEvent.h"
 #include "nsIFocusManager.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
@@ -101,9 +99,6 @@ EmbedChromeManager::WindowCreated(nsIDOMWindow* aWin)
     target->AddEventListener(NS_LITERAL_STRING(MOZ_DOMWillOpenModalDialog), listener,  PR_FALSE);
     target->AddEventListener(NS_LITERAL_STRING(MOZ_DOMModalDialogClosed), listener,  PR_FALSE);
     target->AddEventListener(NS_LITERAL_STRING(MOZ_DOMWindowClose), listener,  PR_FALSE);
-    target->AddEventListener(NS_LITERAL_STRING(MOZ_DOMPopupBlocked), listener,  PR_FALSE);
-    target->AddEventListener(NS_LITERAL_STRING(MOZ_pageshow), listener,  PR_FALSE);
-    target->AddEventListener(NS_LITERAL_STRING(MOZ_pagehide), listener,  PR_FALSE);
     target->AddEventListener(NS_LITERAL_STRING(MOZ_DOMMetaAdded), listener,  PR_FALSE);
     mArray.AppendObject(listener);
     mWindowCounter++;
@@ -134,9 +129,6 @@ EmbedChromeManager::WindowDestroyed(nsIDOMWindow* aWin)
     target->RemoveEventListener(NS_LITERAL_STRING(MOZ_DOMWillOpenModalDialog), listener,  PR_FALSE);
     target->RemoveEventListener(NS_LITERAL_STRING(MOZ_DOMModalDialogClosed), listener,  PR_FALSE);
     target->RemoveEventListener(NS_LITERAL_STRING(MOZ_DOMWindowClose), listener,  PR_FALSE);
-    target->RemoveEventListener(NS_LITERAL_STRING(MOZ_DOMPopupBlocked), listener,  PR_FALSE);
-    target->RemoveEventListener(NS_LITERAL_STRING(MOZ_pageshow), listener,  PR_FALSE);
-    target->RemoveEventListener(NS_LITERAL_STRING(MOZ_pagehide), listener,  PR_FALSE);
     target->RemoveEventListener(NS_LITERAL_STRING(MOZ_DOMMetaAdded), listener,  PR_FALSE);
     mWindowCounter--;
     if (!mWindowCounter) {

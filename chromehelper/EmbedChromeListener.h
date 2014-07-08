@@ -18,9 +18,6 @@
 #define MOZ_DOMWillOpenModalDialog "DOMWillOpenModalDialog"
 #define MOZ_DOMModalDialogClosed "DOMModalDialogClosed"
 #define MOZ_DOMWindowClose "DOMWindowClose"
-#define MOZ_DOMPopupBlocked "DOMPopupBlocked"
-#define MOZ_pageshow "pageshow"
-#define MOZ_pagehide "pagehide"
 #define MOZ_DOMMetaAdded "DOMMetaAdded"
 
 class EmbedChromeListener : public nsIDOMEventListener

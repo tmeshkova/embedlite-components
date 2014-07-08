@@ -24,8 +24,6 @@
 #include "nsHashPropertyBag.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDOMHTMLLinkElement.h"
-#include "nsIDOMPopupBlockedEvent.h"
-#include "nsIDOMPageTransitionEvent.h"
 #include "nsIFocusManager.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
@@ -162,48 +160,6 @@ EmbedChromeListener::HandleEvent(nsIDOMEvent* aEvent)
                type.EqualsLiteral(MOZ_DOMWindowClose)) {
         messageName.AssignLiteral("chrome:winopenclose");
         root->SetPropertyAsAString(NS_LITERAL_STRING("type"), type);
-    } else if (type.EqualsLiteral(MOZ_DOMPopupBlocked)) {
-        uint64_t outerWindowID = 0;
-        utils->GetOuterWindowID(&outerWindowID);
-        nsCOMPtr<nsIDOMPopupBlockedEvent> popupEvent = do_QueryInterface(aEvent);
-        nsCOMPtr<nsIURI> popupUri;
-        popupEvent->GetPopupWindowURI(getter_AddRefs(popupUri));
-        nsString popupWinFeatures, popupWindowName;
-        nsCString spec, origCharset;
-        popupUri->GetSpec(spec);
-        popupUri->GetOriginCharset(origCharset);
-        popupEvent->GetPopupWindowFeatures(popupWinFeatures);
-        popupEvent->GetPopupWindowName(popupWindowName);
-
-        messageName.AssignLiteral("chrome:popupblocked");
-        root->SetPropertyAsACString(NS_LITERAL_STRING("spec"), spec);
-        root->SetPropertyAsACString(NS_LITERAL_STRING("origCharset"), origCharset);
-        root->SetPropertyAsAString(NS_LITERAL_STRING("popupWinFeatures"), popupWinFeatures);
-        root->SetPropertyAsAString(NS_LITERAL_STRING("popupWindowName"), popupWindowName);
-    } else if (type.EqualsLiteral(MOZ_pageshow) ||
-               type.EqualsLiteral(MOZ_pagehide)) {
-        nsCOMPtr<nsIDOMEventTarget> target;
-        aEvent->GetTarget(getter_AddRefs(target));
-        nsCOMPtr<nsIDOMDocument> ctDoc = do_QueryInterface(target);
-        nsCOMPtr<nsIDOMWindow> targetWin;
-        ctDoc->GetDefaultView(getter_AddRefs(targetWin));
-        if (targetWin != docWin) {
-            mService->LeaveSecureJSContext();
-            return NS_OK;
-        }
-        nsCOMPtr<nsIDOMWindowUtils> tutils = do_GetInterface(targetWin);
-        uint64_t outerWindowID = 0, tinnerID = 0;
-        tutils->GetOuterWindowID(&outerWindowID);
-        tutils->GetCurrentInnerWindowID(&tinnerID);
-        int32_t innerWidth, innerHeight;
-        docWin->GetInnerWidth(&innerWidth);
-        docWin->GetInnerHeight(&innerHeight);
-        nsCOMPtr<nsIDOMPageTransitionEvent> transEvent = do_QueryInterface(aEvent);
-        bool persisted = false;
-        transEvent->GetPersisted(&persisted);
-        messageName.AssignLiteral("chrome:");
-        messageName.Append(type);
-        root->SetPropertyAsBool(NS_LITERAL_STRING("persisted"), persisted);
     } else {
         mService->LeaveSecureJSContext();
         return NS_OK;
