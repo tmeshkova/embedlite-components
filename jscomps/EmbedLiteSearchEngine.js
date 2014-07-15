@@ -96,6 +96,32 @@ EmbedLiteSearchEngine.prototype = {
             Services.obs.notifyObservers(null, "embed:search", JSON.stringify({ msg: "pluginslist", list: json}));
             break;
           }
+          case "getsuggestions": {
+            let submission = Services.search.currentEngine.getSubmission(data.searchinput, "application/x-suggestions+json");
+            let httpReq = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
+            httpReq.onload = function(e) {
+              let response = JSON.parse(this.responseText);
+
+              // according to the standard there must be at least two elements in list
+              if (!Array.isArray(response) && response.length < 2) {
+                return;
+              }
+
+              let suggestions = {
+                "msg": "suggestions",
+                "query": response[0],
+                "completions": response[1],
+                "descriptions": response[2] ? response[2] : [],
+                "urls": response[3] ? response[3] : []
+              };
+
+              Services.obs.notifyObservers(null, "embed:search", JSON.stringify(suggestions));
+
+            };
+            httpReq.open("get", submission.uri.spec, true);
+            httpReq.send();
+            break;
+          }
         }
         break;
       }
