@@ -31,9 +31,13 @@ EmbedLiteSearchEngine.prototype = {
         Services.obs.removeObserver(this, "embedliteInitialized");
         Services.search.init(function addEngine_cb(rv) {
             let engines = Services.search.getEngines({});
+            let engineNames = engines.map(function (element) {
+              return element.name;
+            });
             let enginesAvailable = (engines && engines.length > 0);
             var messg = {
               msg: "init",
+              engines: engineNames,
               defaultEngine: enginesAvailable && Services.search.defaultEngine ?
                 Services.search.defaultEngine.name : null
             }
@@ -85,11 +89,37 @@ EmbedLiteSearchEngine.prototype = {
                 let engine = engines[i];
                 let serEn = { name: engine.name,
                               isDefault: Services.search.defaultEngine === engine,
-                              isCurrent: Services.search.currentEngine === engine }
+                              isCurrent: Services.search.currentEngine === engine };
                 json.push(serEn);
               }
             }
             Services.obs.notifyObservers(null, "embed:search", JSON.stringify({ msg: "pluginslist", list: json}));
+            break;
+          }
+          case "getsuggestions": {
+            let submission = Services.search.currentEngine.getSubmission(data.searchinput, "application/x-suggestions+json");
+            let httpReq = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
+            httpReq.onload = function(e) {
+              let response = JSON.parse(this.responseText);
+
+              // according to the standard there must be at least two elements in list
+              if (!Array.isArray(response) && response.length < 2) {
+                return;
+              }
+
+              let suggestions = {
+                "msg": "suggestions",
+                "query": response[0],
+                "completions": response[1],
+                "descriptions": response[2] ? response[2] : [],
+                "urls": response[3] ? response[3] : []
+              };
+
+              Services.obs.notifyObservers(null, "embed:search", JSON.stringify(suggestions));
+
+            };
+            httpReq.open("get", submission.uri.spec, true);
+            httpReq.send();
             break;
           }
         }
