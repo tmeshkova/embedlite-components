@@ -31,9 +31,13 @@ EmbedLiteSearchEngine.prototype = {
         Services.obs.removeObserver(this, "embedliteInitialized");
         Services.search.init(function addEngine_cb(rv) {
             let engines = Services.search.getEngines({});
+            let engineNames = engines.map(function (element) {
+              return element.name;
+            });
             let enginesAvailable = (engines && engines.length > 0);
             var messg = {
               msg: "init",
+              engines: engineNames,
               defaultEngine: enginesAvailable && Services.search.defaultEngine ?
                 Services.search.defaultEngine.name : null
             }
@@ -85,7 +89,7 @@ EmbedLiteSearchEngine.prototype = {
                 let engine = engines[i];
                 let serEn = { name: engine.name,
                               isDefault: Services.search.defaultEngine === engine,
-                              isCurrent: Services.search.currentEngine === engine }
+                              isCurrent: Services.search.currentEngine === engine };
                 json.push(serEn);
               }
             }
