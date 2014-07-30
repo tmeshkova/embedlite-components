@@ -33,8 +33,8 @@ ContentPermissionPrompt.prototype = {
     return Services.uuidgenerator.generateUUID().toString();
   },
 
-  handleExistingPermission: function handleExistingPermission(request) {
-    let result = Services.perms.testExactPermissionFromPrincipal(request.principal, request.type);
+  handleExistingPermission: function handleExistingPermission(request, type) {
+    let result = Services.perms.testExactPermissionFromPrincipal(request.principal, type);
     if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
       request.allow();
       return true;
@@ -60,34 +60,46 @@ ContentPermissionPrompt.prototype = {
         return;
     }
 
+    let types = request.types.QueryInterface(Ci.nsIArray);
+    let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
+
     Services.embedlite.removeMessageListener("embedui:premissions", this);
-    let entityName = kEntities[request.type];
+    let entityName = kEntities[perm.type];
     if (ret.allow) {
       // If the user checked "Don't ask again", make a permanent exception
       if (ret.checkedDontAsk) {
-        Services.perms.addFromPrincipal(request.principal, request.type, Ci.nsIPermissionManager.ALLOW_ACTION);
+        Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.ALLOW_ACTION);
       } else if (entityName == "desktopNotification") {
         // For notifications, it doesn't make sense to grant permission once. So when the user clicks allow,
         // we let the requestor create notifications for the session.
-        Services.perms.addFromPrincipal(request.principal, request.type, Ci.nsIPermissionManager.ALLOW_ACTION,
+        Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.ALLOW_ACTION,
                                         Ci.nsIPermissionManager.EXPIRE_SESSION);
       }
       request.allow();
     } else {
         // If the user checked "Don't ask again", make a permanent exception
         if (ret.checkedDontAsk)
-          Services.perms.addFromPrincipal(request.principal, request.type, Ci.nsIPermissionManager.DENY_ACTION);
+          Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.DENY_ACTION);
         request.cancel();
     }
     delete this._pendingRequests[ret.id];
   },
 
   prompt: function(request) {
-    // Returns true if the request was handled
-    if (this.handleExistingPermission(request))
-       return;
+    // Only allow exactly one permission request here.
+    let types = request.types.QueryInterface(Ci.nsIArray);
+    if (types.length != 1) {
+      request.cancel();
+      return;
+    }
+    let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
 
-    let entityName = kEntities[request.type];
+    // Returns true if the request was handled
+    if (this.handleExistingPermission(request, perm.type)) {
+       return;
+    }
+
+    let entityName = kEntities[perm.type];
 
     dump("idleTime: json:" + Services.embedlite + "\n");
     Services.embedlite.addMessageListener("embedui:premissions", this);
