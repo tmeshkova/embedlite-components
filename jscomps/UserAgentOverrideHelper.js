@@ -45,6 +45,7 @@ var UserAgent = {
   _desktopMode: false,
   DESKTOP_UA: null,
   GOOGLE_DOMAIN: /(^|\.)google\.com$/,
+  GOOGLE_MAPS_DOMAIN: /(^|\.)maps\.google\.com$/,
   YOUTUBE_DOMAIN: /(^|\.)youtube\.com$/,
   NOKIA_HERE_DOMAIN: /(^|\.)here\.com$/,
   _customUA: null,
@@ -82,6 +83,10 @@ var UserAgent = {
     // Not all schemes have a host member.
     if (aUri.schemeIs("http") || aUri.schemeIs("https")) {
       if (this.GOOGLE_DOMAIN.test(aUri.host)) {
+        if (this.GOOGLE_MAPS_DOMAIN.test(aUri.host)) {
+            return ua.replace("X11", "Android").replace("Linux", "Android");
+        }
+
         // Send the phone UA to google
         if (!ua.contains("Mobile")) {
           return ua.replace("X11", "Android").replace("Unix", "Android").replace("Linux", "Mobile");
