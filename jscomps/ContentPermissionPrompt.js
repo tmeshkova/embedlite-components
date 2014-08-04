@@ -14,10 +14,6 @@ XPCOMUtils.defineLazyServiceGetter(Services, "embedlite",
                                     "@mozilla.org/embedlite-app-service;1",
                                     "nsIEmbedAppService");
 
-XPCOMUtils.defineLazyServiceGetter(Services, "uuidgenerator",
-                                    "@mozilla.org/uuid-generator;1",
-                                    "nsIUUIDGenerator");
-
 const kEntities = { "geolocation": "geolocation",
                     "desktop-notification": "desktopNotification" };
 
@@ -29,8 +25,8 @@ ContentPermissionPrompt.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionPrompt, Ci.nsIEmbedMessageListener]),
   _pendingRequests: {},
 
-  _getRandomId: function() {
-    return Services.uuidgenerator.generateUUID().toString();
+  _getReqKey: function(request, type) {
+    return request.principal.URI.host + " " + type;
   },
 
   handleExistingPermission: function handleExistingPermission(request, type) {
@@ -54,11 +50,12 @@ ContentPermissionPrompt.prototype = {
         dump("request id not defined in response\n");
         return;
     }
-    let request = this._pendingRequests[ret.id];
-    if (!request) {
+    let cachedreqs = this._pendingRequests[ret.id];
+    if (!cachedreqs || cachedreqs.length < 1) {
         dump("Wrong request id:" + ret.id + "\n");
         return;
     }
+    let request = cachedreqs[0];
 
     let types = request.types.QueryInterface(Ci.nsIArray);
     let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
@@ -75,12 +72,13 @@ ContentPermissionPrompt.prototype = {
         Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.ALLOW_ACTION,
                                         Ci.nsIPermissionManager.EXPIRE_SESSION);
       }
-      request.allow();
+      cachedreqs.forEach(function(r) { r.allow(); });
     } else {
-        // If the user checked "Don't ask again", make a permanent exception
-        if (ret.checkedDontAsk)
-          Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.DENY_ACTION);
-        request.cancel();
+      // If the user checked "Don't ask again", make a permanent exception
+      if (ret.checkedDontAsk) {
+        Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.DENY_ACTION);
+      }
+      cachedreqs.forEach(function(r) { r.cancel(); });
     }
     delete this._pendingRequests[ret.id];
   },
@@ -99,14 +97,26 @@ ContentPermissionPrompt.prototype = {
        return;
     }
 
+    let reqkey = this._getReqKey(request, perm.type);
+
+    let cachedreqs = this._pendingRequests[reqkey];
+    if (cachedreqs && cachedreqs.length) {
+      // There is already an unanswered permission request of this type and for
+      // this URL -> cache this request and avoid asking the user again.
+      this._pendingRequests[reqkey].push(request);
+      return;
+    } else {
+      this._pendingRequests[reqkey] = [request];
+    }
+
     let entityName = kEntities[perm.type];
 
-    dump("idleTime: json:" + Services.embedlite + "\n");
     Services.embedlite.addMessageListener("embedui:premissions", this);
     var winid = Services.embedlite.getIDByWindow(request.window);
-    let uniqueid = this._getRandomId();
-    Services.embedlite.sendAsyncMessage(winid, "embed:permissions", JSON.stringify({title: entityName, host: request.principal.URI.host, id: uniqueid}));
-    this._pendingRequests[uniqueid] = request;
+    Services.embedlite.sendAsyncMessage(winid, "embed:permissions",
+                                        JSON.stringify({title: entityName,
+                                                        host: request.principal.URI.host,
+                                                        id: reqkey}));
   }
 };
 
