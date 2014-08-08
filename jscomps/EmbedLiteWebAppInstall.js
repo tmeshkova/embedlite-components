@@ -28,7 +28,7 @@ EmbedLiteWebAppInstall.prototype = {
       case "embedliteviewcreated": {
         if (!this._initialized) {
           Services.obs.removeObserver(this, "embedliteviewcreated", true);
-          _initialized = true;
+          this._initialized = true;
           WebappsUI.init();
         }
         break;
