@@ -71,6 +71,9 @@ ln -s $(pwd)/jsscripts/ContextMenuHandler.js $TARGET_DIR/chrome/embedlite/conten
 ln -s $(pwd)/jsscripts/google.xml $TARGET_DIR/chrome/embedlite/content/google.xml;
 ln -s $(pwd)/jsscripts/bing.xml $TARGET_DIR/chrome/embedlite/content/bing.xml;
 ln -s $(pwd)/jsscripts/yahoo.xml $TARGET_DIR/chrome/embedlite/content/yahoo.xml;
+ln -s $(pwd)/jsscripts/baidu.xml $TARGET_DIR/chrome/embedlite/content/baidu.xml;
+ln -s $(pwd)/jsscripts/duckduckgo.xml $TARGET_DIR/chrome/embedlite/content/duckduckgo.xml;
+ln -s $(pwd)/jsscripts/yandex.xml $TARGET_DIR/chrome/embedlite/content/yandex.xml;
 
 ln -s $(pwd)/jsscripts/sync/bookmarks.js $TARGET_DIR/chrome/embedlite/content/sync/bookmarks.js;
 
