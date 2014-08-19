@@ -47,6 +47,7 @@ function EmbedHelper() {
   this.zoomMargin = 14;
   this.vkbOpenCompositionMetrics = null;
   this.returnToBoundsRequested = false;
+  this.inFullScreen = false;
   this._init();
 }
 
@@ -318,7 +319,7 @@ EmbedHelper.prototype = {
 
         // Floor cssCompositedRect.height and ceil cssPageRect.height that there needs to be more than 1px difference.
         // Background reason being that TabChildHelper floors viewport x and y values.
-        if (!this.returnToBoundsRequested && this._viewportData.y + Math.floor(this._viewportData.cssCompositedRect.height) > Math.ceil(this._viewportData.cssPageRect.height)) {
+        if (!this.inFullScreen && !this.returnToBoundsRequested && this._viewportData.y + Math.floor(this._viewportData.cssCompositedRect.height) > Math.ceil(this._viewportData.cssPageRect.height)) {
           let y = -this._viewportData.cssCompositedRect.height + this._viewportData.cssPageRect.height
           var winid = Services.embedlite.getIDByWindow(content);
           Services.embedlite.zoomToRect(winid, this._viewportData.x, y,
@@ -620,6 +621,7 @@ EmbedHelper.prototype = {
   _handleFullScreenChanged: function(aEvent) {
         let window = aEvent.target.defaultView;
         let winid = Services.embedlite.getIDByWindow(window);
+        this.inFullScreen = aEvent.target.mozFullScreen;
         Services.embedlite.sendAsyncMessage(winid, "embed:fullscreenchanged",
                                             JSON.stringify({
                                                     "fullscreen": aEvent.target.mozFullScreen
