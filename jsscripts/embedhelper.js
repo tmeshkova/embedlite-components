@@ -206,7 +206,7 @@ EmbedHelper.prototype = {
       let viewportWidth = this._viewportData.viewport.width;
       let viewportHeight = this._viewportData.viewport.height;
       let viewportWResolution = this._viewportData.resolution.width;
-      let viewportHResolution = this._viewportData.resolution.height;
+
       let viewportY = this._viewportData.y;
       var fudge = 15 / viewportWResolution;
       let width = viewportWidth / viewportWResolution;
@@ -228,7 +228,7 @@ EmbedHelper.prototype = {
                                       rect.x - fudge,
                                       viewportY + (rect.y - this._lastTargetY),
                                       viewportWidth / viewportWResolution,
-                                      viewportHeight / viewportHResolution);
+                                      viewportHeight / viewportWResolution);
         this._lastTarget = null;
       }
       this._viewportReadyToChange = false;
@@ -367,10 +367,10 @@ EmbedHelper.prototype = {
   },
 
   _rectVisibility: function(aSourceRect, aViewportRect) {
-    let vRect = aViewportRect ? aViewportRect : new Rect(this._viewportData.compositionBounds.x + this._viewportData.x,
-                                                         this._viewportData.compositionBounds.y + this._viewportData.y,
-                                                         this._viewportData.compositionBounds.width / this._viewportData.resolution.width,
-                                                         this._viewportData.compositionBounds.height / this._viewportData.resolution.width);
+    let vRect = aViewportRect ? aViewportRect : new Rect(this._viewportData.x,
+                                                         this._viewportData.y,
+                                                         this._viewportData.cssCompositedRect.width,
+                                                         this._viewportData.cssCompositedRect.height);
     let overlap = vRect.intersect(aSourceRect);
     let overlapArea = overlap.width * overlap.height;
     let availHeight = Math.min(aSourceRect.width * vRect.height / vRect.width, aSourceRect.height);
@@ -382,12 +382,13 @@ EmbedHelper.prototype = {
     // For possible error cases
     if (!this._viewportData)
       return;
+
     // Combination of browser.js _zoomToElement and special zoom logic
     let rect = ElementTouchHelper.getBoundingContentRect(aElement);
 
     // Rough cssCompositionHeight as virtual keyboard is not yet raised (upper half).
-    let cssCompositionHeight = this._viewportData.compositionBounds.height / 2;
-    let maxCssCompositionWidth = this._viewportData.compositionBounds.width;
+    let cssCompositionHeight = this._viewportData.cssCompositedRect.height / 2;
+    let maxCssCompositionWidth = this._viewportData.cssCompositedRect.width;
     let maxCssCompositionHeight = cssCompositionHeight;
 
     if (this.vkbOpenCompositionMetrics) {
@@ -397,12 +398,11 @@ EmbedHelper.prototype = {
         // Are equal if vkb is already open and content is not pinched after vkb opening. It does not
         // matter if currentCssCompositedHeight happens to match target before vkb has been opened.
         if (maxCssCompositionHeight != currentCssCompositedHeight) {
-          cssCompositionHeight = this.vkbOpenCompositionMetrics.compositionHeight / this._viewportData.resolution.scale;
+          cssCompositionHeight = this.vkbOpenCompositionMetrics.compositionHeight / this._viewportData.resolution.width;
         } else {
           cssCompositionHeight = currentCssCompositedHeight;
         }
     }
-
     // TODO / Missing: handle maximum zoom level and respect viewport meta tag
     let scaleFactor = aIsTextField ? (this.inputItemSize / this.vkbOpenCompositionMetrics.compositionHeight) / (rect.h / cssCompositionHeight) : 1.0;
 
@@ -412,7 +412,7 @@ EmbedHelper.prototype = {
     // Calculate new css composition bounds that will be the bounds after zooming. Top-left corner is not yet moved.
     let cssCompositedRect = new Rect(this._viewportData.x,
                                     this._viewportData.y,
-                                    this._viewportData.compositionBounds.width / this._viewportData.resolution.scale,
+                                    this._viewportData.cssCompositedRect.width,
                                     cssCompositionHeight);
     let bRect = new Rect(Util.clamp(rect.x - margin, 0, this._viewportData.cssPageRect.width - rect.w),
                         Util.clamp(rect.y - margin, 0, this._viewportData.cssPageRect.height - rect.h),
