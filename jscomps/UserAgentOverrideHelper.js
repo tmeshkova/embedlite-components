@@ -48,6 +48,7 @@ var UserAgent = {
   GOOGLE_MAPS_DOMAIN: /(^|\.)maps\.google\.com$/,
   YOUTUBE_DOMAIN: /(^|\.)youtube\.com$/,
   NOKIA_HERE_DOMAIN: /(^|\.)here\.com$/,
+  FACEBOOK_DOMAIN: /(^|\.)facebook\.com$/,
   _customUA: null,
 
   getCustomUserAgent: function() {
@@ -109,6 +110,9 @@ var UserAgent = {
         if (!ua.contains("Mobile")) {
           return ua.replace("X11", "Android").replace("Unix", "Android").replace("Linux", "Mobile");
         }
+      } else if (this.FACEBOOK_DOMAIN.test(aUri.host)) {
+        // Facebook works best when UA is a copy of Firefox for Android, but without "Android" keyword
+        return "Mozilla/5.0 (Sailfish; Mobile; rv:31.0) Gecko/31.0 Firefox/31.0";
       }
     }
 
