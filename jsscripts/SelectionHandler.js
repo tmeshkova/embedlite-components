@@ -46,7 +46,7 @@ var SelectionHandler = {
   _domWinUtils: null,
   _selectionMoveActive: false,
   _debugOptions: { dumpRanges: false, displayRanges: false },
-  _snap: true,
+  _snap: false,
 
   init: function init() {
     addMessageListener("Browser:SelectionStart", this);
