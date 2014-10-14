@@ -39,7 +39,7 @@ NS_IMETHODIMP nsEmbedAlertsService::ShowAlertNotification(const nsAString& aImag
                                                           const nsAString& aAlertText, bool aAlertTextClickable,
                                                           const nsAString& aAlertCookie, nsIObserver* aAlertListener,
                                                           const nsAString& aAlertName, const nsAString& aBidi,
-                                                          const nsAString& aLang, nsIPrincipal *principal)
+                                                          const nsAString& aLang, const nsAString & data, nsIPrincipal *principal)
 {
   printf(">>>>>>Func:%s::%d image:%s, title:%s, text:%s, clickable:%i, cookie:%s, name:%s\n", __PRETTY_FUNCTION__, __LINE__,
          NS_ConvertUTF16toUTF8(aImageUrl).get(),
