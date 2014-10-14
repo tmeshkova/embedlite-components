@@ -99,12 +99,12 @@ void EmbedTouchListener::RequestContentRepaint(const mozilla::layers::FrameMetri
 {
 //    LOGT("Metr off[%g,%g], vp[%g,%g,%g,%g], scrRe[%g,%g,%g,%g], res[%g,%g]",
 //         aMetrics.mScrollOffset.x, aMetrics.mScrollOffset.y,
-//         aMetrics.mViewport.x, aMetrics.mViewport.y, aMetrics.mViewport.width, aMetrics.mViewport.height,
+//         aMetrics.GetViewport().x, aMetrics.GetViewport().y, aMetrics.GetViewport().width, aMetrics.GetViewport().height,
 //         aMetrics.mScrollableRect.x, aMetrics.mScrollableRect.y, aMetrics.mScrollableRect.width, aMetrics.mScrollableRect.height,
 //         aMetrics.mResolution.width, aMetrics.mResolution.height);
     mGotViewPortUpdate = true;
     mViewport = gfx::Rect(aMetrics.GetScrollOffset().x, aMetrics.GetScrollOffset().y,
-                          aMetrics.mViewport.width, aMetrics.mViewport.height);
+                          aMetrics.GetViewport().width, aMetrics.GetViewport().height);
     mCssCompositedRect = gfx::Rect(aMetrics.GetScrollOffset().x, aMetrics.GetScrollOffset().y,
                                    0, 0);
     float x, y;
