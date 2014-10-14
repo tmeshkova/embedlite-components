@@ -18,9 +18,9 @@ public:
   NS_DECL_ISUPPORTS
 
   nsEmbedAlertsService();
-  virtual ~nsEmbedAlertsService();
 
 protected:
+  virtual ~nsEmbedAlertsService();
   bool ShouldShowAlert();
 };
 

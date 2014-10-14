@@ -42,6 +42,7 @@ public:
   EmbedHistoryListener();
 
 private:
+  virtual ~EmbedHistoryListener() {}
   nsIEmbedAppService* GetService();
 
   static EmbedHistoryListener* sHistory;

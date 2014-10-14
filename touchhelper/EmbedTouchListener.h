@@ -27,8 +27,6 @@ class EmbedTouchListener : public nsIDOMEventListener,
 {
 public:
     EmbedTouchListener(nsIDOMWindow* aWin);
-    virtual ~EmbedTouchListener();
-
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDOMEVENTLISTENER
 
@@ -44,6 +42,8 @@ public:
 
     nsCOMPtr<nsIDOMWindow> DOMWindow;
 private:
+    virtual ~EmbedTouchListener();
+
     void AnyElementFromPoint(nsIDOMWindow* aWindow, double aX, double aY, nsIDOMElement* *aElem);
     bool ShouldZoomToElement(nsIDOMElement* aElement);
     void ZoomToElement(nsIDOMElement* aElement,

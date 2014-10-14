@@ -559,10 +559,6 @@ public:
         NS_ASSERTION(mCallback, "null callback");
     }
 
-    ~nsAuthCancelableConsumer()
-    {
-    }
-
     NS_IMETHOD Cancel(nsresult reason)
     {
         NS_ENSURE_ARG(NS_FAILED(reason));
@@ -578,6 +574,8 @@ public:
 
     nsCOMPtr<nsIAuthPromptCallback> mCallback;
     nsCOMPtr<nsISupports> mContext;
+private:
+    virtual ~nsAuthCancelableConsumer() {}
 };
 
 NS_IMPL_ISUPPORTS(nsAuthCancelableConsumer, nsICancelable);
@@ -643,11 +641,10 @@ public:
       : mPrompt(aPrompt)
     {
     }
-    virtual ~EmbedAuthRunnable()
-    {
-    }
     NS_IMETHOD Run();
     EmbedAsyncAuthPrompt* mPrompt;
+private:
+    virtual ~EmbedAuthRunnable() {}
 };
 
 NS_IMPL_ISUPPORTS(EmbedAuthRunnable, nsIRunnable)

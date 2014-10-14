@@ -15,12 +15,14 @@ class EmbedPromptRegister : public nsIObserver,
 {
 public:
     EmbedPromptRegister();
-    virtual ~EmbedPromptRegister();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
     nsresult Init();
+
+private:
+    virtual ~EmbedPromptRegister();
 };
 
 #define NS_EMBED_PROMPT_CONTRACTID "@mozilla.org/embed-prompt-component;1"

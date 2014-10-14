@@ -19,13 +19,13 @@ class EmbedTouchManager : public nsIObserver,
 {
 public:
     EmbedTouchManager();
-    virtual ~EmbedTouchManager();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
     nsresult Init();
 private:
+    virtual ~EmbedTouchManager();
     void WindowCreated(nsIDOMWindow* aWin);
     void WindowDestroyed(nsIDOMWindow* aWin);
     nsCOMPtr<nsIEmbedAppService> mService;

@@ -10,7 +10,7 @@
 #include "nsIObserverService.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIComponentManager.h"
-#include "GenericFactory.h"
+#include "EmbedliteGenericFactory.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsComponentManagerUtils.h"
 
@@ -49,7 +49,7 @@ EmbedWidgetFactoryRegister::Init()
     rv = NS_GetComponentManager (getter_AddRefs (cm));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIFactory> fp = new mozilla::embedlite::GenericFactory(nsEmbedFilePickerConstructor);
+    nsCOMPtr<nsIFactory> fp = new mozilla::embedlite::EmbedliteGenericFactory(nsEmbedFilePickerConstructor);
     if (!fp) {
         NS_WARNING("Unable to create factory for component");
         return NS_ERROR_FAILURE;
@@ -71,7 +71,7 @@ EmbedWidgetFactoryRegister::Init()
     rv = cr->RegisterFactory(fpickerCID, "EmbedLite FilePicker",
                              filepickerCONTRACTID, fp);
 
-    fp = new mozilla::embedlite::GenericFactory(nsEmbedClipboardConstructor);
+    fp = new mozilla::embedlite::EmbedliteGenericFactory(nsEmbedClipboardConstructor);
     if (!fp) {
         NS_WARNING("Unable to create factory for component");
         return NS_ERROR_FAILURE;

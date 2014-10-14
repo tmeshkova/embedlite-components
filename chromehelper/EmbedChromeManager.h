@@ -19,13 +19,14 @@ class EmbedChromeManager : public nsIObserver,
 {
 public:
     EmbedChromeManager();
-    virtual ~EmbedChromeManager();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
     nsresult Init();
 private:
+    virtual ~EmbedChromeManager();
+
     void WindowCreated(nsIDOMWindow* aWin);
     void WindowDestroyed(nsIDOMWindow* aWin);
     nsCOMPtr<nsIEmbedAppService> mService;

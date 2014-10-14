@@ -358,8 +358,6 @@ public:
     utils = do_GetInterface(aWin);
   }
 
-  virtual ~nsBaseFilePickerEnumerator()
-  {}
 
   NS_IMETHOD
   GetNext(nsISupports** aResult)
@@ -390,6 +388,8 @@ public:
   }
 
 private:
+  virtual ~nsBaseFilePickerEnumerator() {}
+
   nsCOMPtr<nsISimpleEnumerator> mIterator;
   nsCOMPtr<nsIDOMWindowUtils> utils;
 };

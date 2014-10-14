@@ -56,12 +56,12 @@ class EmbedPromptOuterObserver : public nsIObserver, public nsSupportsWeakRefere
 {
 public:
     EmbedPromptOuterObserver(IDestroyNotification* aNotifier, nsIDOMWindow* aWin);
-    virtual ~EmbedPromptOuterObserver();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
     void OnDestroy();
 private:
+    virtual ~EmbedPromptOuterObserver();
     IDestroyNotification* mNotifier;
     nsCOMPtr<nsIDOMWindow> mWin;
     nsCOMPtr<nsIObserverService> mService;
@@ -71,7 +71,6 @@ class EmbedPromptService : public nsIPrompt, public nsIEmbedMessageListener, pub
 {
 public:
     EmbedPromptService(nsIDOMWindow* aWin);
-    virtual ~EmbedPromptService();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROMPT
@@ -80,6 +79,7 @@ public:
     virtual void OnDestroyNotification();
 
 private:
+    virtual ~EmbedPromptService();
     void CancelResponse();
     uint32_t CheckWinID();
 
@@ -106,7 +106,6 @@ public:
         consumers.AppendElement(aCancelable);
     }
 
-    virtual ~EmbedAsyncAuthPrompt() {}
     nsTArray<nsRefPtr<nsICancelable>> consumers;
     nsIDOMWindow* mWin;
     nsCOMPtr<nsIChannel> mChannel;
@@ -115,13 +114,13 @@ public:
     bool mInProgress;
     nsCString mHashKey;
     RefPtr<EmbedAuthPromptService> mService;
+    virtual ~EmbedAsyncAuthPrompt() {}
 };
 
 class EmbedAuthPromptService : public nsIAuthPrompt2, public nsIEmbedMessageListener, public IDestroyNotification
 {
 public:
     EmbedAuthPromptService(nsIDOMWindow* aWin);
-    virtual ~EmbedAuthPromptService();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIAUTHPROMPT2
@@ -136,6 +135,7 @@ public:
     virtual void OnDestroyNotification();
 
 private:
+    virtual ~EmbedAuthPromptService();
     void DoAsyncPrompt();
     void CancelResponse();
     uint32_t CheckWinID();
@@ -149,14 +149,15 @@ private:
     RefPtr<EmbedPromptOuterObserver> mOuterService;
 };
 
-class EmbedPromptFactory :  public nsIPromptFactory
+class EmbedPromptFactory : public nsIPromptFactory
 {
 public:
     EmbedPromptFactory();
-    virtual ~EmbedPromptFactory();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROMPTFACTORY
+private:
+    virtual ~EmbedPromptFactory();
 };
 
 }}

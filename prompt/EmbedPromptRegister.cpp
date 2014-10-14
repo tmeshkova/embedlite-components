@@ -11,8 +11,8 @@
 #include "EmbedPromptService.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIComponentManager.h"
-#include "GenericFactory.h"
 #include "mozilla/ModuleUtils.h"
+#include "../widgetfactory/EmbedliteGenericFactory.h"
 #include "nsComponentManagerUtils.h"
 
 #include "nsILoginManager.h"
@@ -46,7 +46,7 @@ EmbedPromptRegister::Init()
     rv = NS_GetComponentManager (getter_AddRefs (cm));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIFactory> f = new mozilla::embedlite::GenericFactory(EmbedPromptFactoryConstructor);
+    nsCOMPtr<nsIFactory> f = new mozilla::embedlite::EmbedliteGenericFactory(EmbedPromptFactoryConstructor);
     if (!f) {
         NS_WARNING("Unable to create factory for component");
         return NS_ERROR_FAILURE;
@@ -69,7 +69,7 @@ EmbedPromptRegister::Init()
     rv = cr->RegisterFactory(promptCID, "EmbedLite Prompt",
                              "@mozilla.org/prompter;1", f);
 
-    f = new mozilla::embedlite::GenericFactory(nsEmbedAlertsServiceConstructor);
+    f = new mozilla::embedlite::EmbedliteGenericFactory(nsEmbedAlertsServiceConstructor);
     if (!f) {
         NS_WARNING("Unable to create factory for component");
         return NS_ERROR_FAILURE;

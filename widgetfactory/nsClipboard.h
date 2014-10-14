@@ -19,8 +19,6 @@ class nsEmbedClipboard : public nsIClipboard, public nsIObserver
 {
 public:
     nsEmbedClipboard();
-    virtual ~nsEmbedClipboard();
-
     //nsISupports
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
@@ -29,6 +27,8 @@ public:
     NS_DECL_NSICLIPBOARD
 
 private:
+    virtual ~nsEmbedClipboard();
+
     nsCOMPtr<nsIEmbedAppService> mService;
     nsCOMPtr<nsIObserverService> mObserverService;
     nsString mBuffer;

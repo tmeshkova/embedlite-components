@@ -13,11 +13,11 @@ class EmbedWidgetFactoryRegister : public nsSupportsWeakReference
 {
 public:
     EmbedWidgetFactoryRegister();
-    virtual ~EmbedWidgetFactoryRegister();
-
     NS_DECL_ISUPPORTS
 
     nsresult Init();
+private:
+    virtual ~EmbedWidgetFactoryRegister();
 };
 
 #define NS_EMBED_WIDGETFACTORY_CONTRACTID "@mozilla.org/embed-widget-factory-component;1"
