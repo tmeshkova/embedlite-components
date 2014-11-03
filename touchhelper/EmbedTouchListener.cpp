@@ -66,7 +66,7 @@ void EmbedTouchListener::HandleSingleTap(const CSSPoint& aPoint, int32_t, const 
     // SingleTap handler of JavaScript (embedhelper.js) is taken care of input zooming.
 }
 
-void EmbedTouchListener::HandleLongTap(const CSSPoint& aPoint, int32_t, const mozilla::layers::ScrollableLayerGuid&)
+void EmbedTouchListener::HandleLongTap(const CSSPoint& aPoint, int32_t, const mozilla::layers::ScrollableLayerGuid&, uint64_t)
 {
     LOGT("pt[%i,%i]", aPoint.x, aPoint.y);
 }
