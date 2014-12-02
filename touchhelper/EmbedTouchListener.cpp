@@ -145,6 +145,15 @@ void EmbedTouchListener::HandleDoubleTap(const CSSPoint& aPoint, int32_t, const 
         }
     }
 
+    // Don't zoom in or out when in full screen
+    nsCOMPtr<nsIDOMDocument> document;
+    NS_ENSURE_SUCCESS(node->GetOwnerDocument(getter_AddRefs(document)), );
+    bool isFullScreen(false);
+    document->GetMozFullScreen(&isFullScreen);
+    if (isFullScreen) {
+        return;
+    }
+
     if (!element) {
         mService->ZoomToRect(mTopWinid, 0, 0, 0, 0);
     } else {
