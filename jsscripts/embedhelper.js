@@ -41,7 +41,6 @@ function fuzzyEquals(a, b) {
 function EmbedHelper() {
   this.lastTouchedAt = Date.now();
   this.contentDocumentIsDisplayed = true;
-  this.reflowPref = false;
   // Reasonable default. Will be read from preferences.
   this.inputItemSize = 38;
   this.zoomMargin = 14;
@@ -80,10 +79,8 @@ EmbedHelper.prototype = {
     addMessageListener("Gesture:ContextMenuSynth", this);
     addMessageListener("embed:ContextMenuCreate", this);
     Services.obs.addObserver(this, "embedlite-before-first-paint", true);
-    Services.prefs.addObserver("browser.zoom.reflowOnZoom", this, false);
     Services.prefs.addObserver("embedlite.inputItemSize", this, false);
     Services.prefs.addObserver("embedlite.zoomMargin", this, false);
-    this.updateReflowPref();
     this.updateInputItemSizePref();
     this.updateZoomMarginPref();
   },
@@ -140,9 +137,7 @@ EmbedHelper.prototype = {
           this.contentDocumentIsDisplayed = true;
           break;
         case "nsPref:changed":
-          if (data == "browser.zoom.reflowOnZoom") {
-            this.updateReflowPref();
-          } else if (data == "embedlite.inputItemSize") {
+          if (data == "embedlite.inputItemSize") {
             this.updateInputItemSizePref();
           } else if (data == "embedlite.zoomMargin") {
             this.updateZoomMarginPref();
@@ -152,7 +147,6 @@ EmbedHelper.prototype = {
     }
   },
 
-  _viewportLastResolution: 0,
   _viewportData: null,
   _viewportReadyToChange: false,
   _lastTarget: null,
@@ -163,10 +157,6 @@ EmbedHelper.prototype = {
     let docShell = webNav.QueryInterface(Ci.nsIDocShell);
     let docViewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
     docViewer.changeMaxLineBoxWidth(0);
-  },
-
-  updateReflowPref: function() {
-    this.reflowPref = Services.prefs.getBoolPref("browser.zoom.reflowOnZoom");
   },
 
   updateInputItemSizePref: function() {
@@ -185,56 +175,6 @@ EmbedHelper.prototype = {
         this.zoomMargin = tmpMargin;
       }
     } catch (e) {} /*pref is missing*/
-  },
-
-  performReflow: function performReflow() {
-    if (!this._viewportData) {
-      return;
-    }
-    let reflowMobile = false;
-    try {
-      reflowMobile = Services.prefs.getBoolPref("browser.zoom.reflowMobilePages");
-    } catch (e) {}
-    let isMobileView = this._viewportData.viewport.width == this._viewportData.cssPageRect.width;
-    if (this._viewportReadyToChange &&
-        this._viewportLastResolution != this._viewportData.resolution.width) {
-      if (isMobileView && !reflowMobile)
-        return; //dont reflow if pref not allowing reflow Mobile view pages
-      var reflowEnabled = false;
-      try {
-        reflowEnabled = Services.prefs.getBoolPref("browser.zoom.reflowOnZoom");
-      } catch (e) {}
-      let viewportWidth = this._viewportData.viewport.width;
-      let viewportHeight = this._viewportData.viewport.height;
-      let viewportWResolution = this._viewportData.resolution.width;
-
-      let viewportY = this._viewportData.y;
-      var fudge = 15 / viewportWResolution;
-      let width = viewportWidth / viewportWResolution;
-      if (!reflowEnabled) {
-        width = viewportWidth;
-      }
-      let utils = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      let webNav = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
-      let docShell = webNav.QueryInterface(Ci.nsIDocShell);
-      let docViewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
-      docViewer.changeMaxLineBoxWidth(width - 2*fudge);
-
-      let element = this._lastTarget;
-      if (reflowEnabled && element && viewportWResolution > 1) {
-        let window = element.ownerDocument.defaultView;
-        var winid = Services.embedlite.getIDByWindow(window);
-        let rect = ElementTouchHelper.getBoundingContentRect(element);
-        Services.embedlite.zoomToRect(winid,
-                                      rect.x - fudge,
-                                      viewportY + (rect.y - this._lastTargetY),
-                                      viewportWidth / viewportWResolution,
-                                      viewportHeight / viewportWResolution);
-        this._lastTarget = null;
-      }
-      this._viewportReadyToChange = false;
-      this._viewportLastResolution = this._viewportData.resolution.width;
-    }
   },
 
   _touchElement: null,
@@ -313,9 +253,6 @@ EmbedHelper.prototype = {
       }
       case "Viewport:Change": {
         this._viewportData = aMessage.data;
-        if (this._viewportLastResolution == 0 && this._viewportData != null) {
-          this._viewportLastResolution = this._viewportData.resolution.width;
-        }
 
         // Floor cssCompositedRect.height and ceil cssPageRect.height that there needs to be more than 1px difference.
         // Background reason being that TabChildHelper floors viewport x and y values.
@@ -329,7 +266,6 @@ EmbedHelper.prototype = {
           this.returnToBoundsRequested = false;
         }
 
-        this.performReflow();
         break;
       }
       case "embedui:zoomToRect": {
