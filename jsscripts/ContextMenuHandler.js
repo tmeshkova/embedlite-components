@@ -233,7 +233,6 @@ var ContextMenuHandler = {
 
           state.types.push("link");
           state.label = state.linkURL = this._getLinkURL(elem);
-          linkUrl = state.linkURL;
           state.linkTitle = popupNode.textContent || popupNode.title;
           state.linkProtocol = this._getProtocol(this._getURI(state.linkURL));
           // mark as text so we can pickup on selection below
@@ -276,11 +275,11 @@ var ContextMenuHandler = {
         } else if (Util.isText(elem)) {
           isText = true;
         } else if (elem instanceof Ci.nsIDOMHTMLMediaElement ||
-                   elem instanceof Ci.nsIDOMHTMLVideoElement) {
+                   elem instanceof targetWindow.HTMLVideoElement) {
           state.label = state.mediaURL = (elem.currentSrc || elem.src);
           state.types.push((elem.paused || elem.ended) ?
             "media-paused" : "media-playing");
-          if (elem instanceof Ci.nsIDOMHTMLVideoElement) {
+          if (elem instanceof targetWindow.HTMLVideoElement) {
             state.types.push("video");
           }
         }
