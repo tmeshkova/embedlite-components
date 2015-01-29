@@ -110,8 +110,8 @@ void EmbedTouchListener::RequestContentRepaint(const mozilla::layers::FrameMetri
     float x, y;
     mService->GetCompositedRectInCSS(aMetrics, &x, &y, &mCssCompositedRect.width, &mCssCompositedRect.height);
 
-    mCssPageRect = gfx::Rect(aMetrics.mScrollableRect.x, aMetrics.mScrollableRect.y,
-                             aMetrics.mScrollableRect.width, aMetrics.mScrollableRect.height);
+    mCssPageRect = gfx::Rect(aMetrics.GetScrollableRect().x, aMetrics.GetScrollableRect().y,
+                             aMetrics.GetScrollableRect().width, aMetrics.GetScrollableRect().height);
 
 //    LOGT("EmbedTouchListener::RequestContentRepaint mCssPageRect %g %g %g %g", mCssPageRect.x, mCssPageRect.y, mCssPageRect.width, mCssPageRect.height);
 //    LOGT("EmbedTouchListener::RequestContentRepaint Viewport %g %g %g %g", mViewport.x, mViewport.y, mViewport.width, mViewport.height);
