@@ -340,7 +340,7 @@ EmbedHelper.prototype = {
     let scaleFactor = aIsTextField ? (this.inputItemSize / this.vkbOpenCompositionMetrics.compositionHeight) / (rect.h / cssCompositionHeight) : 1.0;
 
     let margin = this.zoomMargin / scaleFactor;
-    let allowZoom = aAllowZoom && rect.height != this.inputItemSize;
+    let allowZoom = aAllowZoom && rect.h != this.inputItemSize;
 
     // Calculate new css composition bounds that will be the bounds after zooming. Top-left corner is not yet moved.
     let cssCompositedRect = new Rect(this._viewportData.x,
