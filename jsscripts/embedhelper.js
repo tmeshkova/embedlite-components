@@ -418,7 +418,7 @@ EmbedHelper.prototype = {
       rect.x = cssCompositedRect.x;
     }
 
-    if (needYAxisMoving && aIsTextField) {
+    if (needYAxisMoving) {
       if (scrollToBottom) {
         rect.y = inputRect.y + inputRect.height - fixedCurrentViewport.height + margin;
       }
