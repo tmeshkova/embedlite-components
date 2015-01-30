@@ -74,6 +74,7 @@ EmbedHelper.prototype = {
     addMessageListener("embedui:zoomToRect", this);
     // Metrics used when virtual keyboard is open/opening.
     addMessageListener("embedui:vkbOpenCompositionMetrics", this);
+    addMessageListener("embedui:vkbFullyOpen", this);
     addMessageListener("Memory:Dump", this);
     addMessageListener("Gesture:ContextMenuSynth", this);
     addMessageListener("embed:ContextMenuCreate", this);
@@ -119,8 +120,8 @@ EmbedHelper.prototype = {
 //  this.scrollToFocusedInput(browser, false);
 
 
-  scrollToFocusedInput: function(aBrowser, aAllowZoom = true) {
-    let { inputElement: inputElement, isTextField: isTextField } = this.getFocusedInput(aBrowser);
+  scrollToFocusedInput: function(aAllowZoom = true) {
+    let { inputElement: inputElement, isTextField: isTextField } = this.getFocusedInput(content);
     if (inputElement) {
       // _zoomToInput will handle not sending any message if this input is already mostly filling the screen
       this._zoomToInput(inputElement, aAllowZoom, isTextField);
@@ -177,6 +178,7 @@ EmbedHelper.prototype = {
   },
 
   _touchElement: null,
+  _isVkbOpen: false,
 
   receiveMessage: function receiveMessage(aMessage) {
     switch (aMessage.name) {
@@ -200,12 +202,10 @@ EmbedHelper.prototype = {
             this._sendMouseEvent("mousedown", element, x, y);
             this._sendMouseEvent("mouseup",   element, x, y);
 
-            // scrollToFocusedInput does its own checks to find out if an element should be zoomed into
-            let { targetWindow: targetWindow,
-                  offsetX: offsetX,
-                  offsetY: offsetY } = Util.translateToTopLevelWindow(element);
-
-            this.scrollToFocusedInput(targetWindow);
+            if (this._isVkbOpen) {
+              // scrollToFocusedInput does its own checks to find out if an element should be zoomed into
+              this.scrollToFocusedInput();
+            }
           } catch(e) {
             Cu.reportError(e);
           }
@@ -282,6 +282,13 @@ EmbedHelper.prototype = {
       case "embedui:vkbOpenCompositionMetrics": {
         if (aMessage.data) {
           this.vkbOpenCompositionMetrics = aMessage.data;
+        }
+        break;
+      }
+      case "embedui:vkbFullyOpen": {
+        this._isVkbOpen = aMessage.data.open;
+        if (this._isVkbOpen) {
+          this.scrollToFocusedInput();
         }
         break;
       }
