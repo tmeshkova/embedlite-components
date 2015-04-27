@@ -19,7 +19,7 @@ namespace embedlite {
  * This class is intended for use by the component manager and the generic
  * module.
  */
-class EmbedliteGenericFactory MOZ_FINAL : public nsIFactory
+class EmbedliteGenericFactory final : public nsIFactory
 {
   ~EmbedliteGenericFactory() {}
 

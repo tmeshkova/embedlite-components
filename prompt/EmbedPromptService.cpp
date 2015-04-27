@@ -546,7 +546,7 @@ EmbedAuthPromptService::PromptAuth(nsIChannel* aChannel,
     return NS_OK;
 }
 
-class nsAuthCancelableConsumer MOZ_FINAL : public nsICancelable
+class nsAuthCancelableConsumer final : public nsICancelable
 {
 public:
     NS_DECL_ISUPPORTS
@@ -731,7 +731,7 @@ EmbedAuthPromptService::DoSendAsyncPrompt(EmbedAsyncAuthPrompt* mPrompt)
         logins[loginIndex]->GetPassword(password);
         NS_RELEASE(logins[loginIndex]);
     }
-    nsMemory::Free(logins);
+    free(logins);
 
     uint32_t winid;
     mService->GetIDByWindow(mPrompt->mWin, &winid);
@@ -785,7 +785,7 @@ EmbedAuthPromptService::DoSendAsyncPrompt(EmbedAsyncAuthPrompt* mPrompt)
             loginMgr->RemoveLogin(logins[loginIndex]);
             NS_RELEASE(logins[loginIndex]);
         }
-        nsMemory::Free(logins);
+        free(logins);
         // store credentials to DB
         nsCOMPtr<nsILoginInfo> loginInfo = do_CreateInstance("@mozilla.org/login-manager/loginInfo;1" , &rv);
         NS_ENSURE_SUCCESS(rv, rv);

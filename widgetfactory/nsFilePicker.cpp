@@ -307,7 +307,7 @@ nsEmbedFilePicker::OnMessageReceived(const char* messageName, const char16_t* me
           }
         }
       }
-      nsMemory::Free(rawArray);
+      free(rawArray);
     }
   } else {
     NS_ERROR("Unexpected items type");
