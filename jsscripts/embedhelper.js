@@ -308,9 +308,9 @@ EmbedHelper.prototype = {
         }
 
         aMessage.data.links.forEach(function(link) {
-            let uri = Cc["@mozilla.org/network/standard-url;1"].createInstance(Ci.nsIURI);
+            let ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+            let uri = ioService.newURI(link, null, null);
             let historyEntry = Cc["@mozilla.org/browser/session-history-entry;1"].createInstance(Ci.nsISHEntry);
-            uri.spec = link;
             historyEntry.setURI(uri);
             shist.addEntry(historyEntry, true);
         });
