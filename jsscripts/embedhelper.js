@@ -299,6 +299,7 @@ EmbedHelper.prototype = {
         let webNav = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
         let docShell = webNav.QueryInterface(Ci.nsIDocShell);
         let shist = webNav.sessionHistory.QueryInterface(Ci.nsISHistoryInternal);
+        let ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
         try {
           // Initially we load the current URL and that creates an unneeded entry in History -> purge it.
@@ -308,8 +309,13 @@ EmbedHelper.prototype = {
         }
 
         aMessage.data.links.forEach(function(link) {
-            let ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-            let uri = ioService.newURI(link, null, null);
+            let uri;
+            try {
+                uri = ioService.newURI(link, null, null);
+            } catch (e) {
+                dump("Warning: no protocol provided for uri '" + link + "'\n");
+                uri = ioService.newURI("file://" + link, null, null);
+            }
             let historyEntry = Cc["@mozilla.org/browser/session-history-entry;1"].createInstance(Ci.nsISHEntry);
             historyEntry.setURI(uri);
             shist.addEntry(historyEntry, true);
@@ -317,8 +323,13 @@ EmbedHelper.prototype = {
         webNav.sessionHistory.getEntryAtIndex(aMessage.data.index, true);
         shist.updateIndex();
 
-        let initialURI = Cc["@mozilla.org/network/standard-url;1"].createInstance(Ci.nsIURI);
-        initialURI.spec = aMessage.data.links[aMessage.data.index];
+        let initialURI;
+        try {
+            initialURI = ioService.newURI(aMessage.data.links[aMessage.data.index], null, null);
+        } catch (e) {
+            dump("Warning: couldn't construct initial URI. Assuming a file:// URI is provided");
+            initialURI = ioService.newURI("file://" + aMessage.data.links[aMessage.data.index], null, null);
+        }
         docShell.setCurrentURI(initialURI);
         break;
       }
