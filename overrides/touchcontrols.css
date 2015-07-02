@@ -8,7 +8,7 @@
 .controlsOverlay {
   -moz-box-pack: center;
   -moz-box-align: end;
-  padding: 20px;
+  padding: 0px;
   -moz-box-flex: 1;
   -moz-box-orient: horizontal;
 }
@@ -17,8 +17,7 @@
   -moz-box-flex: 1;
   font-size: 16pt;
   padding: 0px 0px 10px 0px;
-  background-color: rgba(50,50,50,0.8);
-  border-radius: 8px;
+  background-color: rgba(0,0,0,0.6);
   width: 100%;
 }
 
@@ -27,25 +26,38 @@
   -moz-box-flex: 0;
 }
 
+.buttonsBar {
+  padding: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
 .fullscreenButton,
 .playButton,
 .muteButton {
   -moz-appearance: none;
   min-height: 72px;
   min-width: 72px;
+  max-height: 72px;
+  max-width: 72px;
   border: none !important;
 }
 
 .fullscreenButton {
   background: url("chrome://browser/skin/images/fullscreen-hdpi.png") no-repeat center;
+  background-size: 42px;
 }
 
 .fullscreenButton[fullscreened="true"] {
   background: url("chrome://browser/skin/images/exitfullscreen-hdpi.png") no-repeat center;
+  background-size: 42px;
 }
 
 .playButton {
   background: url("chrome://browser/skin/images/pause-hdpi.png") no-repeat center;
+  background-size: 42px;
 }
 
 /*
@@ -60,14 +72,17 @@
 
 .playButton[paused="true"] {
   background: url("chrome://browser/skin/images/play-hdpi.png") no-repeat center;
+  background-size: 42px;
 }
 
 .muteButton {
   background: url("chrome://browser/skin/images/mute-hdpi.png") no-repeat center;
+  background-size: 42px;
 }
 
 .muteButton[muted="true"] {
   background: url("chrome://browser/skin/images/unmute-hdpi.png") no-repeat center;
+  background-size: 42px;
 }
 
 /* bars */
@@ -75,8 +90,13 @@
   width: 100%;
   min-height: 32px;
   max-height: 32px;
-  padding: 0px 8px;
-  margin: 0px;
+
+  padding: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  /* Push scrubber stack content toward center, buttons have 15px paddings internally (72px button and 42px icon centered) */
+  margin-left: 40px;
+  margin-right: 40px;
 }
 
 .bufferBar,
@@ -91,11 +111,11 @@
   padding: 0px;
   margin: 0px;
   background-color: transparent;
-  border-radius: 3px;
+  border-radius: 0px;
 }
 
 .bufferBar {
-  border: 1px solid #5e6166;
+  border: 1px solid #444444;
 }
 
 .bufferBar,
@@ -105,23 +125,23 @@
 }
 
 .bufferBar .progress-bar {
-  background-color: #5e6166;
+  background-color: #444444;
 }
 
 .progressBar .progress-bar {
-  background-color: white;
+  background-color: #dadada;
 }
 
 .scrubber {
-  margin-left: -16px;
-  margin-right: -16px;
+  margin-left: -1px;
+  margin-right: -1px;
 }
 
 .scrubber .scale-thumb {
   display: -moz-box;
   margin: 0px !important;
   padding: 0px !important;
-  background: url("chrome://browser/skin/images/scrubber-hdpi.png") no-repeat;
+  background: url("chrome://browser/skin/images/scrubber-hdpi.png") no-repeat center;
   background-size: 32px 32px;
   height: 32px;
   width: 32px;
@@ -133,8 +153,12 @@
   -moz-box-align: center;
   color: white;
   font-weight: bold;
-  padding: 0px 8px;
-  margin-top: -6px;
+  padding: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  /* Push duration box toward center, buttons have 15px paddings internally (72px button and 42px icon centered) */
+  margin-right: 40px;
+  margin-left: 40px;
 }
 
 .positionLabel {
