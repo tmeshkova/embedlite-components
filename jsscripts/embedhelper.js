@@ -323,8 +323,8 @@ EmbedHelper.prototype = {
             try {
                 uri = ioService.newURI(link, null, null);
             } catch (e) {
-                dump("Warning: no protocol provided for uri '" + link + "'\n");
-                uri = ioService.newURI("file://" + link, null, null);
+                dump("Warning: no protocol provided for uri '" + link + "'. Assuming http...\n");
+                uri = ioService.newURI("http://" + link, null, null);
             }
             let historyEntry = Cc["@mozilla.org/browser/session-history-entry;1"].createInstance(Ci.nsISHEntry);
             historyEntry.setURI(uri);
@@ -337,8 +337,8 @@ EmbedHelper.prototype = {
         try {
             initialURI = ioService.newURI(aMessage.data.links[aMessage.data.index], null, null);
         } catch (e) {
-            dump("Warning: couldn't construct initial URI. Assuming a file:// URI is provided");
-            initialURI = ioService.newURI("file://" + aMessage.data.links[aMessage.data.index], null, null);
+            dump("Warning: couldn't construct initial URI. Assuming a http:// URI is provided\n");
+            initialURI = ioService.newURI("http://" + aMessage.data.links[aMessage.data.index], null, null);
         }
         docShell.setCurrentURI(initialURI);
         break;
