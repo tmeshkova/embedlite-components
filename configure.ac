@@ -54,17 +54,25 @@ AS_IF([test "x$with_system_nspr" = "xyes"],
   ])
 ])
 
+DEVEL_SUFFIX=
+AC_ARG_WITH(devel-suffix,
+[  --with-devel-suffix[[=DEVELSUFFIX]]       append DEVELSUFFIX to .pc files],[
+  if test "x$withval" != "x"; then
+    DEVEL_SUFFIX=$withval
+  fi
+])
+
 if test "$OBJ_PATH" != ""; then
 SDK_DIR=$OBJ_PATH/dist
 IDL_DIR=$OBJ_PATH/dist/idl
 ENGINE_CFLAGS="-I$OBJ_PATH/dist/include -I$OBJ_PATH/dist/include/nspr -I$OBJ_PATH/dist/include/mozilla -I$OBJ_PATH/dist/include/dom -I/usr/include/nspr4"
 ENGINE_LIBS="-L$OBJ_PATH/dist/sdk/lib -lxpcomglue_s -lxul"
 else
-PKG_CHECK_MODULES(ENGINE, libxul $NSPR,
+PKG_CHECK_MODULES(ENGINE, libxul$DEVEL_SUFFIX $NSPR,
 [
-    SDK_DIR=`pkg-config --variable=sdkdir libxul`
-    IDL_DIR=`pkg-config --variable=idldir libxul`
-    INCLUDE_DIR=`pkg-config --variable=includedir libxul`
+    SDK_DIR=`pkg-config --variable=sdkdir libxul$DEVEL_SUFFIX`
+    IDL_DIR=`pkg-config --variable=idldir libxul$DEVEL_SUFFIX`
+    INCLUDE_DIR=`pkg-config --variable=includedir libxul$DEVEL_SUFFIX`
     ENGINE_CFLAGS="$ENGINE_CFLAGS -I$INCLUDE_DIR/nspr"
 ])
 fi
