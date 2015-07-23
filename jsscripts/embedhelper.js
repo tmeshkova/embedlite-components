@@ -330,15 +330,29 @@ EmbedHelper.prototype = {
             historyEntry.setURI(uri);
             shist.addEntry(historyEntry, true);
         });
-        webNav.sessionHistory.getEntryAtIndex(aMessage.data.index, true);
+        let index = aMessage.data.index;
+        if (index < 0) {
+            dump("Warning: session history entry index out of bounds: " + index + ". Returning index 0.\n");
+            webNav.sessionHistory.getEntryAtIndex(0, true);
+            index = 0;
+        } else if (index >= webNav.sessionHistory.count) {
+            let lastIndex = webNav.sessionHistory.count - 1;
+            dump("Warning: session history entry index out of bound: " + index + ". There are " + webNav.sessionHistory.count +
+                 " item(s) in the session history. Returning index " + lastIndex + ".\n");
+            webNav.sessionHistory.getEntryAtIndex(lastIndex, true);
+            index = lastIndex;
+        } else {
+            webNav.sessionHistory.getEntryAtIndex(index, true);
+        }
+
         shist.updateIndex();
 
         let initialURI;
         try {
-            initialURI = ioService.newURI(aMessage.data.links[aMessage.data.index], null, null);
+            initialURI = ioService.newURI(aMessage.data.links[index], null, null);
         } catch (e) {
             dump("Warning: couldn't construct initial URI. Assuming a http:// URI is provided\n");
-            initialURI = ioService.newURI("http://" + aMessage.data.links[aMessage.data.index], null, null);
+            initialURI = ioService.newURI("http://" + aMessage.data.links[index], null, null);
         }
         docShell.setCurrentURI(initialURI);
         break;
