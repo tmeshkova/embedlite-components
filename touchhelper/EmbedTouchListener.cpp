@@ -260,7 +260,7 @@ EmbedTouchListener::ZoomToElement(nsIDOMElement* aElement, int aClickY, bool aCa
             zoomed = true;
         }
     }
-    else if (elementAspectRatio < viewportAspectRatio < 1) {
+    else if (elementAspectRatio < viewportAspectRatio && viewportAspectRatio < 1) {
         if ((clrect.height < mCssCompositedRect.height && aCanZoomIn) ||
             (clrect.height > mCssCompositedRect.height && aCanZoomOut) ) {
             mService->ZoomToRect(mTopWinid, clrect.x, clrect.y, clrect.width, clrect.height);
