@@ -104,3 +104,7 @@ contract @mozilla.org/network/protocol;1?name=geo {0b452f2d-c6b3-4aee-9a73-dec5a
 # RtspProtocolHandler.js
 component {d43dab24-fab1-11e3-b977-3c970e7aaa3d} RtspProtocolHandler.js
 contract @mozilla.org/network/protocol;1?name=rtsp {d43dab24-fab1-11e3-b977-3c970e7aaa3d}
+
+# Sidebar.js
+component {1a8f0aa4-2433-441f-adad-ed3ea5be4b39} Sidebar.js
+contract @mozilla.org/sidebar;1 {1a8f0aa4-2433-441f-adad-ed3ea5be4b39}
