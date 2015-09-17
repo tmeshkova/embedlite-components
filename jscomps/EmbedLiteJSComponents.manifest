@@ -26,6 +26,7 @@ category app-startup DownloadManagerUI service,@mozilla.org/download-manager-ui;
 component {e9d277a0-268a-4ec2-bb8c-10fdf3e44611} HelperAppDialog.js
 contract @mozilla.org/helperapplauncherdialog;1 {e9d277a0-268a-4ec2-bb8c-10fdf3e44611}
 
+
 # EmbedPrefService.js
 component {4c5563a0-94eb-11e2-a5f4-7f3c5758e2ae} EmbedPrefService.js
 contract @mozilla.org/embedlite-pref-service;1 {4c5563a0-94eb-11e2-a5f4-7f3c5758e2ae}
