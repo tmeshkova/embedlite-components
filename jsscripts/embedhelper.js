@@ -44,7 +44,6 @@ function EmbedHelper() {
   this.inputItemSize = 38;
   this.zoomMargin = 14;
   this.vkbOpenCompositionMetrics = null;
-  this.returnToBoundsRequested = false;
   this.inFullScreen = false;
   this.viewportChangesSinceVkbUpdate = 0;
   this._init();
@@ -250,18 +249,6 @@ EmbedHelper.prototype = {
       }
       case "Viewport:Change": {
         this._viewportData = aMessage.data;
-
-        // Floor cssCompositedRect.height and ceil cssPageRect.height that there needs to be more than 1px difference.
-        // Background reason being that TabChildHelper floors viewport x and y values.
-        if (!this.inFullScreen && !this.returnToBoundsRequested && this._viewportData.y + Math.floor(this._viewportData.cssCompositedRect.height) > Math.ceil(this._viewportData.cssPageRect.height)) {
-          let y = -this._viewportData.cssCompositedRect.height + this._viewportData.cssPageRect.height
-          var winid = Services.embedlite.getIDByWindow(content);
-          Services.embedlite.zoomToRect(winid, this._viewportData.x, y,
-                                        this._viewportData.cssCompositedRect.width, this._viewportData.cssCompositedRect.height);
-          this.returnToBoundsRequested = true;
-        } else {
-          this.returnToBoundsRequested = false;
-        }
 
         let epsilon = 0.999;
         // Facebook generates two Viewport:Change's after an input field is tapped. And only
