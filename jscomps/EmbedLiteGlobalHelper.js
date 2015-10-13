@@ -58,16 +58,20 @@ EmbedLiteGlobalHelper.prototype = {
         dump("EmbedLiteGlobalHelper app-startup\n");
         Services.obs.addObserver(this, "invalidformsubmit", false);
         Services.obs.addObserver(this, "xpcom-shutdown", false);
-        // Init LoginManager, not important for gecko > 32
+        Services.obs.addObserver(this, "profile-after-change", false);
+        break;
+      }
+      case "invalidformsubmit": {
+        dump("EmbedLiteGlobalHelper invalidformsubmit\n");
+        break;
+      }
+      case "profile-after-change": {
+        // Init LoginManager
         try {
           Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
         } catch (e) {
           dump("E login manager\n");
         }
-        break;
-      }
-      case "invalidformsubmit": {
-        dump("EmbedLiteGlobalHelper invalidformsubmit\n");
         break;
       }
       case "xpcom-shutdown": {
