@@ -13,17 +13,18 @@
   -moz-box-orient: horizontal;
 }
 
+.controlsOverlay[scaled] {
+  /* scaled attribute in videocontrols.css causes conflict
+     due to different -moz-box-orient values */
+  -moz-box-align: end;
+}
+
 .controlBar {
   -moz-box-flex: 1;
   font-size: 16pt;
   padding: 0px 0px 10px 0px;
   background-color: rgba(0,0,0,0.6);
   width: 100%;
-}
-
-.controlsSpacer {
-  display: none;
-  -moz-box-flex: 0;
 }
 
 .buttonsBar {
@@ -34,9 +35,15 @@
   margin-right: 20px;
 }
 
-.fullscreenButton,
+.controlsSpacer {
+  display: none;
+  -moz-box-flex: 0;
+}
+
 .playButton,
-.muteButton {
+.castingButton,
+.muteButton,
+.fullscreenButton {
   -moz-appearance: none;
   min-height: 72px;
   min-width: 72px;
@@ -45,33 +52,31 @@
   border: none !important;
 }
 
-.fullscreenButton {
-  background: url("chrome://browser/skin/images/fullscreen-hdpi.png") no-repeat center;
-  background-size: 42px;
-}
-
-.fullscreenButton[fullscreened="true"] {
-  background: url("chrome://browser/skin/images/exitfullscreen-hdpi.png") no-repeat center;
-  background-size: 42px;
-}
-
 .playButton {
   background: url("chrome://browser/skin/images/pause-hdpi.png") no-repeat center;
   background-size: 42px;
 }
 
-/*
- * Normally the button bar has fullscreen spacer play spacer mute, but if
- * this is an audio control rather than a video control, the fullscreen button
- * is hidden by videocontrols.xml, and that alters the position of the
- * play button.  This workaround moves it back to center.
- */
-.controlBar.audio-only .playButton {
-  transform: translateX(28px);
-}
-
 .playButton[paused="true"] {
   background: url("chrome://browser/skin/images/play-hdpi.png") no-repeat center;
+  background-size: 42px;
+}
+
+.castingButton {
+  background: url("chrome://browser/skin/images/cast-ready-hdpi.png") no-repeat center;
+  background-size: 42px;
+}
+
+.castingButton[active="true"] {
+  background: url("chrome://browser/skin/images/cast-active-hdpi.png") no-repeat center;
+  background-size: 42px;
+}
+
+/* If the casting button is showing, there will be two buttons on the right side of the controls.
+ * This shifts the play button to be centered.
+ */
+.castingButton:not([hidden="true"]) + .fullscreenButton + spacer + .playButton {
+  transform: translateX(-21px);
   background-size: 42px;
 }
 
@@ -83,6 +88,21 @@
 .muteButton[muted="true"] {
   background: url("chrome://browser/skin/images/unmute-hdpi.png") no-repeat center;
   background-size: 42px;
+}
+
+.fullscreenButton {
+  background-color: transparent;
+  background: url("chrome://browser/skin/images/fullscreen-hdpi.png") no-repeat center;
+  background-size: 42px;
+}
+
+.fullscreenButton[fullscreened] {
+  background: url("chrome://browser/skin/images/exitfullscreen-hdpi.png") no-repeat center;
+  background-size: 42px;
+}
+
+.controlBar[fullscreen-unavailable] .fullscreenButton {
+  display: none;
 }
 
 /* bars */
@@ -178,11 +198,11 @@
 }
 
 .statusIcon[type="throbber"] {
-  background: url("chrome://browser/skin/images/throbber.png") no-repeat center;
+  background: url(chrome://browser/skin/media/throbber.png) no-repeat center;
 }
 
 .statusIcon[type="error"] {
-  background: url("chrome://browser/skin/images/error.png") no-repeat center;
+  background: url(chrome://browser/skin/media/error.png) no-repeat center;
 }
 
 /* CSS Transitions */
@@ -206,12 +226,15 @@
 }
 
 .volumeStack,
-.controlBar[firstshow="true"] .fullscreenButton,
 .controlBar[firstshow="true"] .muteButton,
 .controlBar[firstshow="true"] .scrubberStack,
 .controlBar[firstshow="true"] .durationBox,
 .timeLabel {
   display: none;
+}
+
+.controlBar[firstshow="true"] .playButton {
+  -moz-transform: none;
 }
 
 /* Error description formatting */
