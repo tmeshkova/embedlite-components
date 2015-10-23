@@ -347,7 +347,7 @@ EmbedHelper.prototype = {
       case "Memory:Dump": {
         if (aMessage.data && aMessage.data.fileName) {
             let memDumper = Cc["@mozilla.org/memory-info-dumper;1"].getService(Ci.nsIMemoryInfoDumper);
-            memDumper.dumpMemoryReportsToNamedFile(aMessage.data.fileName, null, null);
+            memDumper.dumpMemoryReportsToNamedFile(aMessage.data.fileName, null, null, false);
         }
         break;
       }
