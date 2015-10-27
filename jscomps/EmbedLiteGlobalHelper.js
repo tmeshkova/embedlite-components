@@ -8,6 +8,7 @@ const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/LoginManagerParent.jsm");
 
 // Common helper service
 
@@ -72,6 +73,7 @@ EmbedLiteGlobalHelper.prototype = {
         } catch (e) {
           dump("E login manager\n");
         }
+        LoginManagerParent.init();
         break;
       }
       case "xpcom-shutdown": {
