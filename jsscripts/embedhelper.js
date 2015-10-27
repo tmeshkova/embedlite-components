@@ -31,21 +31,24 @@ XPCOMUtils.defineLazyServiceGetter(Services, "embedlite",
 dump("###################################### embedhelper.js loaded\n");
 
 var globalObject = null;
+var gScreenWidth = 0;
+var gScreenHeight = 0;
 
 const kEmbedStateActive = 0x00000001; // :active pseudoclass for elements
 
 function fuzzyEquals(a, b) {
-  return (Math.abs(a - b) < 0.01);
+  return (Math.abs(a - b) < 0.999);
 }
 
 function EmbedHelper() {
   this.contentDocumentIsDisplayed = true;
   // Reasonable default. Will be read from preferences.
   this.inputItemSize = 38;
+  this.inputZoomed = false;
   this.zoomMargin = 14;
+  this.vkbOpen = false;
   this.vkbOpenCompositionMetrics = null;
   this.inFullScreen = false;
-  this.viewportChangesSinceVkbUpdate = 0;
   this._init();
 }
 
@@ -57,6 +60,9 @@ EmbedHelper.prototype = {
   _init: function()
   {
     dump("Init Called:" + this + "\n");
+
+    ViewportHandler.init();
+
     addEventListener("touchstart", this, true);
     addEventListener("touchmove", this, true);
     addEventListener("touchend", this, true);
@@ -113,18 +119,12 @@ EmbedHelper.prototype = {
     return { inputElement: null, isTextField: false };
   },
 
-//  // observe this
-//  case "ScrollTo:FocusedInput":
-//  // these messages come from a change in the viewable area and not user interaction
-//  // we allow scrolling to the selected input, but not zooming the page
-//  this.scrollToFocusedInput(browser, false);
-
-
-  scrollToFocusedInput: function(aAllowZoom = true) {
+  scrollToFocusedInput: function() {
     let { inputElement: inputElement, isTextField: isTextField } = this.getFocusedInput(content);
-    if (inputElement) {
+    if (inputElement && this.isVirtualKeyboardOpen()) {
+      let viewportMetadata = ViewportHandler.getViewportMetadata(content);
       // _zoomToInput will handle not sending any message if this input is already mostly filling the screen
-      this._zoomToInput(inputElement, aAllowZoom, isTextField);
+      this._zoomToInput(inputElement, viewportMetadata.allowZoom, isTextField);
     }
   },
 
@@ -147,6 +147,7 @@ EmbedHelper.prototype = {
     }
   },
 
+  _previousViewportData: null,
   _viewportData: null,
   _viewportReadyToChange: false,
   _lastTarget: null,
@@ -197,15 +198,11 @@ EmbedHelper.prototype = {
         if (element) {
           try {
             let [x, y] = [aMessage.json.x, aMessage.json.y];
-
             this._sendMouseEvent("mousemove", element, x, y);
             this._sendMouseEvent("mousedown", element, x, y);
             this._sendMouseEvent("mouseup",   element, x, y);
-
             // scrollToFocusedInput does its own checks to find out if an element should be zoomed into
-            if (this.vkbOpenCompositionMetrics.imOpen) {
-              this.scrollToFocusedInput();
-            }
+            this.scrollToFocusedInput();
           } catch(e) {
             Cu.reportError(e);
           }
@@ -248,17 +245,11 @@ EmbedHelper.prototype = {
         break;
       }
       case "Viewport:Change": {
+        this._previousViewportData = this._viewportData
         this._viewportData = aMessage.data;
 
-        let epsilon = 0.999;
-        // Facebook generates two Viewport:Change's after an input field is tapped. And only
-        // the second one is valid because Facebook's JS makes the page longer after the tap.
-        let maxViewportChanges = 2;
-        if (this.vkbOpenCompositionMetrics && this.vkbOpenCompositionMetrics.imOpen &&
-            (this.viewportChangesSinceVkbUpdate <= maxViewportChanges) &&
-            Math.abs((this._viewportData.cssCompositedRect.height * this.vkbOpenCompositionMetrics.resolution) - this.vkbOpenCompositionMetrics.compositionHeight) < epsilon) {
-              this.scrollToFocusedInput();
-              this.viewportChangesSinceVkbUpdate = this.viewportChangesSinceVkbUpdate + 1;
+        if (!this.inputZoomed) {
+          this.scrollToFocusedInput();
         }
         break;
       }
@@ -286,7 +277,14 @@ EmbedHelper.prototype = {
       case "embedui:vkbOpenCompositionMetrics": {
         if (aMessage.data) {
           this.vkbOpenCompositionMetrics = aMessage.data;
-          this.viewportChangesSinceVkbUpdate = 0;
+          if (this.vkbOpenCompositionMetrics.imOpen) {
+            gScreenWidth = this.vkbOpenCompositionMetrics.screenWidth;
+            gScreenHeight = this.vkbOpenCompositionMetrics.screenHeight;
+            this.scrollToFocusedInput();
+          } else {
+            this.inputZoomed = false;
+            this.vkbOpen = false;
+          }
         }
         break;
       }
@@ -358,6 +356,7 @@ EmbedHelper.prototype = {
     }
   },
 
+
   _rectVisibility: function(aSourceRect, aViewportRect) {
     let vRect = aViewportRect ? aViewportRect : new Rect(this._viewportData.x,
                                                          this._viewportData.y,
@@ -371,44 +370,43 @@ EmbedHelper.prototype = {
   },
 
   _zoomToInput: function(aElement, aAllowZoom = true, aIsTextField = true) {
-    // For possible error cases
-    if (!this._viewportData)
+    if (!this.vkbOpenCompositionMetrics || !this.vkbOpenCompositionMetrics.imOpen || !this._viewportData) {
       return;
+    }
 
     // Combination of browser.js _zoomToElement and special zoom logic
     let rect = ElementTouchHelper.getBoundingContentRect(aElement);
 
     // Rough cssCompositionHeight as virtual keyboard is not yet raised (upper half).
-    let cssCompositionHeight = this._viewportData.cssCompositedRect.height / 2;
-    let maxCssCompositionWidth = this._viewportData.cssCompositedRect.width;
+    let availableHeight = gScreenHeight - this.vkbOpenCompositionMetrics.bottomMargin;
+    let cssCompositionHeight = availableHeight / content.devicePixelRatio;
+
+    let maxCssCompositionWidth = gScreenWidth / content.devicePixelRatio;
     let maxCssCompositionHeight = cssCompositionHeight;
 
-    if (this.vkbOpenCompositionMetrics && this.vkbOpenCompositionMetrics.imOpen) {
-        maxCssCompositionWidth = this.vkbOpenCompositionMetrics.maxCssCompositionWidth;
-        maxCssCompositionHeight = this.vkbOpenCompositionMetrics.maxCssCompositionHeight;
-        let currentCssCompositedHeight = this._viewportData.cssCompositedRect.height
-        // Are equal if vkb is already open and content is not pinched after vkb opening. It does not
-        // matter if currentCssCompositedHeight happens to match target before vkb has been opened.
-        if (maxCssCompositionHeight != currentCssCompositedHeight) {
-          cssCompositionHeight = this.vkbOpenCompositionMetrics.compositionHeight / this._viewportData.resolution.width;
-        } else {
-          cssCompositionHeight = currentCssCompositedHeight;
-        }
+    let currentCssCompositedHeight = this._viewportData.cssCompositedRect.height
+    // Are equal if vkb is already open and content is not pinched after vkb opening. It does not
+    // matter if currentCssCompositedHeight happens to match target before vkb has been opened.
+    if (maxCssCompositionHeight != currentCssCompositedHeight) {
+      let resolution = this._viewportData.cssPageRect.width / this._viewportData.cssCompositedRect.width;
+      cssCompositionHeight = (gScreenHeight - this.vkbOpenCompositionMetrics.bottomMargin) / resolution;
+    } else {
+      cssCompositionHeight = currentCssCompositedHeight;
     }
+
     // TODO / Missing: handle maximum zoom level and respect viewport meta tag
-    let scaleFactor = aIsTextField ? (this.inputItemSize / this.vkbOpenCompositionMetrics.compositionHeight) / (rect.h / cssCompositionHeight) : 1.0;
+    let scaleFactor = aIsTextField ? (this.inputItemSize / availableHeight) / (rect.h / cssCompositionHeight) : 1.0;
 
     let margin = this.zoomMargin / scaleFactor;
-    let allowZoom = aAllowZoom && rect.h != this.inputItemSize;
-
     // Calculate new css composition bounds that will be the bounds after zooming. Top-left corner is not yet moved.
     let cssCompositedRect = new Rect(this._viewportData.x,
                                     this._viewportData.y,
                                     this._viewportData.cssCompositedRect.width,
                                     cssCompositionHeight);
+
     let bRect = new Rect(Util.clamp(rect.x - margin, 0, this._viewportData.cssPageRect.width - rect.w),
                         Util.clamp(rect.y - margin, 0, this._viewportData.cssPageRect.height - rect.h),
-                        allowZoom ? rect.w + 2 * margin : this._viewportData.viewport.width,
+                        aAllowZoom ? rect.w + 2 * margin : this._viewportData.viewport.width,
                         rect.h);
 
     // constrict the rect to the screen's right edge
@@ -448,11 +446,6 @@ EmbedHelper.prototype = {
       let moveToZero = new Rect(0, fixedCurrentViewport.y, fixedCurrentViewport.width, fixedCurrentViewport.height);
       let zeroNeedsMoving = this._testXMovement(inputRect, moveToZero);
       if (!zeroNeedsMoving) {
-        if (cssCompositedRect.x === 0) {
-          rect.x = 1;
-        } else {
-          rect.x = 0;
-        }
         xUpdated = true;
         needXAxisMoving = false;
       }
@@ -492,8 +485,16 @@ EmbedHelper.prototype = {
     rect.w = fixedCurrentViewport.width;
     rect.h = fixedCurrentViewport.height;
 
-    var winid = Services.embedlite.getIDByWindow(content);
-    Services.embedlite.zoomToRect(winid, rect.x, rect.y, rect.w, rect.h);
+    // Are we really zooming.
+    aAllowZoom = !fuzzyEquals(rect.w, this._viewportData.cssCompositedRect.width)
+
+    if (aAllowZoom) {
+      var winid = Services.embedlite.getIDByWindow(content);
+      Services.embedlite.zoomToRect(winid, rect.x, rect.y, rect.w, rect.h);
+    } else {
+      content.scrollTo(rect.x, rect.y);
+    }
+    this.inputZoomed = true;
   },
 
   // Move y-axis to viewport area and test if element is visible.
@@ -650,23 +651,56 @@ EmbedHelper.prototype = {
     this._highlightElement = null;
   },
 
+  isVirtualKeyboardOpen: function() {
+    if (this.vkbOpen) {
+      return this.vkbOpen;
+    }
+
+    if (this.vkbOpenCompositionMetrics && this.vkbOpenCompositionMetrics.imOpen &&
+        this._previousViewportData && this._viewportData) {
+      let oldVpWidth = this._previousViewportData.viewport.width;
+      let oldVpHeight = this._previousViewportData.viewport.height;
+
+      let vpWidth = this._viewportData.viewport.width;
+      let vpHeight = this._viewportData.viewport.height;
+
+      let scaleFactor = vpWidth / (gScreenWidth / content.devicePixelRatio);
+      oldVpHeight = oldVpHeight / scaleFactor;
+      vpHeight = vpHeight / scaleFactor;
+
+      this.vkbOpen = fuzzyEquals(oldVpHeight - vpHeight, this.vkbOpenCompositionMetrics.bottomMargin / 2);
+      return this.vkbOpen;
+    }
+    return false;
+  },
+
   _dumpViewport: function() {
-    if (this._viewportData != null) {
-      dump("--------------- Viewport data ----------------------- \n")
-      for (var i in this._viewportData) {
-        if (typeof(this._viewportData[i]) == "object") {
-          for (var j in this._viewportData[i]) {
-            dump("   " + i + " " + j + ": " + this._viewportData[i][j] + "\n")
+    dump("--------------- Viewport data ----------------------- \n")
+    this._dumpObject(this._viewportData)
+    dump("--------------- Viewport data dumpped --------------- \n")
+  },
+
+  _dumpVkbMetrics: function() {
+    dump("--------------- Vkb metrics ----------------------- \n")
+    this._dumpObject(this.vkbOpenCompositionMetrics)
+    dump("--------------- Vkb metrics dumpped --------------- \n")
+  },
+
+  _dumpObject: function(object) {
+    if (object) {
+      for (var i in object) {
+        if (typeof(object[i]) == "object") {
+          for (var j in object[i]) {
+            dump("   " + i + " " + j + ": " + object[i][j] + "\n")
           }
         } else {
-          dump("viewport data object: " + i + ": " + this._viewportData[i] + "\n")
+          dump(i + ": " + object[i] + "\n")
         }
       }
-      dump("--------------- Viewport data dumpped --------------- \n")
     } else {
       dump("Nothing to dump\n")
     }
-  },
+  }
 };
 
 const ElementTouchHelper = {
@@ -698,6 +732,179 @@ const ElementTouchHelper = {
             y: r.top + scrollY.value,
             w: r.width,
             h: r.height };
+  }
+};
+
+
+// Blindly copied from Safari documentation for now.
+const kViewportMinScale  = 0;
+const kViewportMaxScale  = 10;
+const kViewportMinWidth  = 200;
+const kViewportMaxWidth  = 10000;
+const kViewportMinHeight = 223;
+const kViewportMaxHeight = 10000;
+
+var ViewportHandler = {
+  // The cached viewport metadata for each document. We tie viewport metadata to each document
+  // instead of to each tab so that we don't have to update it when the document changes. Using an
+  // ES6 weak map lets us avoid leaks.
+  _metadata: new WeakMap(),
+  _zoom: 1.0,
+
+  init: function init() {
+  },
+
+  update: function(viewport) {
+    if (viewport) {
+      this._zoom = viewport.cssPageRect.width / viewport.cssCompositedRect.width;
+    } else {
+      dump("Updated with an invalid viewport")
+    }
+  },
+
+  get zoomLevel() {
+    return this._zoom;
+  },
+
+  /**
+   * Returns the ViewportMetadata object.
+   */
+  getViewportMetadata: function getViewportMetadata(aWindow) {
+    let windowUtils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+
+    // viewport details found here
+    // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html
+    // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariWebContent/UsingtheViewport/UsingtheViewport.html
+
+    // Note: These values will be NaN if parseFloat or parseInt doesn't find a number.
+    // Remember that NaN is contagious: Math.max(1, NaN) == Math.min(1, NaN) == NaN.
+    let hasMetaViewport = true;
+    let scale = parseFloat(windowUtils.getDocumentMetadata("viewport-initial-scale"));
+    let minScale = parseFloat(windowUtils.getDocumentMetadata("viewport-minimum-scale"));
+    let maxScale = parseFloat(windowUtils.getDocumentMetadata("viewport-maximum-scale"));
+
+    let widthStr = windowUtils.getDocumentMetadata("viewport-width");
+    let heightStr = windowUtils.getDocumentMetadata("viewport-height");
+    let width = this.clamp(parseInt(widthStr), kViewportMinWidth, kViewportMaxWidth) || 0;
+    let height = this.clamp(parseInt(heightStr), kViewportMinHeight, kViewportMaxHeight) || 0;
+
+    // Allow zoom unless explicity disabled or minScale and maxScale are equal.
+    // WebKit allows 0, "no", or "false" for viewport-user-scalable.
+    // Note: NaN != NaN. Therefore if minScale and maxScale are undefined the clause has no effect.
+    let allowZoomStr = windowUtils.getDocumentMetadata("viewport-user-scalable");
+    let allowZoom = !/^(0|no|false)$/.test(allowZoomStr) && (minScale != maxScale);
+
+    // Double-tap should always be disabled if allowZoom is disabled. So we initialize
+    // allowDoubleTapZoom to the same value as allowZoom and have additional conditions to
+    // disable it in updateViewportSize.
+    let allowDoubleTapZoom = allowZoom;
+
+    let autoSize = true;
+
+    if (isNaN(scale) && isNaN(minScale) && isNaN(maxScale) && allowZoomStr == "" && widthStr == "" && heightStr == "") {
+      // Only check for HandheldFriendly if we don't have a viewport meta tag
+      let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
+      if (handheldFriendly == "true") {
+        return new ViewportMetadata({
+          defaultZoom: 1,
+          autoSize: true,
+          allowZoom: true,
+          allowDoubleTapZoom: false
+        });
+      }
+
+      let doctype = aWindow.document.doctype;
+      if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId)) {
+        return new ViewportMetadata({
+          defaultZoom: 1,
+          autoSize: true,
+          allowZoom: true,
+          allowDoubleTapZoom: false
+        });
+      }
+
+      hasMetaViewport = false;
+    }
+
+    scale = this.clamp(scale, kViewportMinScale, kViewportMaxScale);
+    minScale = this.clamp(minScale, kViewportMinScale, kViewportMaxScale);
+    maxScale = this.clamp(maxScale, (isNaN(minScale) ? kViewportMinScale : minScale), kViewportMaxScale);
+    if (autoSize) {
+      // If initial scale is 1.0 and width is not set, assume width=device-width
+      autoSize = (widthStr == "device-width" ||
+                  (!widthStr && (heightStr == "device-height" || scale == 1.0)));
+    }
+
+    let isRTL = aWindow.document.documentElement.dir == "rtl";
+
+    return new ViewportMetadata({
+      defaultZoom: scale,
+      minZoom: minScale,
+      maxZoom: maxScale,
+      width: width,
+      height: height,
+      autoSize: autoSize,
+      allowZoom: allowZoom,
+      allowDoubleTapZoom: allowDoubleTapZoom,
+      isSpecified: hasMetaViewport,
+      isRTL: isRTL
+    });
+  },
+
+  clamp: function(num, min, max) {
+    return Math.max(min, Math.min(max, num));
+  },
+};
+
+/**
+ * An object which represents the page's preferred viewport properties:
+ *   width (int): The CSS viewport width in px.
+ *   height (int): The CSS viewport height in px.
+ *   defaultZoom (float): The initial scale when the page is loaded.
+ *   minZoom (float): The minimum zoom level.
+ *   maxZoom (float): The maximum zoom level.
+ *   autoSize (boolean): Resize the CSS viewport when the window resizes.
+ *   allowZoom (boolean): Let the user zoom in or out.
+ *   allowDoubleTapZoom (boolean): Allow double-tap to zoom in.
+ *   isSpecified (boolean): Whether the page viewport is specified or not.
+ */
+function ViewportMetadata(aMetadata = {}) {
+  this.width = ("width" in aMetadata) ? aMetadata.width : 0;
+  this.height = ("height" in aMetadata) ? aMetadata.height : 0;
+  this.defaultZoom = ("defaultZoom" in aMetadata) ? aMetadata.defaultZoom : 0;
+  this.minZoom = ("minZoom" in aMetadata) ? aMetadata.minZoom : 0;
+  this.maxZoom = ("maxZoom" in aMetadata) ? aMetadata.maxZoom : 0;
+  this.autoSize = ("autoSize" in aMetadata) ? aMetadata.autoSize : false;
+  this.allowZoom = ("allowZoom" in aMetadata) ? aMetadata.allowZoom : true;
+  this.allowDoubleTapZoom = ("allowDoubleTapZoom" in aMetadata) ? aMetadata.allowDoubleTapZoom : true;
+  this.isSpecified = ("isSpecified" in aMetadata) ? aMetadata.isSpecified : false;
+  this.isRTL = ("isRTL" in aMetadata) ? aMetadata.isRTL : false;
+  Object.seal(this);
+}
+
+ViewportMetadata.prototype = {
+  width: null,
+  height: null,
+  defaultZoom: null,
+  minZoom: null,
+  maxZoom: null,
+  autoSize: null,
+  allowZoom: null,
+  allowDoubleTapZoom: null,
+  isSpecified: null,
+  isRTL: null,
+
+  toString: function() {
+    return "width=" + this.width
+         + "; height=" + this.height
+         + "; defaultZoom=" + this.defaultZoom
+         + "; minZoom=" + this.minZoom
+         + "; maxZoom=" + this.maxZoom
+         + "; autoSize=" + this.autoSize
+         + "; allowZoom=" + this.allowZoom
+         + "; allowDoubleTapZoom=" + this.allowDoubleTapZoom
+         + "; isSpecified=" + this.isSpecified
+         + "; isRTL=" + this.isRTL;
   }
 };
 
