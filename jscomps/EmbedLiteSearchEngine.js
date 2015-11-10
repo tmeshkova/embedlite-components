@@ -18,31 +18,32 @@ function EmbedLiteSearchEngine()
 EmbedLiteSearchEngine.prototype = {
   classID: Components.ID("{924fe7ba-afa1-11e2-9d4f-533572064b73}"),
 
+  _handleSearchEngineInit: function(rv, all) {
+    if (!Components.isSuccessCode(rv)) {
+      Cu.reportError("Could not initialize search service, bailing out.");
+      return;
+    }
+
+    let engines = Services.search.getEngines({})
+    let engineNames = engines.map(function (element) {
+      return element.name;
+    });
+    let enginesAvailable = (engines && engines.length > 0);
+    var messg = {
+      msg: "load",
+      engines: engineNames,
+      defaultEngine: enginesAvailable && Services.search.defaultEngine ?
+                       Services.search.defaultEngine.name : null
+    }
+    Services.obs.notifyObservers(null, "embed:search", JSON.stringify(messg));
+  },
+
   observe: function (aSubject, aTopic, aData) {
     switch(aTopic) {
       // Engine DownloadManager notifications
       case "app-startup": {
         Services.obs.addObserver(this, "xpcom-shutdown", true);
         Services.obs.addObserver(this, "embedui:search", true);
-        Services.obs.addObserver(this, "embedliteInitialized", true);
-        break;
-      }
-      case "embedliteInitialized": {
-        Services.obs.removeObserver(this, "embedliteInitialized");
-        Services.search.init(function addEngine_cb(rv) {
-            let engines = Services.search.getEngines({});
-            let engineNames = engines.map(function (element) {
-              return element.name;
-            });
-            let enginesAvailable = (engines && engines.length > 0);
-            var messg = {
-              msg: "init",
-              engines: engineNames,
-              defaultEngine: enginesAvailable && Services.search.defaultEngine ?
-                Services.search.defaultEngine.name : null
-            }
-            Services.obs.notifyObservers(null, "embed:search", JSON.stringify(messg));
-        });
         break;
       }
       case "embedui:search": {
@@ -50,6 +51,10 @@ EmbedLiteSearchEngine.prototype = {
         switch (data.msg) {
           case "loadxml": {
             Services.search.addEngine(data.uri, Ci.nsISearchEngine.DATA_XML, null, data.confirm);
+            break;
+          }
+          case "init": {
+            Services.search.init(this._handleSearchEngineInit.bind(this));
             break;
           }
           case "restoreDefault": {
