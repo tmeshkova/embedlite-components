@@ -3,7 +3,7 @@ Summary:    EmbedLite components Qt5
 Version:    1.0.0
 Release:    1
 Group:      Applications/Internet
-License:    Mozilla License
+License:    MPLv2
 URL:        https://github.com/tmeshkova/embedlite-components
 Source0:    %{name}-%{version}.tar.bz2
 BuildRequires:  xulrunner-qt5-devel
