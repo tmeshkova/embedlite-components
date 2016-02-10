@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+
 let Util = {
   /*
    * General purpose utilities
@@ -9,26 +12,6 @@ let Util = {
 
   getWindowUtils: function getWindowUtils(aWindow) {
     return aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-  },
-
-  // Recursively find all documents, including root document.
-  getAllDocuments: function getAllDocuments(doc, resultSoFar) {
-    resultSoFar = resultSoFar || [doc];
-    if (!doc.defaultView)
-      return resultSoFar;
-    let frames = doc.defaultView.frames;
-    if (!frames)
-      return resultSoFar;
-
-    let i;
-    let currentDoc;
-    for (i = 0; i < frames.length; i++) {
-      currentDoc = frames[i].document;
-      resultSoFar.push(currentDoc);
-      this.getAllDocuments(currentDoc, resultSoFar);
-    }
-
-    return resultSoFar;
   },
 
   // Put the Mozilla networking code into a state that will kick the
@@ -126,14 +109,6 @@ let Util = {
    * Element utilities
    */
 
-  highlightElement: function highlightElement(aElement) {
-    if (aElement == null) {
-      this.dumpLn("aElement is null");
-      return;
-    }
-    aElement.style.border = "2px solid red";
-  },
-
   transitionElementVisibility: function(aNodes, aVisible) {
     // accept single node or a collection of nodes
     aNodes = aNodes.length ? aNodes : [aNodes];
@@ -161,28 +136,50 @@ let Util = {
     return defd.promise;
   },
 
-  getHrefForElement: function getHrefForElement(target) {
-    let link = null;
-    while (target) {
-      if (target instanceof Ci.nsIDOMHTMLAnchorElement ||
-          target instanceof Ci.nsIDOMHTMLAreaElement ||
-          target instanceof Ci.nsIDOMHTMLLinkElement) {
-          if (target.hasAttribute("href"))
-            link = target;
-      }
-      target = target.parentNode;
-    }
-
-    if (link && link.hasAttribute("href"))
-      return link.href;
-    else
-      return null;
-  },
-
   isTextInput: function isTextInput(aElement) {
     return ((aElement instanceof Ci.nsIDOMHTMLInputElement &&
              aElement.mozIsTextField(false)) ||
             aElement instanceof Ci.nsIDOMHTMLTextAreaElement);
+  },
+
+  /**
+   * Checks whether aElement's content can be edited either if it(or any of its
+   * parents) has "contenteditable" attribute set to "true" or aElement's
+   * ownerDocument is in design mode.
+   */
+  isEditableContent: function isEditableContent(aElement) {
+    return !!aElement && (aElement.isContentEditable ||
+                          this.isOwnerDocumentInDesignMode(aElement));
+
+  },
+
+  isEditable: function isEditable(aElement) {
+    if (!aElement) {
+      return false;
+    }
+
+    if (this.isTextInput(aElement) || this.isEditableContent(aElement)) {
+      return true;
+    }
+
+    // If a body element is editable and the body is the child of an
+    // iframe or div we can assume this is an advanced HTML editor
+    if ((aElement instanceof Ci.nsIDOMHTMLIFrameElement ||
+         aElement instanceof Ci.nsIDOMHTMLDivElement) &&
+        aElement.contentDocument &&
+        this.isEditableContent(aElement.contentDocument.body)) {
+      return true;
+    }
+
+    return false;
+  },
+
+  /**
+   * Checks whether aElement's owner document has design mode turned on.
+   */
+  isOwnerDocumentInDesignMode: function(aElement) {
+    return !!aElement && !!aElement.ownerDocument &&
+           aElement.ownerDocument.designMode == "on";
   },
 
   isMultilineInput: function isMultilineInput(aElement) {
@@ -250,6 +247,18 @@ let Util = {
   },
 
   /*
+   * DownloadUtils.convertByteUnits returns [size, localized-unit-string]
+   * so they are joined for a single download size string.
+   */
+  getDownloadSize: function dv__getDownloadSize (aSize) {
+    let [size, units] = DownloadUtils.convertByteUnits(aSize);
+    if (aSize > 0)
+      return size + units;
+    else
+      return Strings.browser.GetStringFromName("downloadsUnknownSize");
+  },
+
+  /*
    * URIs and schemes
    */
 
@@ -270,23 +279,14 @@ let Util = {
             aURL.indexOf("chrome:") == 0);
   },
 
-  isOpenableScheme: function isShareableScheme(aProtocol) {
-    let dontOpen = /^(mailto|javascript|news|snews)$/;
-    return (aProtocol && !dontOpen.test(aProtocol));
-  },
-
-  isShareableScheme: function isShareableScheme(aProtocol) {
-    let dontShare = /^(chrome|about|file|javascript|resource)$/;
-    return (aProtocol && !dontShare.test(aProtocol));
-  },
-
   // Don't display anything in the urlbar for these special URIs.
   isURLEmpty: function isURLEmpty(aURL) {
     return (!aURL ||
             aURL == "about:blank" ||
             aURL == "about:empty" ||
             aURL == "about:home" ||
-            aURL == "about:start");
+            aURL == "about:newtab" ||
+            aURL.startsWith("about:newtab"));
   },
 
   // Title to use for emptyURL tabs.
@@ -344,66 +344,41 @@ let Util = {
     return this.displayDPI = this.getWindowUtils(window).displayDPI;
   },
 
-  isPortrait: function isPortrait() {
-    return (window.innerWidth <= window.innerHeight);
-  },
-
-  LOCALE_DIR_RTL: -1,
-  LOCALE_DIR_LTR: 1,
-  get localeDir() {
-    // determine browser dir first to know which direction to snap to
-    let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
-    return chromeReg.isLocaleRTL("global") ? this.LOCALE_DIR_RTL : this.LOCALE_DIR_LTR;
-  },
-
   /*
-   * Process utilities
+   * aViewHeight - the height of the viewable area in the browser
+   * aRect - a bounding rectangle of a selection or element.
+   *
+   * return - number of pixels for the browser to be shifted up by such
+   * that aRect is centered vertically within aViewHeight.
    */
+  centerElementInView: function centerElementInView(aViewHeight, aRect) {
+    // If the bottom of the target bounds is higher than the new height,
+    // there's no need to adjust. It will be above the keyboard.
+    if (aRect.bottom <= aViewHeight) {
+      return 0;
+    }
 
-  isParentProcess: function isInParentProcess() {
-    let appInfo = Cc["@mozilla.org/xre/app-info;1"];
-    return (!appInfo || appInfo.getService(Ci.nsIXULRuntime).processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT);
-  },
+    // height of the target element
+    let targetHeight = aRect.bottom - aRect.top;
+    // height of the browser view.
+    let viewBottom = content.innerHeight;
 
-  /*
-   * Event utilities
-   */
-
-  modifierMaskFromEvent: function modifierMaskFromEvent(aEvent) {
-    return (aEvent.altKey   ? Ci.nsIDOMEvent.ALT_MASK     : 0) |
-           (aEvent.ctrlKey  ? Ci.nsIDOMEvent.CONTROL_MASK : 0) |
-           (aEvent.shiftKey ? Ci.nsIDOMEvent.SHIFT_MASK   : 0) |
-           (aEvent.metaKey  ? Ci.nsIDOMEvent.META_MASK    : 0);
-  },
-
-  /*
-   * Download utilities
-   */
-
-  insertDownload: function insertDownload(aSrcUri, aFile) {
-    let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-    let db = dm.DBConnection;
-
-    let stmt = db.createStatement(
-      "INSERT INTO moz_downloads (name, source, target, startTime, endTime, state, referrer) " +
-      "VALUES (:name, :source, :target, :startTime, :endTime, :state, :referrer)"
-    );
-
-    stmt.params.name = aFile.leafName;
-    stmt.params.source = aSrcUri.spec;
-    stmt.params.target = aFile.path;
-    stmt.params.startTime = Date.now() * 1000;
-    stmt.params.endTime = Date.now() * 1000;
-    stmt.params.state = Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED;
-    stmt.params.referrer = aSrcUri.spec;
-
-    stmt.execute();
-    stmt.finalize();
-
-    let newItemId = db.lastInsertRowID;
-    let download = dm.getDownload(newItemId);
-    //dm.resumeDownload(download);
-    //Services.obs.notifyObservers(download, "dl-start", null);
+    // If the target is shorter than the new content height, we can go ahead
+    // and center it.
+    if (targetHeight <= aViewHeight) {
+      // Try to center the element vertically in the new content area, but
+      // don't position such that the bottom of the browser view moves above
+      // the top of the chrome. We purposely do not resize the browser window
+      // by making it taller when trying to center elements that are near the
+      // lower bounds. This would trigger reflow which can cause content to
+      // shift around.
+      let splitMargin = Math.round((aViewHeight - targetHeight) * .5);
+      let distanceToPageBounds = viewBottom - aRect.bottom;
+      let distanceFromChromeTop = aRect.bottom - aViewHeight;
+      let distanceToCenter =
+        distanceFromChromeTop + Math.min(distanceToPageBounds, splitMargin);
+      return distanceToCenter;
+    }
   },
 
   /*
@@ -502,3 +477,4 @@ Util.Timeout.prototype = {
   }
 };
 
+this.Util = Util;
