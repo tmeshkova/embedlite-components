@@ -25,10 +25,22 @@ UserAgentOverrideHelper.prototype = {
       // Engine DownloadManager notifications
       case "app-startup": {
         dump("UserAgentOverrideHelper app-startup\n");
-        UserAgent.init();
+        Services.obs.addObserver(this, "embedliteviewcreated", true);
         Services.obs.addObserver(this, "xpcom-shutdown", false);
+        Services.prefs.addObserver("general.useragent.override", this, false);
         break;
       }
+      case "nsPref:changed": {
+        if (aData == "general.useragent.override") {
+          UserAgent.init();
+        }
+        break;
+      }
+      case "embedliteviewcreated": {
+        UserAgent.init();
+        break;
+      }
+
       case "xpcom-shutdown": {
         dump("UserAgentOverrideHelper xpcom-shutdown\n");
         Services.obs.removeObserver(this, "xpcom-shutdown", false);
@@ -38,29 +50,30 @@ UserAgentOverrideHelper.prototype = {
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference, Ci.nsIFormSubmitObserver])
+  getUserAgentForURIAndWindow: function ssua_getUserAgentForURIAndWindow(aURI, aWindow) {
+    return UserAgent.getUserAgentForWindow(aURI, aWindow)
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISiteSpecificUserAgent, Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference, Ci.nsIFormSubmitObserver])
 };
 
 var UserAgent = {
   _desktopMode: false,
+  _customUA: null,
+  overrideMap: new Map,
+  initilized: false,
   DESKTOP_UA: null,
   GOOGLE_DOMAIN: /(^|\.)google\.com$/,
   GOOGLE_MAPS_DOMAIN: /(^|\.)maps\.google\.com$/,
   YOUTUBE_DOMAIN: /(^|\.)youtube\.com$/,
   NOKIA_HERE_DOMAIN: /(^|\.)here\.com$/,
-  _customUA: null,
-
-  getCustomUserAgent: function() {
-    if (Services.prefs.prefHasUserValue("general.useragent.override")) {
-      let ua = Services.prefs.getCharPref("general.useragent.override");
-      return ua;
-    }
-    else {
-      return null;
-    }
-  },
 
   init: function ua_init() {
+    if (this.initilized) {
+      return
+    }
+
     Services.obs.addObserver(this, "DesktopMode:Change", false);
     Services.prefs.addObserver("general.useragent.override", this, false);
     this._customUA = this.getCustomUserAgent();
@@ -71,15 +84,28 @@ var UserAgent = {
                         .getService(Ci.nsIHttpProtocolHandler).userAgent
                         .replace(/Android; [a-zA-Z]+/, "X11; Linux x86_64")
                         .replace(/Gecko\/[0-9\.]+/, "Gecko/20100101");
+    this.initilized = true;
   },
 
-  getUserAgentForUriAndTab: function ua_getUserAgentForUriAndTab(aUri, defaultUA) {
+  getCustomUserAgent: function() {
+    if (Services.prefs.prefHasUserValue("general.useragent.override")) {
+      let ua = Services.prefs.getCharPref("general.useragent.override");
+      return ua;
+    } else {
+      return null;
+    }
+  },
+
+  getDefaultUserAgent : function ua_getDefaultUserAgent() {
     // Send desktop UA if "Request Desktop Site" is enabled.
     if (this._desktopMode)
       return this.DESKTOP_UA;
 
-    let ua = this._customUA ? this._customUA : defaultUA;
+    return this._customUA ? this._customUA : defaultUA;
+  },
 
+  getUserAgentForUriAndTab: function ua_getUserAgentForUriAndTab(aUri) {
+    let ua = this.getDefaultUserAgent();
     // Not all schemes have a host member.
     if (aUri.schemeIs("http") || aUri.schemeIs("https")) {
       if (this.GOOGLE_DOMAIN.test(aUri.host)) {
@@ -112,7 +138,7 @@ var UserAgent = {
       }
     }
 
-    return ua;
+    return "";
   },
 
   uninit: function ua_uninit() {
@@ -121,18 +147,39 @@ var UserAgent = {
     UserAgentOverrides.uninit();
   },
 
+  // Complex override calls this first.
   onRequest: function(channel, defaultUA) {
     let channelWindow = this._getWindowForRequest(channel);
-    let ua = this.getUserAgentForUriAndTab(channel.URI, defaultUA);
-    if (ua)
-      channel.setRequestHeader("User-Agent", ua, false);
+    let ua = "";
+    let host = channel.URI.asciiHost
+    let windowHost = channelWindow && channelWindow.location.hostname || "";
+
+    if (!channelWindow) {
+      ua = this.getDefaultUserAgent()
+    } else if (this.overrideMap.has(host)) {
+      ua = this.overrideMap.get(host);
+    } else if (this.overrideMap.has(windowHost)) {
+      ua = this.overrideMap.get(windowHost);
+    } else {
+      ua = this.getUserAgentForWindow(channel.URI, channelWindow);
+    }
+    return ua
   },
 
-  getUserAgentForWindow: function ua_getUserAgentForWindow(aWindow, defaultUA) {
-    let tab = BrowserApp.getTabForWindow(aWindow.top);
-    if (tab)
-      return this.getUserAgentForUriAndTab(tab.browser.currentURI, tab, defaultUA);
-    return defaultUA;
+  // Called if onRequest returns empty user-agent.
+  getUserAgentForWindow: function ua_getUserAgentForWindow(aUri, aWindow) {
+    // Try to pick 'general.useragent.override.*'
+    let ua = UserAgentOverrides.getOverrideForURI(aUri)
+    if (!ua) {
+      ua = this.getUserAgentForUriAndTab(aUri);
+    }
+
+    if (ua) {
+      this.overrideMap.set(aUri.asciiHost, ua)
+      return ua
+    }
+
+    return this.getDefaultUserAgent();
   },
 
   _getRequestLoadContext: function ua_getRequestLoadContext(aRequest) {
