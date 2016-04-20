@@ -64,6 +64,7 @@ category app-startup EmbedLiteErrorPageHandler service,@mozilla.org/embedlite-er
 # UserAgentOverrideHelper.js
 component {69d68654-b5a0-11e2-bb91-2b8ad5eb98ac} UserAgentOverrideHelper.js
 contract @mozilla.org/embedlite-uahelper-component;1 {69d68654-b5a0-11e2-bb91-2b8ad5eb98ac}
+contract @mozilla.org/dom/site-specific-user-agent;1 {69d68654-b5a0-11e2-bb91-2b8ad5eb98ac}
 category app-startup UserAgentOverrideHelper service,@mozilla.org/embedlite-uahelper-component;1
 
 # XPIDialogService.js
