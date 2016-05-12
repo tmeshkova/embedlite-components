@@ -11,38 +11,6 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 // Common helper service
 
-function InitializeXulAppInfo()
-{
-  let XULAppInfo = {
-    vendor: "Mozilla",
-    name: "Firefox",
-    ID: "embedliteBrowser@embed.mozilla.org",
-    version: "23.0",
-    appBuildID: "20130329080257",
-    platformVersion: "23.0",
-    platformBuildID: "20130329080257",
-    inSafeMode: false,
-    logConsoleErrors: true,
-    OS: "Linux",
-    XPCOMABI: "noarch",
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULAppInfo, Ci.nsIXULRuntime]),
-    invalidateCachesOnRestart: function invalidateCachesOnRestart() { }
-  };
-
-  let XULAppInfoFactory = {
-    createInstance: function (outer, iid) {
-      if (outer != null)
-        throw Cr.NS_ERROR_NO_AGGREGATION;
-      return XULAppInfo.QueryInterface(iid);
-    }
-  };
-
-  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  registrar.registerFactory(Components.ID("{0aba3008-9ad4-11e2-a327-cb2a226fec9f}"),
-                            "XULAppInfo", "@mozilla.org/xre/app-info;1",
-                            XULAppInfoFactory);
-}
-
 function EmbedLiteGlobalHelper()
 {
 }
@@ -54,7 +22,6 @@ EmbedLiteGlobalHelper.prototype = {
     switch(aTopic) {
       // Engine DownloadManager notifications
       case "app-startup": {
-        InitializeXulAppInfo();
         dump("EmbedLiteGlobalHelper app-startup\n");
         Services.obs.addObserver(this, "invalidformsubmit", false);
         Services.obs.addObserver(this, "xpcom-shutdown", false);
